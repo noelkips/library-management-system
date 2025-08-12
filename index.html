@@ -1,0 +1,241 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Library Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+  <style>
+    :root {
+      --primary: #143C50; /* Dark blue */
+      --accent: #C86450; /* Coral */
+      --background: #DCDCF0; /* Light purple */
+      --neutral: #A0A0A0; /* Gray */
+      --highlight: #288CC8; /* Bright blue */
+      --alert: #B42828; /* Red */
+    }
+    .swiper-slide img {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+    }
+    .swiper {
+      width: 100%;
+      height: 300px;
+    }
+    @media (min-width: 768px) {
+      .swiper {
+        height: 400px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .swiper {
+        height: 500px;
+      }
+    }
+    #mobile-menu {
+      transition: transform 0.3s ease-in-out;
+    }
+    #mobile-menu.hidden {
+      transform: translateX(-100%);
+    }
+    #mobile-menu:not(.hidden) {
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body class="flex flex-col min-h-screen bg-[var(--background)] text-gray-800 font-sans">
+  <!-- Navigation -->
+  <nav class="bg-[var(--primary)] text-white p-4">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl sm:text-2xl font-bold">Library Management System</h1>
+      <!-- Hamburger Icon (Mobile Only) -->
+      <button id="hamburger-btn" class="sm:hidden focus:outline-none">
+        <svg class="w-6 h-6 fill-[var(--highlight)]" viewBox="0 0 24 24">
+          <path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path>
+        </svg>
+      </button>
+      <!-- Desktop Menu -->
+      <div class="hidden sm:flex space-x-4">
+        <a href="index.html" class="hover:text-[var(--accent)] font-bold text-sm sm:text-base">Home</a>
+        <a href="catalog.html" class="hover:text-[var(--accent)] text-sm sm:text-base">Catalog</a>
+        
+        <a href="contact.html" class="hover:text-[var(--accent)] text-sm sm:text-base">Contact</a>
+        <a href="events.html" class="hover:text-[var(--accent)] text-sm sm:text-base">Events</a>
+        <a href="login.html" class="hover:text-[var(--accent)] text-sm sm:text-base">Login</a>
+      </div>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="hidden sm:hidden fixed top-0 left-0 h-full w-1/2 bg-[var(--accent)] text-white p-4">
+      <button id="close-menu-btn" class="mb-4 focus:outline-none">
+        <svg class="w-6 h-6 fill-[var(--highlight)]" viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path>
+        </svg>
+      </button>
+      <div class="flex flex-col space-y-4">
+        <a href="index.html" class="hover:text-[var(--highlight)] font-bold text-base">Home</a>
+        <a href="catalog.html" class="hover:text-[var(--highlight)] text-base">Catalog</a>
+        
+        <a href="contact.html" class="hover:text-[var(--highlight)] text-base">Contact</a>
+        <a href="events.html" class="hover:text-[var(--highlight)] text-base">Events</a>
+        <a href="login.html" class="hover:text-[var(--highlight)] text-base">Login</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Carousel -->
+  <section class="swiper mySwiper">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide relative">
+        <img src="https://images.unsplash.com/photo-1512820790803-83ca9606a6a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Books">
+        <div class="absolute inset-0 flex items-center justify-center bg-[var(--primary)] bg-opacity-60">
+          <div class="text-center text-white px-4">
+            <h2 class="text-lg sm:text-2xl md:text-3xl font-bold">New Arrivals</h2>
+            <p class="mt-2 text-sm sm:text-base">Discover the latest books added to our collection!</p>
+          </div>
+        </div>
+      </div>
+      <div class="swiper-slide relative">
+        <img src="https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Books">
+        <div class="absolute inset-0 flex items-center justify-center bg-[var(--primary)] bg-opacity-60">
+          <div class="text-center text-white px-4">
+            <h2 class="text-lg sm:text-2xl md:text-3xl font-bold">Library Event</h2>
+            <p class="mt-2 text-sm sm:text-base">Join our book reading event this weekend!</p>
+          </div>
+        </div>
+      </div>
+      <div class="swiper-slide relative">
+        <img src="https://images.unsplash.com/photo-1491841573634-28140fc7ced7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" alt="Books">
+        <div class="absolute inset-0 flex items-center justify-center bg-[var(--primary)] bg-opacity-60">
+          <div class="text-center text-white px-4">
+            <h2 class="text-lg sm:text-2xl md:text-3xl font-bold">About Our Library</h2>
+            <p class="mt-2 text-sm sm:text-base">Serving our community with knowledge and resources since 2020.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-next hidden sm:block"></div>
+    <div class="swiper-button-prev hidden sm:block"></div>
+  </section>
+
+  <!-- Popular Books -->
+  <main class="container mx-auto p-4 sm:p-6 flex-grow">
+    <section class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
+      <h2 class="text-lg sm:text-2xl font-semibold text-[var(--primary)] mb-4">Popular Books</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="border rounded p-4">
+          <h3 class="font-bold text-base sm:text-lg">Book Title 1</h3>
+          <p class="text-[var(--neutral)] text-sm sm:text-base">Author: John Doe</p>
+          <a href="login.html" class="bg-[var(--highlight)] text-white px-3 py-2 sm:px-4 sm:py-2 rounded hover:bg-[var(--primary)] mt-2 inline-block text-sm sm:text-base">Borrow</a>
+        </div>
+        <div class="border rounded p-4">
+          <h3 class="font-bold text-base sm:text-lg">Book Title 2</h3>
+          <p class="text-[var(--neutral)] text-sm sm:text-base">Author: Jane Smith</p>
+          <a href="login.html" class="bg-[var(--highlight)] text-white px-3 py-2 sm:px-4 sm:py-2 rounded hover:bg-[var(--primary)] mt-2 inline-block text-sm sm:text-base">Borrow</a>
+        </div>
+        <div class="border rounded p-4">
+          <h3 class="font-bold text-base sm:text-lg">Book Title 3</h3>
+          <p class="text-[var(--neutral)] text-sm sm:text-base">Author: Alex Brown</p>
+          <a href="login.html" class="bg-[var(--highlight)] text-white px-3 py-2 sm:px-4 sm:py-2 rounded hover:bg-[var(--primary)] mt-2 inline-block text-sm sm:text-base">Borrow</a>
+        </div>
+        <div class="border rounded p-4">
+          <h3 class="font-bold text-base sm:text-lg">Book Title 4</h3>
+          <p class="text-[var(--neutral)] text-sm sm:text-base">Author: Emily Davis</p>
+          <a href="login.html" class="bg-[var(--highlight)] text-white px-3 py-2 sm:px-4 sm:py-2 rounded hover:bg-[var(--primary)] mt-2 inline-block text-sm sm:text-base">Borrow</a>
+        </div>
+        <div class="border rounded p-4">
+          <h3 class="font-bold text-base sm:text-lg">Book Title 5</h3>
+          <p class="text-[var(--neutral)] text-sm sm:text-base">Author: Michael Lee</p>
+          <a href="login.html" class="bg-[var(--highlight)] text-white px-3 py-2 sm:px-4 sm:py-2 rounded hover:bg-[var(--primary)] mt-2 inline-block text-sm sm:text-base">Borrow</a>
+        </div>
+      </div>
+    </section>
+   
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-[var(--primary)] text-white p-4 text-center mt-auto">
+    <p class="text-sm sm:text-base">&copy; 2025 Library Management System. All rights reserved.</p>
+  </footer>
+
+  <!-- Swiper JS and Hamburger Menu Toggle -->
+  <script>
+    const swiper = new Swiper('.mySwiper', {
+      loop: true,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      autoplay: {
+        delay: 5000,
+      },
+    });
+
+    // Hamburger Menu Toggle
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const closeMenuBtn = document.getElementById('close-menu-btn');
+
+    hamburgerBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    closeMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.add('hidden');
+    });
+
+    // Close menu when clicking a link
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+      });
+    });
+  </script>
+</body>
+</html>
