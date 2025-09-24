@@ -1,10 +1,8 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+
 from simple_history.models import HistoricalRecords
-from django.utils import timezone
-from datetime import timedelta
+from django.contrib.auth.models import AbstractUser, PermissionsMixin, Group, Permission
+from django.contrib.auth.base_user import BaseUserManager
+from django.db import models
 
 class Centre(models.Model):
     name = models.CharField(max_length=300)
@@ -13,23 +11,39 @@ class Centre(models.Model):
     def __str__(self):
         return f"{self.name} ({self.centre_code})"
 
+
 class CustomUser(AbstractUser):
-    is_staff = models.BooleanField(default=True)
-    is_librarian = models.BooleanField(default=False)  # For Librarian role
-    is_student = models.BooleanField(default=False)   # For Student role
-    is_teacher = models.BooleanField(default=False)   # For Teacher role
+    username = None
+    email = models.EmailField(unique=True)  # Required if USERNAME_FIELD is email
+
+    is_librarian = models.BooleanField(default=False)
+    is_student = models.BooleanField(default=False)
+    is_teacher = models.BooleanField(default=False)
     centre = models.ForeignKey('Centre', on_delete=models.SET_NULL, null=True, blank=True)
-    
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    # Fix: Override `groups` and `user_permissions` with unique related_names
     groups = models.ManyToManyField(
-        'auth.Group',
+        Group,
         related_name='customuser_set',
         blank=True,
         help_text='The groups this user belongs to.',
         verbose_name='groups',
     )
 
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='customuser_permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions',
+    )
+
     def __str__(self):
-        return self.username
+        return self.email or "Unnamed User"
+
 
 class Book(models.Model):
     title = models.CharField(max_length=300)
@@ -51,15 +65,15 @@ class Book(models.Model):
         if self.available_copies > self.total_copies:
             self.available_copies = self.total_copies
         super().save(*args, **kwargs)
-        if self.pk is None:  # New book
-            admins = CustomUser.objects.filter(is_superuser=True)
-            for admin in admins:
-                Notification.objects.create(
-                    user=admin,
-                    message=f"New book '{self.title}' added by {self.added_by.username if self.added_by else 'Unknown'} at {self.centre.name}.",
-                    content_type=ContentType.objects.get_for_model(self),
-                    object_id=self.id
-                )
+        # if self.pk is None:  # New book
+        #     admins = CustomUser.objects.filter(is_superuser=True)
+        #     for admin in admins:
+        #         Notification.objects.create(
+        #             user=admin,
+        #             message=f"New book '{self.title}' added by {self.added_by.first_name if self.added_by else 'Unknown'} at {self.centre.name}.",
+        #             content_type=ContentType.objects.get_for_model(self),
+        #             object_id=self.id
+        #         )
 
     def __str__(self):
         return f"{self.title} ({self.book_code}) - {self.centre.name if self.centre else 'No Centre'}"
@@ -67,7 +81,7 @@ class Book(models.Model):
     class Meta:
         unique_together = ('book_code', 'centre')
 
-class Issue(models.Model):
+'''class Issue(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='issues')
     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='issues')
     centre = models.ForeignKey('Centre', on_delete=models.SET_NULL, null=True, related_name='issues')
@@ -206,3 +220,4 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message}"
+        '''
