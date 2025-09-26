@@ -1,0 +1,76 @@
+<!-- templates/books/book_list.html -->
+{% extends 'base.html' %}
+
+{% block title %}Books List{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4 text-primary">Books List</h1>
+
+<div class="mb-4 flex justify-between">
+    <form method="get" class="flex">
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Search books..." class="border border-neutral p-2 rounded-l">
+        <select name="items_per_page" class="border border-neutral p-2">
+            {% for option in items_per_page_options %}
+                <option value="{{ option }}" {% if items_per_page == option %}selected{% endif %}>{{ option }} per page</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="bg-accent text-white p-2 rounded-r">Search</button>
+    </form>
+    <a href="{% url 'book_add' %}" class="bg-secondary text-white p-2 rounded">Add New Book</a>
+</div>
+
+<table class="w-full border-collapse border border-neutral">
+    <thead>
+        <tr class="bg-primary text-white">
+            <th class="p-2">Title</th>
+            <th class="p-2">Author</th>
+            <th class="p-2">Category</th>
+            <th class="p-2">Book Code</th>
+            <th class="p-2">Publisher</th>
+            <th class="p-2">Year</th>
+            <th class="p-2">Total Copies</th>
+            <th class="p-2">Available</th>
+            <th class="p-2">Centre</th>
+            <th class="p-2">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for book in books %}
+            <tr class="{% cycle 'bg-white' 'bg-light' %}">
+                <td class="p-2 border border-neutral">{{ book.title }}</td>
+                <td class="p-2 border border-neutral">{{ book.author }}</td>
+                <td class="p-2 border border-neutral">{{ book.category }}</td>
+                <td class="p-2 border border-neutral">{{ book.book_code }}</td>
+                <td class="p-2 border border-neutral">{{ book.publisher }}</td>
+                <td class="p-2 border border-neutral">{{ book.year_of_publication }}</td>
+                <td class="p-2 border border-neutral">{{ book.total_copies }}</td>
+                <td class="p-2 border border-neutral">{{ book.available_copies }}</td>
+                <td class="p-2 border border-neutral">{{ book.centre.name|default:"N/A" }}</td>
+                <td class="p-2 border border-neutral">
+                    <a href="{% url 'book_update' book.pk %}" class="text-accent hover:underline">Edit</a>
+                    <form method="post" action="{% url 'book_delete' book.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-danger hover:underline" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="10" class="p-2 text-center">No books found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="mt-4 flex justify-center">
+    {% if books.has_previous %}
+        <a href="?page=1&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">&laquo; First</a>
+        <a href="?page={{ books.previous_page_number }}&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">Previous</a>
+    {% endif %}
+    <span class="mx-2">Page {{ books.number }} of {{ paginator.num_pages }}</span>
+    {% if books.has_next %}
+        <a href="?page={{ books.next_page_number }}&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">Next</a>
+        <a href="?page={{ paginator.num_pages }}&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">Last &raquo;</a>
+    {% endif %}
+</div>
+{% endblock %}

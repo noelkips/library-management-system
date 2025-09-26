@@ -1,0 +1,61 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Library Management System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#143C50',
+                        'secondary': '#C86450',
+                        'neutral': '#A0A0A0',
+                        'light': '#DCDCF0',
+                        'accent': '#288CC8',
+                        'danger': '#B42828',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-light min-h-screen font-sans">
+    <header class="bg-primary text-white p-4 flex justify-between items-center">
+        <div class="text-xl font-bold">LibraryHub</div>
+        <nav>
+            <span class="mr-4">{{ user.email }}</span>
+            <a href="" class="mr-2 hover:underline">Profile</a>
+            <a href="" class="mr-2 hover:underline">Change Password</a>
+            <a href="" class="hover:underline">Logout</a>
+        </nav>
+    </header>
+    <div class="flex">
+        <aside class="bg-accent text-white w-64 p-4 min-h-screen">
+            <ul>
+                <li><a href="" class="block py-2 hover:bg-secondary">Home</a></li>
+                <li><a href="{% url 'book_list' %}" class="block py-2 hover:bg-secondary">Manage Books</a></li>
+                {% if user.is_superuser %}
+                <li><a href="" class="block py-2 hover:bg-secondary">Manage Users</a></li>
+                {% endif %}
+            </ul>
+        </aside>
+        <main class="flex-1 p-6">
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="bg-secondary text-white p-2 rounded">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    <footer class="bg-primary text-white p-4 text-center">
+        © LibraryHub. All rights reserved.
+    </footer>
+</body>
+</html>

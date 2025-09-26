@@ -1,0 +1,56 @@
+<!-- templates/books/book_update.html -->
+{% extends 'base.html' %}
+
+{% block title %}Update Book{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4 text-primary">Update Book</h1>
+
+<form method="post" class="grid grid-cols-2 gap-4">
+    {% csrf_token %}
+    <div>
+        <label class="block mb-1">Title</label>
+        <input type="text" name="title" value="{{ book.title }}" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Author</label>
+        <input type="text" name="author" value="{{ book.author }}" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Category</label>
+        <input type="text" name="category" value="{{ book.category }}" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Book Code</label>
+        <input type="text" name="book_code" value="{{ book.book_code }}" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Publisher</label>
+        <input type="text" name="publisher" value="{{ book.publisher }}" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Year of Publication</label>
+        <input type="number" name="year_of_publication" value="{{ book.year_of_publication }}" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Total Copies</label>
+        <input type="number" name="total_copies" value="{{ book.total_copies }}" min="1" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Available Copies</label>
+        <input type="number" name="available_copies" value="{{ book.available_copies }}" min="0" required class="w-full border border-neutral p-2 rounded">
+    </div>
+    <div>
+        <label class="block mb-1">Centre</label>
+        <select name="centre" class="w-full border border-neutral p-2 rounded">
+            <option value="">None</option>
+            {% for centre in centres %}
+                <option value="{{ centre.id }}" {% if book.centre.id == centre.id %}selected{% endif %}>{{ centre.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-span-2">
+        <button type="submit" class="bg-secondary text-white p-2 rounded">Update Book</button>
+    </div>
+</form>
+{% endblock %}

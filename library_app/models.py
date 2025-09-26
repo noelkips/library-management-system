@@ -81,6 +81,16 @@ class Book(models.Model):
     class Meta:
         unique_together = ('book_code', 'centre')
 
+class Student(models.Model):
+    CIN = models.IntegerField(unique=True, blank=True, null=True)
+    name = models.CharField(max_length=500)
+    centre = models.ForeignKey('Centre', on_delete=models.SET_NULL, null=True, blank=True)
+    school = models.CharField(max_length=500)
+
+    def __str__(self):
+        return self.name
+
+
 '''class Issue(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='issues')
     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='issues')

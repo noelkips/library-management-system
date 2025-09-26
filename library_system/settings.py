@@ -79,7 +79,8 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
+# settings.py
+AUTH_USER_MODEL = 'library_app.CustomUser'  # Replace 'your_app_name' with the name of the app containing CustomUser
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
