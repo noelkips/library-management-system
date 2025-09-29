@@ -1,10 +1,48 @@
-<!-- templates/base.html -->
-<!DOCTYPE html>
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Library Management System{% endblock %}</title>
+    <title>{% block title %}LibraryHub{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -25,22 +63,178 @@
 </head>
 <body class="bg-light min-h-screen font-sans">
     <header class="bg-primary text-white p-4 flex justify-between items-center">
-        <div class="text-xl font-bold">LibraryHub</div>
-        <nav>
-            <span class="mr-4">{{ user.email }}</span>
-            <a href="" class="mr-2 hover:underline">Profile</a>
-            <a href="" class="mr-2 hover:underline">Change Password</a>
-            <a href="" class="hover:underline">Logout</a>
-        </nav>
+        <div class="text-xl font-bold flex items-center">
+            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+            </svg>
+            LibraryHub
+        </div>
+        <div class="relative">
+            <button id="user-menu-button" class="flex items-center hover:bg-secondary p-2 rounded">
+                <span class="mr-2">{{ user.email }}</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </button>
+            <div id="user-menu" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg text-primary hidden">
+                <a href="{% url 'profile' %}" class="block px-4 py-2 hover:bg-light">My Profile</a>
+                <a href="{% url 'change_password' %}" class="block px-4 py-2 hover:bg-light">Change Password</a>
+                <a href="{% url 'logout' %}" class="block px-4 py-2 hover:bg-light">Logout</a>
+            </div>
+        </div>
     </header>
     <div class="flex">
         <aside class="bg-accent text-white w-64 p-4 min-h-screen">
-            <ul>
-                <li><a href="" class="block py-2 hover:bg-secondary">Home</a></li>
-                <li><a href="{% url 'book_list' %}" class="block py-2 hover:bg-secondary">Manage Books</a></li>
+            <button id="sidebar-toggle" class="md:hidden mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+                </svg>
+            </button>
+            <ul id="sidebar-menu" class="space-y-2">
+                <li>
+                    <a href="{% url 'dashboard' %}" class="flex items-center py-2 px-4 hover:bg-secondary rounded">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        Dashboard
+                    </a>
+                </li>
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                            </svg>
+                            Books
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="{% url 'book_list' %}" class="block py-1 px-4 hover:bg-secondary rounded">List Books</a></li>
+                        <li><a href="{% url 'book_add' %}" class="block py-1 px-4 hover:bg-secondary rounded">Add Book</a></li>
+                    </ul>
+                </li>
                 {% if user.is_superuser %}
-                <li><a href="" class="block py-2 hover:bg-secondary">Manage Users</a></li>
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            Users
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Manage Users</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4-1h.01"></path>
+                            </svg>
+                            Centres
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Centres</a></li>
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Add Centre</a></li>
+                    </ul>
+                </li>
                 {% endif %}
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                            Students
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Students</a></li>
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Add Student</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            Issues
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Issues</a></li>
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Issue Book</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            Borrows
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Borrows</a></li>
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Add Borrow</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            Reservations
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Reservations</a></li>
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Add Reservation</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <button class="flex items-center justify-between w-full py-2 px-4 hover:bg-secondary rounded">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            Notifications
+                        </span>
+                        <svg class="w-5 h-5 dropdown-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
+                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Notifications</a></li>
+                    </ul>
+                </li>
             </ul>
         </aside>
         <main class="flex-1 p-6">
@@ -57,5 +251,25 @@
     <footer class="bg-primary text-white p-4 text-center">
         © LibraryHub. All rights reserved.
     </footer>
+    <script>
+        // Toggle user menu
+        document.getElementById('user-menu-button').addEventListener('click', function() {
+            document.getElementById('user-menu').classList.toggle('hidden');
+        });
+
+        // Toggle sidebar on mobile
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            document.getElementById('sidebar-menu').classList.toggle('hidden');
+        });
+
+        // Toggle dropdown menus
+        document.querySelectorAll('.dropdown-arrow').forEach(arrow => {
+            arrow.addEventListener('click', function() {
+                const dropdown = this.parentElement.nextElementSibling;
+                dropdown.classList.toggle('hidden');
+                this.classList.toggle('rotate-180');
+            });
+        });
+    </script>
 </body>
 </html>
