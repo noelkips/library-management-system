@@ -143,7 +143,7 @@ def change_password(request):
             return redirect('profile')
         except Exception as e:
             messages.error(request, f"Error changing password: {str(e)}")
-    return render(request, 'change_password.html')
+    return render(request, 'auth/change_password.html')
 
 
 

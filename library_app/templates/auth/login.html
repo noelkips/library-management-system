@@ -38,7 +38,7 @@
             {% endif %}
 
             <!-- Login Form -->
-            <form method="POST" action="{% url 'auth:login_view' %}">
+            <form method="POST" action="{% url 'login_view' %}">
                 {% csrf_token %}
                 <div class="mb-4">
                     <label class="block text-gray-700 font-medium mb-1" for="username">Email</label>

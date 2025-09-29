@@ -14,180 +14,229 @@ from ..models import Book, Centre, CustomUser
 def is_authorized(user):
     return user.is_superuser or user.is_staff
 
-def handle_uploaded_file(file, user):
+
+def is_authorized(user):
+    return user.is_superuser or user.is_librarian
+
+def handle_uploaded_file(request, file, user, centre_id):
     header_mapping = {
-        'title': 'title',
-        'author': 'author',
+        'book_title': 'title',
+        'author_name': 'author',
         'category': 'category',
         'book_code': 'book_code',
         'publisher': 'publisher',
-        'year_of_publication': 'year_of_publication',
-        'total_copies': 'total_copies',
+        'pub_year': 'year_of_publication',
+        'total_no': 'total_copies',
         'available_copies': 'available_copies',
-        'centre_code': 'centre_code',
     }
 
-    book_instances = []
     errors = []
+    created_count = 0
 
     try:
+        centre = None
+        if centre_id:
+            try:
+                centre = Centre.objects.get(id=centre_id)
+                print(f"Selected centre: {centre.name} (ID: {centre_id})")
+            except Centre.DoesNotExist:
+                messages.error(request, f"Selected centre with ID {centre_id} not found.")
+                print(f"Error: Centre ID {centre_id} not found.")
+                return
+
+        if user.is_librarian and not user.is_superuser and user.centre and centre != user.centre:
+            messages.error(request, "You can only add books for your own centre.")
+            print(f"Error: User {user.email} attempted to add books to unauthorized centre {centre.name}.")
+            return
+
+        book_instances = []
         if file.name.lower().endswith('.csv'):
+            print(f"Processing CSV file: {file.name}")
             file.seek(0)
             decoded_file = TextIOWrapper(file.file, encoding='utf-8-sig')
             reader = csv.reader(decoded_file)
             headers = next(reader, None)
             if not headers:
-                raise ValueError("File is empty or invalid.")
+                messages.error(request, "File is empty or has no headers.")
+                print(f"Error: File {file.name} is empty or has no headers.")
+                return
             headers = [h.lower().strip() for h in headers]
+            print(f"CSV headers: {headers}")
 
-            for row in reader:
+            required_fields = ['book_title', 'book_code']
+            if not all(field in headers for field in required_fields):
+                messages.error(request, "CSV file must include 'book_title' and 'book_code' columns.")
+                print(f"Error: CSV file {file.name} missing required columns: {required_fields}")
+                return
+
+            for row_index, row in enumerate(reader, start=2):
                 if not any(row):
+                    print(f"Skipping empty row {row_index}")
                     continue
-                data = {header_mapping.get(header): value.strip() if value else None for header, value in zip(headers, row) if header in header_mapping}
+                data = {header_mapping.get(header, header): value.strip() if value else None for header, value in zip(headers, row) if header in header_mapping}
+                print(f"Row {row_index} data: {data}")
+                if not all(data.get(header_mapping[field]) for field in required_fields):
+                    errors.append(f"Row {row_index}: Missing required fields (book_title, book_code).")
+                    print(f"Error in row {row_index}: Missing required fields: {data}")
+                    continue
                 book_instances.append(data)
 
         elif file.name.lower().endswith('.xlsx'):
+            print(f"Processing Excel file: {file.name}")
             wb = openpyxl.load_workbook(file)
             ws = wb.active
             headers = [cell.value.lower().strip() if cell.value else '' for cell in ws[1]]
-            for row in ws.iter_rows(min_row=2):
-                data = {header_mapping.get(headers[i]): cell.value if cell.value else None for i, cell in enumerate(row) if i < len(headers) and headers[i] in header_mapping}
+            if not headers:
+                messages.error(request, "Excel file is empty or has no headers.")
+                print(f"Error: Excel file {file.name} is empty or has no headers.")
+                return
+            print(f"Excel headers: {headers}")
+
+            required_fields = ['book_title', 'book_code']
+            if not all(field in headers for field in required_fields):
+                messages.error(request, "Excel file must include 'book_title' and 'book_code' columns.")
+                print(f"Error: Excel file {file.name} missing required columns: {required_fields}")
+                return
+
+            for row_index, row in enumerate(ws.iter_rows(min_row=2), start=2):
+                data = {header_mapping.get(headers[i], headers[i]): cell.value if cell.value else None for i, cell in enumerate(row) if i < len(headers) and headers[i] in header_mapping}
+                print(f"Row {row_index} data: {data}")
+                if not all(data.get(header_mapping[field]) for field in required_fields):
+                    errors.append(f"Row {row_index}: Missing required fields (book_title, book_code).")
+                    print(f"Error in row {row_index}: Missing required fields: {data}")
+                    continue
                 book_instances.append(data)
 
         else:
-            raise ValueError("Unsupported file format. Only CSV and XLSX are allowed.")
+            messages.error(request, "Unsupported file format. Only CSV and XLSX are allowed.")
+            print(f"Error: Unsupported file format: {file.name}")
+            return
 
-        created_count = 0
+        print(f"Parsed {len(book_instances)} book entries from {file.name}")
         for data in book_instances:
-            centre_code = data.get('centre_code')
-            centre = None
-            if centre_code:
-                try:
-                    centre = Centre.objects.get(centre_code=centre_code)
-                except Centre.DoesNotExist:
-                    errors.append(f"Centre with code {centre_code} not found.")
-                    continue
-
-            if user.is_staff and not user.is_superuser and user.centre and centre != user.centre:
-                errors.append("You can only add books for your own centre.")
-                continue
-
             try:
                 with transaction.atomic():
                     book = Book(
                         title=data.get('title'),
-                        author=data.get('author'),
-                        category=data.get('category'),
-                        book_code=data.get('book_code'),
-                        publisher=data.get('publisher'),
-                        year_of_publication=data.get('year_of_publication'),
-                        total_copies=data.get('total_copies') or 1,
-                        available_copies=data.get('available_copies') or data.get('total_copies') or 1,
-                        centre=centre or (user.centre if user.is_staff and not user.is_superuser else None),
+                        author=data.get('author') or '',
+                        category=data.get('category') or '',
+                        book_code=str(data.get('book_code')),
+                        publisher=data.get('publisher') or '',
+                        year_of_publication=int(data.get('year_of_publication')) if data.get('year_of_publication') and str(data.get('year_of_publication')).isdigit() else None,
+                        total_copies=int(data.get('total_copies')) if data.get('total_copies') and str(data.get('total_copies')).isdigit() else 1,
+                        available_copies=int(data.get('total_copies')) if data.get('total_copies') and str(data.get('total_copies')).isdigit() else 1,  # Fallback to total_copies
+                        centre=centre or (user.centre if user.is_librarian and not user.is_superuser else None),
                         added_by=user,
                     )
-                    book.save()
+                    book.full_clean()  # Validate model fields
+                    book.save(user=user)  # Pass user for history
                     created_count += 1
+                    print(f"Saved book: {book.title} (Code: {book.book_code})")
             except IntegrityError:
                 errors.append(f"Book with code {data.get('book_code')} already exists in the centre.")
+                print(f"IntegrityError for book code {data.get('book_code')}: Already exists")
             except ValueError as ve:
-                errors.append(str(ve))
+                errors.append(f"Row with book code {data.get('book_code')}: Invalid data ({str(ve)}).")
+                print(f"ValueError for book code {data.get('book_code')}: {str(ve)}")
+            except Exception as e:
+                errors.append(f"Row with book code {data.get('book_code')}: Error saving book ({str(e)}).")
+                print(f"Unexpected error for book code {data.get('book_code')}: {str(e)}")
 
         if created_count > 0:
-            messages.success(None, f"{created_count} books imported successfully.")
+            messages.success(request, f"{created_count} books imported successfully.", extra_tags='green')
+            print(f"Successfully imported {created_count} books")
         if errors:
             for error in errors:
-                messages.error(None, error)
+                messages.error(request, error)
+        if created_count == 0 and not errors:
+            messages.error(request, "No books were imported. Please check the file format and data.")
+            print("No books imported from file")
 
     except Exception as e:
-        messages.error(None, f"Error processing file: {str(e)}")
-
-@login_required
-def book_list(request):
-    if not is_authorized(request.user):
-        messages.error(request, "You do not have permission to access this page.")
-        return redirect('dashboard')
-
-    if request.user.is_superuser:
-        books = Book.objects.all()
-    elif request.user.is_staff:
-        books = Book.objects.filter(centre=request.user.centre)
-    else:
-        books = Book.objects.none()
-
-    search_query = request.GET.get('search', '')
-    if search_query:
-        query = (
-            Q(title__icontains=search_query) |
-            Q(author__icontains=search_query) |
-            Q(category__icontains=search_query) |
-            Q(book_code__icontains=search_query) |
-            Q(publisher__icontains=search_query) |
-            Q(year_of_publication__icontains=search_query) |
-            Q(centre__name__icontains=search_query) |
-            Q(centre__centre_code__icontains=search_query)
-        )
-        books = books.filter(query)
-
-    items_per_page = int(request.GET.get('items_per_page', 10))
-    paginator = Paginator(books, items_per_page)
-    page_number = request.GET.get('page', 1)
-
-    try:
-        books_page = paginator.page(page_number)
-    except (PageNotAnInteger, EmptyPage):
-        books_page = paginator.page(1)
-
-    context = {
-        'books': books_page,
-        'paginator': paginator,
-        'search_query': search_query,
-        'items_per_page': items_per_page,
-        'items_per_page_options': [10, 25, 50, 100],
-    }
-    return render(request, 'books/book_list.html', context)
+        messages.error(request, f"Error processing file: {str(e)}")
+        print(f"Error processing file {file.name}: {str(e)}")
 
 @login_required
 def book_add(request):
     if not is_authorized(request.user):
         messages.error(request, "You do not have permission to access this page.")
+        print(f"Unauthorized access attempt by {request.user.email} to book_add")
         return redirect('dashboard')
 
     centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
 
     if request.method == 'POST':
-        if 'file' in request.FILES:
-            handle_uploaded_file(request.FILES['file'], request.user)
+        print(f"POST request for book_add by {request.user.email}: {request.POST}, Files: {request.FILES}")
+        if 'file' in request.FILES and request.FILES['file']:
+            print(f"Handling file upload: {request.FILES['file'].name}")
+            handle_uploaded_file(request, request.FILES['file'], request.user, request.POST.get('centre_id'))
             return redirect('book_list')
-        else:
+        elif 'file' in request.POST and not request.FILES:
+            messages.error(request, "No file was uploaded. Please select a CSV or Excel file.")
+            print("Error: No file uploaded in POST request")
+        elif 'title' in request.POST:
             try:
                 centre_id = request.POST.get('centre')
                 centre = Centre.objects.get(id=centre_id) if centre_id else None
-                if request.user.is_staff and not request.user.is_superuser and centre != request.user.centre:
+                if request.user.is_librarian and not request.user.is_superuser and centre != request.user.centre:
                     messages.error(request, "You can only add books for your own centre.")
+                    print(f"Error: User {request.user.email} attempted to add book to unauthorized centre")
                     return redirect('book_add')
 
                 book = Book(
                     title=request.POST.get('title'),
-                    author=request.POST.get('author'),
-                    category=request.POST.get('category'),
+                    author=request.POST.get('author') or '',
+                    category=request.POST.get('category') or '',
                     book_code=request.POST.get('book_code'),
-                    publisher=request.POST.get('publisher'),
-                    year_of_publication=request.POST.get('year_of_publication'),
-                    total_copies=request.POST.get('total_copies') or 1,
-                    available_copies=request.POST.get('available_copies') or request.POST.get('total_copies') or 1,
+                    publisher=request.POST.get('publisher') or '',
+                    year_of_publication=int(request.POST.get('year_of_publication')) if request.POST.get('year_of_publication') and request.POST.get('year_of_publication').isdigit() else None,
+                    total_copies=int(request.POST.get('total_copies')) if request.POST.get('total_copies') and request.POST.get('total_copies').isdigit() else 1,
+                    available_copies=int(request.POST.get('available_copies')) if request.POST.get('available_copies') and request.POST.get('available_copies').isdigit() else request.POST.get('total_copies') or 1,
                     centre=centre,
                     added_by=request.user,
                 )
-                book.save()
-                messages.success(request, "Book added successfully.")
+                book.full_clean()  # Validate model fields
+                book.save(user=request.user)  # Pass user for history
+                messages.success(request, "Book added successfully.", extra_tags='green')
+                print(f"Book added: {book.title} (Code: {book.book_code}) by {request.user.email}")
                 return redirect('book_list')
             except IntegrityError:
                 messages.error(request, "Book code already exists in the centre.")
+                print(f"IntegrityError: Book code {request.POST.get('book_code')} already exists")
+            except ValueError as ve:
+                messages.error(request, f"Invalid data: {str(ve)}")
+                print(f"ValueError: Invalid data for book: {str(ve)}")
             except Exception as e:
                 messages.error(request, f"Error adding book: {str(e)}")
+                print(f"Unexpected error adding book: {str(e)}")
+        else:
+            messages.error(request, "Invalid form submission. Please provide a file or book details.")
+            print("Error: Invalid form submission, missing file or book details")
 
     return render(request, 'books/book_add.html', {'centres': centres})
+
+@login_required
+def book_list(request):
+    if request.user.is_superuser:
+        books = Book.objects.all()
+    elif request.user.is_librarian and request.user.centre:
+        books = Book.objects.filter(centre=request.user.centre)
+    else:
+        books = Book.objects.none()
+
+    books = books.order_by('title')  # Fix UnorderedObjectListWarning
+
+    items_per_page = 10
+    paginator = Paginator(books, items_per_page)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    print(f"Book list for {request.user.email}: {books.count()} books retrieved")
+    return render(request, 'books/book_list.html', {
+        'page_obj': page_obj,
+         'books': books,
+        'centres': Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
+    })
 
 @login_required
 def book_update(request, pk):
