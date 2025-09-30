@@ -22,11 +22,12 @@
 
 <div class="bg-white p-6 rounded-lg shadow-lg animate-fade-in">
     <h2 class="text-xl font-semibold text-primary mb-4">Add Single Book</h2>
+    <p class="text-sm text-neutral mb-4">Only <code>book_code</code> is required. Other fields are optional.</p>
     <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {% csrf_token %}
         <div class="animate-slide-in">
             <label class="block mb-1 text-primary">Title</label>
-            <input type="text" name="title" required class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+            <input type="text" name="title" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
         </div>
         <div class="animate-slide-in">
             <label class="block mb-1 text-primary">Author</label>
@@ -50,11 +51,11 @@
         </div>
         <div class="animate-slide-in">
             <label class="block mb-1 text-primary">Total Copies</label>
-            <input type="number" name="total_copies" min="1" value="1" required class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+            <input type="number" name="total_copies" min="1" value="1" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
         </div>
         <div class="animate-slide-in">
             <label class="block mb-1 text-primary">Available Copies</label>
-            <input type="number" name="available_copies" min="0" value="1" required class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+            <input type="number" name="available_copies" min="0" value="1" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
         </div>
         <div class="animate-slide-in">
             <label class="block mb-1 text-primary">Centre</label>
@@ -78,7 +79,7 @@
 
 <div class="bg-white p-6 rounded-lg shadow-lg mt-6 animate-fade-in">
     <h2 class="text-xl font-semibold text-primary mb-4">Upload CSV/Excel File</h2>
-    <p class="text-sm text-neutral mb-4">File must include columns: <code>title</code>, <code>book_code</code>. Optional: <code>author</code>, <code>category</code>, <code>publisher</code>, <code>year_of_publication</code>, <code>total_copies</code>, <code>available_copies</code>.</p>
+    <p class="text-sm text-neutral mb-4">File must include column: <code>book_code</code>. Optional: <code>book_title</code>, <code>author_name</code>, <code>category</code>, <code>publisher</code>, <code>pub_year</code>, <code>total_no</code>, <code>available_copies</code>.</p>
     <form id="uploadForm" method="post" enctype="multipart/form-data" class="space-y-4">
         {% csrf_token %}
         <div class="animate-slide-in">
@@ -86,67 +87,31 @@
             <input type="file" name="file" id="fileInput" accept=".csv,.xlsx" required class="border border-neutral p-2 rounded w-full focus:ring-2 focus:ring-accent">
             <p id="fileName" class="text-sm text-neutral mt-1"></p>
         </div>
-        <button type="button" onclick="openModal()" class="bg-secondary text-white p-2 rounded flex items-center hover:bg-accent transition-colors animate-slide-in">
+        <div class="animate-slide-in">
+            <label class="block mb-1 text-primary">Centre</label>
+            <select name="centre_id" id="centreSelect" required class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+                <option value="">Select a centre</option>
+                {% for centre in centres %}
+                    <option value="{{ centre.id }}">{{ centre.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="bg-secondary text-white p-2 rounded flex items-center hover:bg-accent transition-colors animate-slide-in">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
             </svg>
             Upload File
         </button>
-        <!-- Hidden modal form for centre selection -->
-        <div id="centreModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full animate-fade-in">
-                <h3 class="text-lg font-semibold text-primary mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4 0h4"></path>
-                    </svg>
-                    Select Centre
-                </h3>
-                <div class="mb-4 animate-slide-in">
-                    <label class="block mb-1 text-primary">Centre</label>
-                    <select name="centre_id" id="centreSelect" required class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
-                        <option value="">Select a centre</option>
-                        {% for centre in centres %}
-                            <option value="{{ centre.id }}">{{ centre.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="closeModal()" class="bg-neutral text-white p-2 rounded hover:bg-danger transition-colors">Cancel</button>
-                    <button type="submit" class="bg-secondary text-white p-2 rounded flex items-center hover:bg-accent transition-colors">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Confirm Upload
-                    </button>
-                </div>
-            </div>
-        </div>
     </form>
 </div>
 
 <script>
     const fileInput = document.getElementById('fileInput');
     const fileNameDisplay = document.getElementById('fileName');
-    const centreModal = document.getElementById('centreModal');
-    const uploadForm = document.getElementById('uploadForm');
 
     fileInput.addEventListener('change', () => {
         fileNameDisplay.textContent = fileInput.files.length ? `Selected: ${fileInput.files[0].name}` : '';
     });
-
-    function openModal() {
-        if (!fileInput.files.length) {
-            alert('Please select a file first.');
-            return;
-        }
-        centreModal.classList.remove('hidden');
-    }
-
-    function closeModal() {
-        centreModal.classList.add('hidden');
-        fileNameDisplay.textContent = '';
-        fileInput.value = '';
-    }
 </script>
 
 <style>
