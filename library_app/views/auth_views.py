@@ -11,9 +11,29 @@ import openpyxl
 from io import TextIOWrapper
 from ..models import Book, Centre, CustomUser, Student 
 from django.contrib.auth import update_session_auth_hash
+# library_app/views/user_views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.db import transaction
+from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.utils.crypto import get_random_string
 
+def is_site_admin(user):
+    return user.is_site_admin
 
+def is_librarian(user):
+    return user.is_librarian
 
+def is_authorized_for_manage_users(user):
+    return user.is_site_admin or user.is_librarian
+
+def can_reset_password(user, target_user):
+    if user.is_site_admin:
+        return True
+    if user.is_librarian:
+        return target_user.is_student or target_user.is_other or target_user.is_teacher
+    return False
 
 def landing_page(request):
     if request.user.is_authenticated:
@@ -144,6 +164,157 @@ def change_password(request):
         except Exception as e:
             messages.error(request, f"Error changing password: {str(e)}")
     return render(request, 'auth/change_password.html')
+
+
+
+@login_required
+@user_passes_test(is_authorized_for_manage_users)
+def manage_users(request):
+    users = CustomUser.objects.all()
+    centres = Centre.objects.all()
+    groups = Group.objects.all()
+    permissions = Permission.objects.all()
+    return render(request, 'auth/manage_users.html', {
+        'users': users,
+        'centres': centres,
+        'groups': groups,
+        'permissions': permissions
+    })
+
+@login_required
+@user_passes_test(is_authorized_for_manage_users)
+def user_add(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = get_random_string(length=12)
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        centre_id = request.POST.get('centre')
+        is_librarian = request.POST.get('is_librarian') == 'on'
+        is_student = request.POST.get('is_student') == 'on'
+        is_teacher = request.POST.get('is_teacher') == 'on'
+        is_site_admin = request.POST.get('is_site_admin') == 'on'
+        is_other = request.POST.get('is_other') == 'on'
+        groups = request.POST.getlist('groups')
+        errors = []
+
+        if not email:
+            errors.append("Email is required.")
+        if CustomUser.objects.filter(email=email).exists():
+            errors.append("Email is already in use.")
+        if centre_id and centre_id != '' and not Centre.objects.filter(id=centre_id).exists():
+            errors.append("Invalid centre selected.")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            with transaction.atomic():
+                centre = Centre.objects.get(id=centre_id) if centre_id and centre_id != '' else None
+                user = CustomUser.objects.create_user(
+                    email=email,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    centre=centre,
+                    is_librarian=is_librarian,
+                    is_student=is_student,
+                    is_teacher=is_teacher,
+                    is_site_admin=is_site_admin,
+                    is_other=is_other,
+                )
+                if groups:
+                    user.groups.set(groups)
+                Notification.objects.create(
+                    user=user,
+                    message=f"Your new password is: {password}"
+                )
+                messages.success(request, "User added successfully. New password displayed in their dashboard.")
+                return redirect('manage_users')
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_authorized_for_manage_users)
+def user_update(request, pk):
+    target_user = get_object_or_404(CustomUser, pk=pk)
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        centre_id = request.POST.get('centre')
+        is_librarian = request.POST.get('is_librarian') == 'on'
+        is_student = request.POST.get('is_student') == 'on'
+        is_teacher = request.POST.get('is_teacher') == 'on'
+        is_site_admin = request.POST.get('is_site_admin') == 'on'
+        is_other = request.POST.get('is_other') == 'on'
+        groups = request.POST.getlist('groups')
+        errors = []
+
+        if not email:
+            errors.append("Email is required.")
+        if CustomUser.objects.filter(email=email).exclude(id=pk).exists():
+            errors.append("Email is already in use.")
+        if centre_id and centre_id != '' and not Centre.objects.filter(id=centre_id).exists():
+            errors.append("Invalid centre selected.")
+
+        if errors:
+            for error in errors:
+                messages.error(request, error)
+        else:
+            with transaction.atomic():
+                centre = Centre.objects.get(id=centre_id) if centre_id and centre_id != '' else None
+                target_user.email = email
+                target_user.first_name = first_name
+                target_user.last_name = last_name
+                target_user.centre = centre
+                target_user.is_librarian = is_librarian
+                target_user.is_student = is_student
+                target_user.is_teacher = is_teacher
+                target_user.is_site_admin = is_site_admin
+                target_user.is_other = is_other
+                target_user.save()
+                target_user.groups.clear()
+                if groups:
+                    target_user.groups.set(groups)
+                messages.success(request, "User updated successfully.")
+            return redirect('manage_users')
+    return redirect('manage_users')
+
+@login_required
+@user_passes_test(is_authorized_for_manage_users)
+def user_delete(request, pk):
+    target_user = get_object_or_404(CustomUser, pk=pk)
+    if request.method == 'POST':
+        if target_user == request.user:
+            messages.error(request, "You cannot delete your own account.")
+            return redirect('manage_users')
+        with transaction.atomic():
+            target_user.delete()
+            messages.success(request, "User deleted successfully.")
+        return redirect('manage_users')
+    return redirect('manage_users')
+
+@login_required
+def user_reset_password(request, pk):
+    target_user = get_object_or_404(CustomUser, pk=pk)
+    if not can_reset_password(request.user, target_user):
+        messages.error(request, "You do not have permission to reset this user's password.")
+        return redirect('manage_users')
+
+    if request.method == 'POST':
+        new_password = get_random_string(length=12)
+        target_user.set_password(new_password)
+        target_user.save()
+        Notification.objects.create(
+            user=target_user,
+            message=f"Your password has been reset by {request.user.email}. New password: {new_password}"
+        )
+        messages.success(request, "Password reset successfully. New password displayed in the user's dashboard.")
+        return redirect('manage_users')
+    return redirect('manage_users')
+
+
+
 
 
 

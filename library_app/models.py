@@ -41,7 +41,9 @@ class CustomUser(AbstractUser):
 
     is_librarian = models.BooleanField(default=False)
     is_student = models.BooleanField(default=False)
+    is_site_admin = models.BooleanField(default=False)
     is_teacher = models.BooleanField(default=False)
+    is_other = models.BooleanField(default=False)
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, blank=True)
 

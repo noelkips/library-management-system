@@ -19,6 +19,7 @@ def is_authorized(user):
     return user.is_superuser or user.is_librarian
 
 
+
 def is_authorized(user):
     return user.is_superuser or user.is_librarian
 
@@ -36,6 +37,8 @@ def handle_uploaded_file(request, file, user, centre_id):
 
     errors = []
     created_count = 0
+    skipped_count = 0
+    total_rows = 0
 
     try:
         centre = None
@@ -72,9 +75,14 @@ def handle_uploaded_file(request, file, user, centre_id):
                 print(f"Error: CSV file {file.name} missing required column: book_code")
                 return
 
-            for row_index, row in enumerate(reader, start=2):
+            all_rows = list(reader)
+            total_rows = len(all_rows) + 1  # +1 for header
+            print(f"Total rows in CSV: {total_rows}")
+
+            for row_index, row in enumerate(all_rows, start=2):
                 if not any(row):
                     print(f"Skipping empty row {row_index}")
+                    skipped_count += 1
                     continue
                 data = {header_mapping.get(header, header): value.strip() if value else None for header, value in zip(headers, row) if header in header_mapping}
                 print(f"Row {row_index} data: {data}")
@@ -100,7 +108,11 @@ def handle_uploaded_file(request, file, user, centre_id):
                 print(f"Error: Excel file {file.name} missing required column: book_code")
                 return
 
-            for row_index, row in enumerate(ws.iter_rows(min_row=2), start=2):
+            all_rows = list(ws.iter_rows(min_row=2))
+            total_rows = len(all_rows) + 1  # +1 for header
+            print(f"Total rows in Excel: {total_rows}")
+
+            for row_index, row in enumerate(all_rows, start=2):
                 data = {header_mapping.get(headers[i], headers[i]): cell.value if cell.value else None for i, cell in enumerate(row) if i < len(headers) and headers[i] in header_mapping}
                 print(f"Row {row_index} data: {data}")
                 if not data.get('book_code'):
@@ -126,16 +138,16 @@ def handle_uploaded_file(request, file, user, centre_id):
                         publisher=data.get('publisher') or '',
                         year_of_publication=int(data.get('year_of_publication')) if data.get('year_of_publication') and str(data.get('year_of_publication')).isdigit() else None,
                         total_copies=int(data.get('total_copies')) if data.get('total_copies') and str(data.get('total_copies')).isdigit() else 1,
-                        available_copies=int(data.get('total_copies')) if data.get('total_copies') and str(data.get('total_copies')).isdigit() else 1,
+                        available_copies=int(data.get('total_copies')) if data.get('total_copies') and str(data.get('total_copies')).isdigit() else 1,  # Fallback to total_copies
                         centre=centre or (user.centre if user.is_librarian and not user.is_superuser else None),
                         added_by=user,
                     )
-                    book.full_clean()
-                    book.save(user=user)
+                    book.full_clean()  # Validate model fields
+                    book.save(user=user)  # Pass user for history
                     created_count += 1
                     print(f"Saved book: {book.title or 'Untitled'} (Code: {book.book_code})")
             except IntegrityError:
-                errors.append(f"Row with book code {data.get('book_code')}: Already exists in centre")
+                errors.append(f"Book with code {data.get('book_code')} already exists in the centre.")
                 print(f"IntegrityError for book code {data.get('book_code')}: Already exists")
             except ValueError as ve:
                 errors.append(f"Row with book code {data.get('book_code')}: Invalid data ({str(ve)})")
@@ -150,6 +162,8 @@ def handle_uploaded_file(request, file, user, centre_id):
         if errors:
             messages.error(request, f"Failed to import {len(errors)} rows due to invalid data or duplicate book codes.")
             print(f"Errors encountered: {errors}")
+        messages.info(request, f"Processed {total_rows} rows: {created_count} added, {len(errors)} failed, {skipped_count} skipped.")
+
         if created_count == 0 and not errors:
             messages.error(request, "No books were imported. Please check the file format and data.")
             print("No books imported from file")
@@ -163,7 +177,7 @@ def book_add(request):
     if not is_authorized(request.user):
         messages.error(request, "You do not have permission to access this page.")
         print(f"Unauthorized access attempt by {request.user.email} to book_add")
-        return redirect('books:dashboard')
+        return redirect('book_list')
 
     centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
 
@@ -172,7 +186,7 @@ def book_add(request):
         if 'file' in request.FILES and request.FILES['file']:
             print(f"Handling file upload: {request.FILES['file'].name}")
             handle_uploaded_file(request, request.FILES['file'], request.user, request.POST.get('centre_id'))
-            return redirect('books:book_list')
+            return redirect('book_list')
         elif 'file' in request.POST and not request.FILES:
             messages.error(request, "No file was uploaded. Please select a CSV or Excel file.")
             print("Error: No file uploaded in POST request")
@@ -180,10 +194,10 @@ def book_add(request):
             try:
                 centre_id = request.POST.get('centre')
                 centre = Centre.objects.get(id=centre_id) if centre_id else None
-                if request.user.is_librarian and not user.is_superuser and centre != request.user.centre:
+                if request.user.is_librarian and not request.user.is_superuser and centre != request.user.centre:
                     messages.error(request, "You can only add books for your own centre.")
                     print(f"Error: User {request.user.email} attempted to add book to unauthorized centre")
-                    return redirect('books:book_add')
+                    return redirect('book_add')
 
                 book = Book(
                     title=request.POST.get('title') or '',
@@ -197,11 +211,11 @@ def book_add(request):
                     centre=centre,
                     added_by=request.user,
                 )
-                book.full_clean()
-                book.save(user=request.user)
+                book.full_clean()  # Validate model fields
+                book.save(user=request.user)  # Pass user for history
                 messages.success(request, "Book added successfully.", extra_tags='green')
                 print(f"Book added: {book.title or 'Untitled'} (Code: {book.book_code}) by {request.user.email}")
-                return redirect('books:book_list')
+                return redirect('book_list')
             except IntegrityError:
                 messages.error(request, "Book code already exists in the centre.")
                 print(f"IntegrityError: Book code {request.POST.get('book_code')} already exists")
@@ -226,7 +240,7 @@ def book_list(request):
     else:
         books = Book.objects.none()
 
-    books = books.order_by('title')
+    books = books.order_by('title')  # Fix UnorderedObjectListWarning
 
     items_per_page = 10
     paginator = Paginator(books, items_per_page)
@@ -236,9 +250,9 @@ def book_list(request):
     print(f"Book list for {request.user.email}: {books.count()} books retrieved")
     return render(request, 'books/book_list.html', {
         'page_obj': page_obj,
-        'books': books,
         'centres': Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
     })
+
 
 @login_required
 def book_update(request, pk):
