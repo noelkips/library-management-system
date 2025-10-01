@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Students List{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-4 text-primary">Students List</h1>
+
+<div class="mb-4 flex justify-between">
+    <form method="get" class="flex">
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Search students..." class="border border-neutral p-2 rounded-l">
+        <select name="items_per_page" class="border border-neutral p-2">
+            {% for option in items_per_page_options %}
+                <option value="{{ option }}" {% if items_per_page == option %}selected{% endif %}>{{ option }} per page</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="bg-accent text-white p-2 rounded-r">Search</button>
+    </form>
+    <a href="{% url 'student_add' %}" class="bg-secondary text-white p-2 rounded">Add New Student</a>
+</div>
+
+<table class="w-full border-collapse border border-neutral">
+    <thead>
+        <tr class="bg-primary text-white">
+            <th class="p-2">Name</th>
+            <th class="p-2">Child ID</th>
+            <th class="p-2">School</th>
+            <th class="p-2">Centre</th>
+            <th class="p-2">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+            <tr class="{% cycle 'bg-white' 'bg-light' %}">
+                <td class="p-2 border border-neutral">{{ student.name }}</td>
+                <td class="p-2 border border-neutral">{{ student.child_ID }}</td>
+                <td class="p-2 border border-neutral">{{ student.school }}</td>
+                <td class="p-2 border border-neutral">{{ student.centre.name|default:"N/A" }}</td>
+                <td class="p-2 border border-neutral">
+                    <a href="{% url 'student_update' student.pk %}" class="text-accent hover:underline">Edit</a>
+                    <form method="post" action="{% url 'student_delete' student.pk %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-danger hover:underline" onclick="return confirm('Are you sure?')">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="5" class="p-2 text-center">No students found.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="mt-4 flex justify-center">
+    {% if students.has_previous %}
+        <a href="?page=1&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">&laquo; First</a>
+        <a href="?page={{ students.previous_page_number }}&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">Previous</a>
+    {% endif %}
+    <span class="mx-2">Page {{ students.number }} of {{ paginator.num_pages }}</span>
+    {% if students.has_next %}
+        <a href="?page={{ students.next_page_number }}&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">Next</a>
+        <a href="?page={{ paginator.num_pages }}&search={{ search_query }}&items_per_page={{ items_per_page }}" class="mx-1 p-2 bg-accent text-white rounded">Last &raquo;</a>
+    {% endif %}
+</div>
+{% endblock %}

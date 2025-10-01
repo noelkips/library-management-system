@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Student - LibraryHub{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-bold mb-6 text-primary flex items-center animate-fade-in">
+    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+    </svg>
+    Update Student: {{ student.name }}
+</h1>
+
+{% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+            <div class="{% if message.tags == 'green' %}bg-green-500{% else %}bg-danger{% endif %} text-white p-3 rounded-lg shadow animate-slide-in">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="bg-white p-6 rounded-lg shadow-lg animate-fade-in">
+    <h2 class="text-xl font-semibold text-primary mb-4">Edit Student Details</h2>
+    <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% csrf_token %}
+        <div class="animate-slide-in">
+            <label class="block mb-1 text-primary">Name</label>
+            <input type="text" name="name" value="{{ student.name }}" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+        </div>
+        <div class="animate-slide-in">
+            <label class="block mb-1 text-primary">Child ID</label>
+            <input type="number" name="child_ID" value="{{ student.child_ID }}" required class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+        </div>
+        <div class="animate-slide-in">
+            <label class="block mb-1 text-primary">School</label>
+            <input type="text" name="school" value="{{ student.school }}" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+        </div>
+        <div class="animate-slide-in">
+            <label class="block mb-1 text-primary">Centre</label>
+            <select name="centre" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+                <option value="">None</option>
+                {% for centre in centres %}
+                    <option value="{{ centre.id }}" {% if student.centre and student.centre.id == centre.id %}selected{% endif %}>{{ centre.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="md:col-span-2 animate-slide-in flex justify-between">
+            <button type="submit" class="bg-secondary text-white p-2 rounded flex items-center hover:bg-accent transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Save Changes
+            </button>
+            <a href="{% url 'student_list' %}" class="bg-neutral text-white p-2 rounded flex items-center hover:bg-accent transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+    .animate-slide-in {
+        animation: slideIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes slideIn {
+        from { transform: translateY(10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}
