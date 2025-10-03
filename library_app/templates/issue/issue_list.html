@@ -3,6 +3,7 @@
 {% block title %}Issues - LibraryHub{% endblock %}
 
 {% block content %}
+<<<<<<< Updated upstream
 <div class="animate-fade-in">
     {% if messages %}
         <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
@@ -30,6 +31,57 @@
                         </button>
                     </div>
                 </div>
+=======
+<h1 class="text-2xl font-bold mb-4 text-primary flex items-center animate-fade-in">
+    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+    </svg>
+    Issued Books
+</h1>
+
+<div class="bg-white p-6 rounded-lg shadow-lg animate-fade-in">
+    <table class="w-full border-collapse border border-neutral">
+        <thead>
+            <tr class="bg-primary text-white">
+                <th class="p-2">Book</th>
+                <th class="p-2">Student</th>
+                <th class="p-2">Centre</th>
+                <th class="p-2">Issued By</th>
+                <th class="p-2">Issue Date</th>
+                 
+                <th class="p-2">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for issue in issues %}
+                <tr class="{% cycle 'bg-white' 'bg-light' %}">
+                    <td class="p-2 border border-neutral">{{ issue.book.title }} ({{ issue.book.book_code }})</td>
+                    <td class="p-2 border border-neutral">{{ issue.user }}</td>
+                    <td class="p-2 border border-neutral">{{ issue.centre.name|default:"N/A" }}</td>
+                    <td class="p-2 border border-neutral">{{ issue.issued_by.email }}</td>
+                    <td class="p-2 border border-neutral">{{ issue.issue_date|date:"Y-m-d" }}</td>
+                     
+                    <td class="p-2 border border-neutral text-center">
+                        {% if issue.is_returned %}
+                            <span class="text-green-600 font-semibold">Returned</span>
+                        {% else %}
+                            <form method="post" action="{% url 'return_book' issue.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors flex items-center justify-center mx-auto">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Return
+                                </button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" class="p-2 text-center">No books issued.</td>
+                </tr>
+>>>>>>> Stashed changes
             {% endfor %}
         </div>
     {% endif %}
@@ -209,6 +261,7 @@
         {% endif %}
     </div>
 </div>
+<<<<<<< Updated upstream
 
 <style>
     @keyframes fade-in {
@@ -249,3 +302,6 @@
     }, 5000);
 </script>
 {% endblock %}
+=======
+{% endblock %}
+>>>>>>> Stashed changes

@@ -89,4 +89,58 @@ def issue_book(request):
 @user_passes_test(is_librarian_or_superuser)
 def issue_list(request):
     issues = Issue.objects.select_related('book', 'user', 'centre', 'issued_by').all()
+    
+    # Add is_returned status to each issue by checking related Borrow
+    for issue in issues:
+        try:
+            borrow = Borrow.objects.get(
+                book=issue.book,
+                user=issue.user.user,
+                borrow_date__gte=issue.issue_date,
+                borrow_date__lte=issue.issue_date + timedelta(minutes=1)
+            )
+            issue.is_returned = borrow.is_returned
+        except Borrow.DoesNotExist:
+            issue.is_returned = False
+    
     return render(request, 'issue/issue_list.html', {'issues': issues})
+
+@login_required
+@user_passes_test(is_librarian_or_superuser)
+def return_book(request, issue_id):
+    if request.method == 'POST':
+        issue = get_object_or_404(Issue, id=issue_id)
+        
+        try:
+            with transaction.atomic():
+                # Find the corresponding Borrow record
+                borrow = Borrow.objects.get(
+                    book=issue.book,
+                    user=issue.user.user,
+                    is_returned=False,
+                    borrow_date__gte=issue.issue_date,
+                    borrow_date__lte=issue.issue_date + timedelta(minutes=1)
+                )
+                
+                # Mark as returned
+                borrow.is_returned = True
+                borrow.return_date = timezone.now()
+                borrow.save()
+                
+                # Increment available copies
+                issue.book.available_copies += 1
+                issue.book.save()
+                
+                # Create notification
+                Notification.objects.create(
+                    user=issue.user.user,
+                    message=f"Book '{issue.book.title}' returned successfully on {borrow.return_date.strftime('%Y-%m-%d')}."
+                )
+                
+                messages.success(request, f"Book '{issue.book.title}' returned successfully by {issue.user.name}.")
+        except Borrow.DoesNotExist:
+            messages.error(request, "No active borrow record found for this issue.")
+        except Exception as e:
+            messages.error(request, f"Error returning book: {str(e)}")
+    
+    return redirect('issue_list')
