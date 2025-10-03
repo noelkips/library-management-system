@@ -250,6 +250,7 @@ def book_list(request):
     print(f"Book list for {request.user.email}: {books.count()} books retrieved")
     return render(request, 'books/book_list.html', {
         'page_obj': page_obj,
+        'books':books,
         'centres': Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
     })
 

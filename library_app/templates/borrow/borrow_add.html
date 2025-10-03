@@ -3,49 +3,218 @@
 {% block title %}Borrow Book - LibraryHub{% endblock %}
 
 {% block content %}
-<div class="container mx-auto p-4">
-    <div class="max-w-2xl ml-0">
-        <h2 class="text-2xl font-bold mb-4">Borrow Book</h2>
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <div class="border-b pb-2 mb-4">
-                <h4 class="text-lg font-semibold">Borrow New Book</h4>
-            </div>
-            <div>
-                <!-- <h5 class="text-md font-medium mb-4">Borrow Book to Student</h5> -->
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="p-2 mb-2 {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} rounded">
-                            {{ message }}
+<div class="max-w-4xl mx-auto animate-fade-in">
+    {% if messages %}
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            {% else %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
                         </div>
-                    {% endfor %}
-                {% endif %}
-                <form method="post" class="space-y-4">
-                    {% csrf_token %}
-                    <div>
-                        <label for="book" class="block text-sm font-medium text-gray-700">Book</label>
-                        <select name="book" id="book" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
-                            <option value="">Select a book</option>
-                            {% for book in books %}
-                                <option value="{{ book.id }}">{{ book.title }} ({{ book.book_code }}) - {{ book.centre.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium">{{ message|safe }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
                     </div>
-                    <div>
-                        <label for="student" class="block text-sm font-medium text-gray-700">Student</label>
-                        <select name="student" id="student" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
-                            <option value="">Select a student</option>
-                            {% for student in students %}
-                                <option value="{{ student.id }}">{{ student.name }} ({{ student.user.email }})</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="flex justify-end space-x-4">
-                        <a href="{% url 'borrow_list' %}" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</a>
-                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Borrow</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+            {% endfor %}
         </div>
+    {% endif %}
+
+    <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
+            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Borrow Book to Student
+        </h1>
+        <p class="text-gray-600 mt-2 text-sm md:text-base">Lend a book to a student</p>
+    </div>
+
+    <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 gap-4 md:gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                        </svg>
+                        Book *
+                    </label>
+                    <select 
+                        name="book" 
+                        id="book" 
+                        class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                        required
+                    >
+                        <option value="">Select a book</option>
+                        {% for book in books %}
+                            <option value="{{ book.id }}">{{ book.title }} ({{ book.book_code }}) - {{ book.centre.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Select the book to lend to the student</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Student *
+                    </label>
+                    <select 
+                        name="student" 
+                        id="student" 
+                        class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                        required
+                    >
+                        <option value="">Select a student</option>
+                        {% for student in students %}
+                            <option value="{{ student.id }}">{{ student.name }} ({{ student.user.email }})</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Select the student who will borrow the book</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Borrow Date *
+                    </label>
+                    <input 
+                        type="date" 
+                        name="borrow_date" 
+                        class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                        value="{{ today }}"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Return Date *
+                    </label>
+                    <input 
+                        type="date" 
+                        name="return_date" 
+                        class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all"
+                        value="{{ default_return_date }}"
+                        required
+                    >
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                        </svg>
+                        Notes
+                    </label>
+                    <textarea 
+                        name="notes" 
+                        rows="3"
+                        class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all resize-vertical"
+                        placeholder="Add any additional notes about this borrow..."
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                <a 
+                    href="{% url 'borrow_list' %}" 
+                    class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 text-center transition-all transform hover:scale-105 font-medium"
+                >
+                    Cancel
+                </a>
+                <button 
+                    type="submit" 
+                    class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Borrow Book
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slide-in-right {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+    
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+    }
+
+    input[type="date"],
+    select,
+    textarea {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: #C86450;
+        border-color: transparent;
+    }
+</style>
+
+<script>
+    setTimeout(function() {
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            message.style.transition = 'opacity 0.5s';
+            message.style.opacity = '0';
+            setTimeout(function() {
+                message.remove();
+            }, 500);
+        });
+    }, 5000);
+</script>
 {% endblock %}

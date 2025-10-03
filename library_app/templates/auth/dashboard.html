@@ -1,255 +1,324 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Dashboard - LibraryHub{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4 text-primary flex items-center">
-    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-    </svg>
-    Dashboard
-</h1>
+<div class="animate-fade-in">
+    {% if messages %}
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% elif message.tags == 'warning' %}bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            {% else %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium">{{ message|safe }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-{% if user.is_superuser %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Books</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_books }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4-1h.01"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Centres</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_centres }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Users</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_users }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Students</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_students }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Issues</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_issues }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Borrows</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_borrows }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Reservations</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_reservations }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Total Notifications</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_notifications }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-{% elif user.is_librarian and user.centre %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Books in {{ user.centre.name }}</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_books }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Students in {{ user.centre.name }}</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_students }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Issues</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_issues }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Borrows</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_borrows }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Reservations</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_reservations }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-            <div class="flex items-center">
-                <svg class="w-8 h-8 text-accent mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                </svg>
-                <div>
-                    <h2 class="text-lg font-semibold text-primary">Notifications</h2>
-                    <p class="text-2xl font-bold text-secondary">{{ total_notifications }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-{% elif user.is_student or user.is_teacher %}
-    <div class="bg-white p-6 rounded-lg shadow mb-6">
-        <h2 class="text-xl font-semibold text-primary mb-4 flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+    <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
+            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
             </svg>
-            Borrowed Books
-        </h2>
-        <p class="text-neutral">Borrow functionality not yet implemented.</p>
-        {% comment %}
-        {% for borrow in borrowed_books %}
-            <div class="border-b py-2">
-                <p class="text-primary">{{ borrow.book.title }} - Due: {{ borrow.due_date|date:"Y-m-d" }}</p>
+            Dashboard
+        </h1>
+        <p class="text-gray-600 mt-2 text-sm md:text-base">Welcome back, {{ user.first_name|default:user.email }}!</p>
+    </div>
+
+    {% if user.is_superuser %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Books</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_books }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                        </svg>
+                    </div>
+                </div>
             </div>
-        {% empty %}
-            <p class="text-neutral">No books currently borrowed.</p>
-        {% endfor %}
-        {% endcomment %}
-    </div>
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-xl font-semibold text-primary mb-4 flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-            </svg>
-            Notifications
-        </h2>
-        <p class="text-neutral">Notification functionality not yet implemented.</p>
-        {% comment %}
-        {% for notification in notifications %}
-            <div class="border-b py-2">
-                <p class="text-primary">{{ notification.message }} - {{ notification.created_at|date:"Y-m-d H:i" }}</p>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Centres</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_centres }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4-1h.01"></path>
+                        </svg>
+                    </div>
+                </div>
             </div>
-        {% empty %}
-            <p class="text-neutral">No notifications.</p>
-        {% endfor %}
-        {% endcomment %}
-    </div>
-{% else %}
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-xl font-semibold text-primary mb-4">Welcome, {{ user.email }}!</h2>
-        <p class="text-neutral">{{ message }}</p>
-    </div>
-{% endif %}
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Users</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_users }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Students</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_students }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Issues</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_issues }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Total Borrows</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_borrows }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Reservations</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_reservations }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Notifications</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_notifications }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif user.is_librarian and user.centre %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Books in Centre</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_books }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ user.centre.name }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Students</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_students }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ user.centre.name }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Issues</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_issues }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Borrows</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_borrows }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Reservations</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_reservations }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Notifications</p>
+                        <p class="text-2xl md:text-3xl font-bold text-secondary">{{ total_notifications }}</p>
+                    </div>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-full">
+                        <svg class="w-6 h-6 md:w-8 md:h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% elif user.is_student or user.is_teacher %}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold text-primary mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                    </svg>
+                    Borrowed Books
+                </h2>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-800">Borrow functionality not yet implemented.</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold text-primary mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    Notifications
+                </h2>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-800">Notification functionality not yet implemented.</p>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-semibold text-primary mb-4">Welcome, {{ user.email }}!</h2>
+            <p class="text-gray-600">{{ message }}</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slide-in-right {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+    
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+    }
+</style>
+
+<script>
+    setTimeout(function() {
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            message.style.transition = 'opacity 0.5s';
+            message.style.opacity = '0';
+            setTimeout(function() {
+                message.remove();
+            }, 500);
+        });
+    }, 5000);
+</script>
 {% endblock %}

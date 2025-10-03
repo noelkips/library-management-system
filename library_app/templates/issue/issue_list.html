@@ -1,41 +1,251 @@
 {% extends 'base.html' %}
 
-{% block title %}Issue List - LibraryHub{% endblock %}
+{% block title %}Issues - LibraryHub{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4 text-primary flex items-center animate-fade-in">
-    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-    </svg>
-    Issued Books
-</h1>
-
-<div class="bg-white p-6 rounded-lg shadow-lg animate-fade-in">
-    <table class="w-full border-collapse border border-neutral">
-        <thead>
-            <tr class="bg-primary text-white">
-                <th class="p-2">Book</th>
-                <th class="p-2">Student</th>
-                <th class="p-2">Centre</th>
-                <th class="p-2">Issued By</th>
-                <th class="p-2">Issue Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for issue in issues %}
-                <tr class="{% cycle 'bg-white' 'bg-light' %}">
-                    <td class="p-2 border border-neutral">{{ issue.book.title }} ({{ issue.book.book_code }})</td>
-                    <td class="p-2 border border-neutral">{{ issue.user }}</td>
-                    <td class="p-2 border border-neutral">{{ issue.centre.name|default:"N/A" }}</td>
-                    <td class="p-2 border border-neutral">{{ issue.issued_by.email }}</td>
-                    <td class="p-2 border border-neutral">{{ issue.issue_date|date:"Y-m-d" }}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="5" class="p-2 text-center">No books issued.</td>
-                </tr>
+<div class="animate-fade-in">
+    {% if messages %}
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            {% else %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium">{{ message|safe }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
+        </div>
+    {% endif %}
+
+    <div class="mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                    Book Issues
+                </h1>
+                <p class="text-gray-600 mt-2 text-sm md:text-base">Track all book issues and returns</p>
+            </div>
+            <a href="{% url 'issue_book' %}" class="bg-secondary text-white px-4 py-2 md:px-6 md:py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg flex items-center justify-center text-sm md:text-base">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Issue Book
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-4 md:p-6 border-b border-gray-200">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Search</label>
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ request.GET.search }}" 
+                        placeholder="Search by student, book..." 
+                        class="w-full border border-gray-300 p-2 md:p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all text-sm md:text-base"
+                    >
+                </div>
+                {% if user.is_site_admin %}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Centre</label>
+                    <select 
+                        name="centre" 
+                        class="w-full border border-gray-300 p-2 md:p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all text-sm md:text-base"
+                    >
+                        <option value="">All Centres</option>
+                        {% for centre in centres %}
+                            <option value="{{ centre.id }}" {% if request.GET.centre == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                    <select 
+                        name="status" 
+                        class="w-full border border-gray-300 p-2 md:p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all text-sm md:text-base"
+                    >
+                        <option value="">All Status</option>
+                        <option value="issued" {% if request.GET.status == 'issued' %}selected{% endif %}>Issued</option>
+                        <option value="returned" {% if request.GET.status == 'returned' %}selected{% endif %}>Returned</option>
+                        <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Overdue</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button 
+                        type="submit" 
+                        class="w-full bg-accent text-white px-4 py-2 md:py-3 rounded-lg hover:bg-secondary transition-all transform hover:scale-105 flex items-center justify-center text-sm md:text-base"
+                    >
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold">Student</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold">Book</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden lg:table-cell">Centre</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden md:table-cell">Issue Date</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden sm:table-cell">Due Date</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold">Status</th>
+                        <th class="px-4 py-3 text-center text-xs md:text-sm font-semibold">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for issue in issues %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3 text-sm md:text-base">
+                            <div class="font-medium text-gray-900">{{ issue.student.first_name }} {{ issue.student.last_name }}</div>
+                            <div class="text-xs text-gray-500">{{ issue.student.cin }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm md:text-base">
+                            <div class="font-medium text-gray-900">{{ issue.book.title }}</div>
+                            <div class="text-xs text-gray-500 md:hidden">{{ issue.issue_date|date:"M d, Y" }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm md:text-base text-gray-700 hidden lg:table-cell">{{ issue.student.centre.name }}</td>
+                        <td class="px-4 py-3 text-sm md:text-base text-gray-700 hidden md:table-cell">{{ issue.issue_date|date:"M d, Y" }}</td>
+                        <td class="px-4 py-3 text-sm md:text-base text-gray-700 hidden sm:table-cell">{{ issue.due_date|date:"M d, Y" }}</td>
+                        <td class="px-4 py-3">
+                            {% if issue.return_date %}
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                    Returned
+                                </span>
+                            {% elif issue.is_overdue %}
+                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                    Overdue
+                                </span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                    Issued
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <div class="flex items-center justify-center gap-2">
+                                {% if not issue.return_date %}
+                                <form method="post" action="{% url 'issue_book' %}" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="issue_id" value="{{ issue.id }}">
+                                    <input type="hidden" name="action" value="return">
+                                    <button type="submit" class="text-green-600 hover:text-green-800 transition-colors" title="Mark as Returned">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-gray-400" title="Already Returned">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            <p class="text-lg font-medium">No issues found</p>
+                            <p class="text-sm mt-1">Try adjusting your search criteria</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if issues.has_other_pages %}
+        <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-gray-700">
+                    Showing page {{ issues.number }} of {{ issues.paginator.num_pages }}
+                </div>
+                <div class="flex gap-2">
+                    {% if issues.has_previous %}
+                        <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">First</a>
+                        <a href="?page={{ issues.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Previous</a>
+                    {% endif %}
+                    
+                    {% if issues.has_next %}
+                        <a href="?page={{ issues.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Next</a>
+                        <a href="?page={{ issues.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.centre %}&centre={{ request.GET.centre }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Last</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slide-in-right {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+    
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+    }
+</style>
+
+<script>
+    setTimeout(function() {
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            message.style.transition = 'opacity 0.5s';
+            message.style.opacity = '0';
+            setTimeout(function() {
+                message.remove();
+            }, 500);
+        });
+    }, 5000);
+</script>
 {% endblock %}

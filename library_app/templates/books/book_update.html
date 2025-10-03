@@ -1,56 +1,242 @@
-<!-- templates/books/book_update.html -->
 {% extends 'base.html' %}
 
-{% block title %}Update Book{% endblock %}
+{% block title %}Add Book - LibraryHub{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4 text-primary">Update Book</h1>
-
-<form method="post" class="grid grid-cols-2 gap-4">
-    {% csrf_token %}
-    <div>
-        <label class="block mb-1">Title</label>
-        <input type="text" name="title" value="{{ book.title }}" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Author</label>
-        <input type="text" name="author" value="{{ book.author }}" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Category</label>
-        <input type="text" name="category" value="{{ book.category }}" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Book Code</label>
-        <input type="text" name="book_code" value="{{ book.book_code }}" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Publisher</label>
-        <input type="text" name="publisher" value="{{ book.publisher }}" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Year of Publication</label>
-        <input type="number" name="year_of_publication" value="{{ book.year_of_publication }}" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Total Copies</label>
-        <input type="number" name="total_copies" value="{{ book.total_copies }}" min="1" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Available Copies</label>
-        <input type="number" name="available_copies" value="{{ book.available_copies }}" min="0" required class="w-full border border-neutral p-2 rounded">
-    </div>
-    <div>
-        <label class="block mb-1">Centre</label>
-        <select name="centre" class="w-full border border-neutral p-2 rounded">
-            <option value="">None</option>
-            {% for centre in centres %}
-                <option value="{{ centre.id }}" {% if book.centre.id == centre.id %}selected{% endif %}>{{ centre.name }}</option>
+<div class="max-w-4xl mx-auto animate-fade-in">
+    {% if messages %}
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            {% else %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium">{{ message|safe }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
             {% endfor %}
-        </select>
+        </div>
+    {% endif %}
+
+    <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
+            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add New Book
+        </h1>
+        <p class="text-gray-600 mt-2 text-sm md:text-base">Add a new book to the library collection</p>
     </div>
-    <div class="col-span-2">
-        <button type="submit" class="bg-secondary text-white p-2 rounded">Update Book</button>
+
+    <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                        </svg>
+                        Title *
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.title.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                        Author *
+                    </label>
+                    {{ form.author }}
+                    {% if form.author.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.author.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                        ISBN *
+                    </label>
+                    {{ form.isbn }}
+                    {% if form.isbn.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.isbn.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        </svg>
+                        Category *
+                    </label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.category.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                        Publication Year
+                    </label>
+                    {{ form.publication_year }}
+                    {% if form.publication_year.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.publication_year.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                        Publisher
+                    </label>
+                    {{ form.publisher }}
+                    {% if form.publisher.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.publisher.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                        </svg>
+                        Total Copies *
+                    </label>
+                    {{ form.total_copies }}
+                    {% if form.total_copies.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.total_copies.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+                        </svg>
+                        Description
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <p class="text-danger text-sm mt-1">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                <a 
+                    href="{% url 'book_list' %}" 
+                    class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 text-center transition-all transform hover:scale-105 font-medium"
+                >
+                    Cancel
+                </a>
+                <button 
+                    type="submit" 
+                    class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Add Book
+                </button>
+            </div>
+        </form>
     </div>
-</form>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slide-in-right {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+    
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+        outline: none;
+        ring: 2px;
+        ring-color: #C86450;
+        border-color: transparent;
+    }
+
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+</style>
+
+<script>
+    setTimeout(function() {
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            message.style.transition = 'opacity 0.5s';
+            message.style.opacity = '0';
+            setTimeout(function() {
+                message.remove();
+            }, 500);
+        });
+    }, 5000);
+</script>
 {% endblock %}
