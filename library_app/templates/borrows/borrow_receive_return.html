@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Receive Return - LibraryHub{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto animate-fade-in">
+    <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
+            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Receive Book Return
+        </h1>
+        <p class="text-gray-600 mt-2 text-sm md:text-base">Confirm the book has been returned</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        {% if borrow.is_overdue %}
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800">Overdue Return</h3>
+                    <p class="text-sm text-red-700 mt-1">
+                        This book was due on {{ borrow.due_date|date:"M d, Y" }}. Please check the book condition carefully.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-green-800">On-Time Return</h3>
+                    <p class="text-sm text-green-700 mt-1">
+                        This book is being returned on time. Confirm receipt to complete the transaction.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Student Info -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-bold text-sm text-gray-600 mb-3">STUDENT INFORMATION</h3>
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg">
+                    {{ borrow.user.first_name.0 }}{{ borrow.user.last_name.0 }}
+                </div>
+                <div>
+                    <p class="font-bold text-gray-900">{{ borrow.user.get_full_name }}</p>
+                    <p class="text-sm text-gray-600">{{ borrow.user.email }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Book Info -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 class="font-bold text-sm text-gray-600 mb-3">BOOK INFORMATION</h3>
+            <h4 class="font-bold text-lg text-gray-900 mb-2">{{ borrow.book.title }}</h4>
+            <p class="text-sm text-gray-600 mb-3">by {{ borrow.book.author }}</p>
+            
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                    <p class="text-gray-500">Book Code</p>
+                    <p class="font-medium text-gray-900">{{ borrow.book.book_code }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-500">Category</p>
+                    <p class="font-medium text-gray-900">{{ borrow.book.category }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Borrow Timeline -->
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg">
+            <h3 class="font-bold text-sm text-gray-600 mb-3">BORROW TIMELINE</h3>
+            <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Requested</p>
+                        <p class="text-xs text-gray-600">{{ borrow.request_date|date:"M d, Y - h:i A" }}</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Issued by {{ borrow.issued_by.get_full_name }}</p>
+                        <p class="text-xs text-gray-600">{{ borrow.issue_date|date:"M d, Y - h:i A" }}</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 {% if borrow.is_overdue %}bg-red-500{% else %}bg-gray-400{% endif %} text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Due Date</p>
+                        <p class="text-xs {% if borrow.is_overdue %}text-red-600 font-bold{% else %}text-gray-600{% endif %}">
+                            {{ borrow.due_date|date:"M d, Y" }}
+                            {% if borrow.is_overdue %}(OVERDUE){% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-xs font-bold">4</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">Return (Today)</p>
+                        <p class="text-xs text-gray-600">{{ now|date:"M d, Y - h:i A" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            {% if borrow.renewals > 0 %}
+            <div class="mt-3 pt-3 border-t border-blue-200">
+                <p class="text-xs text-blue-700">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    This borrow was renewed {{ borrow.renewals }} time{{ borrow.renewals|pluralize }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a 
+                    href="{% url 'active_borrows_list' %}" 
+                    class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 text-center transition-all transform hover:scale-105 font-medium"
+                >
+                    Cancel
+                </a>
+                <button 
+                    type="submit" 
+                    class="flex-1 bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Confirm Return
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+</style>
+{% endblock %}

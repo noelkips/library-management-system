@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+
+{% block title %}Active Borrows - LibraryHub{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    {% if messages %}
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            {% else %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium">{{ message|safe }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
+            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            Active Borrows
+        </h1>
+        <p class="text-gray-600 mt-2 text-sm md:text-base">Manage currently issued books</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="p-4 md:p-6 border-b border-gray-200">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <input 
+                        type="text" 
+                        name="search" 
+                        value="{{ request.GET.search }}" 
+                        placeholder="Search by student name, email, or book title..." 
+                        class="w-full border border-gray-300 p-2 md:p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all text-sm md:text-base"
+                    >
+                </div>
+                <div class="flex gap-2">
+                    <select 
+                        name="status" 
+                        class="flex-1 border border-gray-300 p-2 md:p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all text-sm md:text-base"
+                    >
+                        <option value="">All Status</option>
+                        <option value="overdue" {% if request.GET.status == 'overdue' %}selected{% endif %}>Overdue Only</option>
+                    </select>
+                    <button 
+                        type="submit" 
+                        class="bg-accent text-white px-4 py-2 md:py-3 rounded-lg hover:bg-secondary transition-all transform hover:scale-105 flex items-center justify-center text-sm md:text-base"
+                    >
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if borrows %}
+        <div class="divide-y divide-gray-200">
+            {% for borrow in borrows %}
+            <div class="p-6 hover:bg-gray-50 transition-colors {% if borrow.is_overdue %}bg-red-50{% endif %}">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center font-bold text-lg">
+                                {{ borrow.user.first_name.0 }}{{ borrow.user.last_name.0 }}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-lg font-bold text-gray-900">{{ borrow.user.get_full_name }}</h3>
+                                    {% if borrow.is_overdue %}
+                                        <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full animate-pulse">
+                                            OVERDUE
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-gray-600">{{ borrow.user.email }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="ml-15 space-y-2">
+                            <div class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-accent mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                                </svg>
+                                <div>
+                                    <p class="font-medium text-gray-900">{{ borrow.book.title }}</p>
+                                    <p class="text-sm text-gray-600">by {{ borrow.book.author }} ({{ borrow.book.book_code }})</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
+                                <div>
+                                    <p class="text-gray-500">Issued On</p>
+                                    <p class="font-medium text-gray-900">{{ borrow.issue_date|date:"M d, Y" }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Due Date</p>
+                                    <p class="font-medium {% if borrow.is_overdue %}text-red-600{% else %}text-gray-900{% endif %}">
+                                        {{ borrow.due_date|date:"M d, Y" }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Issued By</p>
+                                    <p class="font-medium text-gray-900">{{ borrow.issued_by.get_full_name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500">Renewals</p>
+                                    <p class="font-medium text-gray-900">{{ borrow.renewals }}/2</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-2 lg:ml-4">
+                        <a 
+                            href="{% url 'borrow_receive_return' borrow.pk %}" 
+                            class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center"
+                        >
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Receive Return
+                        </a>
+                        <a 
+                            href="{% url 'book_detail' borrow.book.pk %}" 
+                            class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-all font-medium flex items-center justify-center text-sm"
+                        >
+                            View Book
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if borrows.has_other_pages %}
+        <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-gray-700">
+                    Showing page {{ borrows.number }} of {{ borrows.paginator.num_pages }}
+                </div>
+                <div class="flex gap-2">
+                    {% if borrows.has_previous %}
+                        <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">First</a>
+                        <a href="?page={{ borrows.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Previous</a>
+                    {% endif %}
+                    
+                    {% if borrows.has_next %}
+                        <a href="?page={{ borrows.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Next</a>
+                        <a href="?page={{ borrows.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Last</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="p-8 text-center text-gray-500">
+            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            <p class="text-lg font-medium">No active borrows</p>
+            <p class="text-sm mt-1">All books have been returned</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes slide-in-right {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.5s ease-out;
+    }
+    
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+    }
+</style>
+
+<script>
+    setTimeout(function() {
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            message.style.transition = 'opacity 0.5s';
+            message.style.opacity = '0';
+            setTimeout(function() {
+                message.remove();
+            }, 500);
+        });
+    }, 5000);
+</script>
+{% endblock %}
