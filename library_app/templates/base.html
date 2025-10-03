@@ -125,8 +125,8 @@
                         </svg>
                     </button>
                     <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
-                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Students</a></li>
-                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Add Student</a></li>
+                        <li><a href="{% url 'student_list' %}" class="block py-1 px-4 hover:bg-secondary rounded">List Students</a></li>
+                        <li><a href="{% url 'student_add' %}" class="block py-1 px-4 hover:bg-secondary rounded">Add Student</a></li>
                     </ul>
                 </li>
                 <li>
@@ -142,8 +142,8 @@
                         </svg>
                     </button>
                     <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
-                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Issues</a></li>
-                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Issue Book</a></li>
+                        <li><a href="{% url 'issue_list' %}" class="block py-1 px-4 hover:bg-secondary rounded">List Issues</a></li>
+                        <li><a href="{% url 'issue_book' %}" class="block py-1 px-4 hover:bg-secondary rounded">Issue Book</a></li>
                     </ul>
                 </li>
                 <li>
@@ -159,8 +159,8 @@
                         </svg>
                     </button>
                     <ul class="dropdown-menu hidden ml-4 mt-1 space-y-1">
-                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">List Borrows</a></li>
-                        <li><a href="" class="block py-1 px-4 hover:bg-secondary rounded">Add Borrow</a></li>
+                        <li><a href="{% url 'borrow_list' %}" class="block py-1 px-4 hover:bg-secondary rounded">List Borrows</a></li>
+                        <li><a href="{% url 'borrow_add' %}" class="block py-1 px-4 hover:bg-secondary rounded">Add Borrow</a></li>
                     </ul>
                 </li>
                 <li>

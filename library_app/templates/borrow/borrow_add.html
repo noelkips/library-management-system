@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Borrow Book - LibraryHub{% endblock %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+    <div class="max-w-2xl ml-0">
+        <h2 class="text-2xl font-bold mb-4">Borrow Book</h2>
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <div class="border-b pb-2 mb-4">
+                <h4 class="text-lg font-semibold">Borrow New Book</h4>
+            </div>
+            <div>
+                <!-- <h5 class="text-md font-medium mb-4">Borrow Book to Student</h5> -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="p-2 mb-2 {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} rounded">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label for="book" class="block text-sm font-medium text-gray-700">Book</label>
+                        <select name="book" id="book" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                            <option value="">Select a book</option>
+                            {% for book in books %}
+                                <option value="{{ book.id }}">{{ book.title }} ({{ book.book_code }}) - {{ book.centre.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="student" class="block text-sm font-medium text-gray-700">Student</label>
+                        <select name="student" id="student" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                            <option value="">Select a student</option>
+                            {% for student in students %}
+                                <option value="{{ student.id }}">{{ student.name }} ({{ student.user.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-4">
+                        <a href="{% url 'borrow_list' %}" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancel</a>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Borrow</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

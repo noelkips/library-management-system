@@ -25,7 +25,7 @@
             {% for issue in issues %}
                 <tr class="{% cycle 'bg-white' 'bg-light' %}">
                     <td class="p-2 border border-neutral">{{ issue.book.title }} ({{ issue.book.book_code }})</td>
-                    <td class="p-2 border border-neutral">{{ issue.user.email }}</td>
+                    <td class="p-2 border border-neutral">{{ issue.user }}</td>
                     <td class="p-2 border border-neutral">{{ issue.centre.name|default:"N/A" }}</td>
                     <td class="p-2 border border-neutral">{{ issue.issued_by.email }}</td>
                     <td class="p-2 border border-neutral">{{ issue.issue_date|date:"Y-m-d" }}</td>

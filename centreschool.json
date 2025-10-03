@@ -1,0 +1,361 @@
+[
+    {
+        "model": "library_app.centre",
+        "pk": 45,
+        "fields": {
+            "name": "Kang’agetei",
+            "centre_code": "CENTRE_45"
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 1,
+        "fields": {
+            "name": "Area 2 School",
+            "school_code": "SCHOOL_1",
+            "centre": 2
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 2,
+        "fields": {
+            "name": "Babadogo School",
+            "school_code": "SCHOOL_2",
+            "centre": 11
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 3,
+        "fields": {
+            "name": "Bondeni School",
+            "school_code": "SCHOOL_3",
+            "centre": 3
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 4,
+        "fields": {
+            "name": "Chumani School",
+            "school_code": "SCHOOL_4",
+            "centre": 37
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 5,
+        "fields": {
+            "name": "Coram Deo School",
+            "school_code": "SCHOOL_5",
+            "centre": 31
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 6,
+        "fields": {
+            "name": "Gitathuru School",
+            "school_code": "SCHOOL_6",
+            "centre": 5
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 7,
+        "fields": {
+            "name": "Grogan School",
+            "school_code": "SCHOOL_7",
+            "centre": 12
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 8,
+        "fields": {
+            "name": "Joska School",
+            "school_code": "SCHOOL_8",
+            "centre": 17
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 9,
+        "fields": {
+            "name": "Mohi Girls High School",
+            "school_code": "SCHOOL_9",
+            "centre": 17
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 10,
+        "fields": {
+            "name": "Kang’agetei School",
+            "school_code": "SCHOOL_10",
+            "centre": 45
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 11,
+        "fields": {
+            "name": "Kargi School",
+            "school_code": "SCHOOL_11",
+            "centre": 26
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 12,
+        "fields": {
+            "name": "Kariobangi School",
+            "school_code": "SCHOOL_12",
+            "centre": 10
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 13,
+        "fields": {
+            "name": "Kiamaiko School",
+            "school_code": "SCHOOL_13",
+            "centre": 44
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 14,
+        "fields": {
+            "name": "Kiamaiko Ngei School",
+            "school_code": "SCHOOL_14",
+            "centre": 44
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 15,
+        "fields": {
+            "name": "Kibarani School",
+            "school_code": "SCHOOL_15",
+            "centre": 34
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 16,
+        "fields": {
+            "name": "Kiwandani School",
+            "school_code": "SCHOOL_16",
+            "centre": 35
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 17,
+        "fields": {
+            "name": "Korogocho B School",
+            "school_code": "SCHOOL_17",
+            "centre": 13
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 18,
+        "fields": {
+            "name": "Kosovo School",
+            "school_code": "SCHOOL_18",
+            "centre": 4
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 19,
+        "fields": {
+            "name": "Lochoredome School",
+            "school_code": "SCHOOL_19",
+            "centre": 23
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 20,
+        "fields": {
+            "name": "Mabatini School",
+            "school_code": "SCHOOL_20",
+            "centre": 7
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 21,
+        "fields": {
+            "name": "Madoya School",
+            "school_code": "SCHOOL_21",
+            "centre": 8
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 22,
+        "fields": {
+            "name": "Mathare North School",
+            "school_code": "SCHOOL_22",
+            "centre": 6
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 23,
+        "fields": {
+            "name": "Molo Milimani School",
+            "school_code": "SCHOOL_23",
+            "centre": 30
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 24,
+        "fields": {
+            "name": "Mitangoni School",
+            "school_code": "SCHOOL_24",
+            "centre": 36
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 25,
+        "fields": {
+            "name": "Morokani School",
+            "school_code": "SCHOOL_25",
+            "centre": 42
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 26,
+        "fields": {
+            "name": "Namarei School",
+            "school_code": "SCHOOL_26",
+            "centre": 28
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 27,
+        "fields": {
+            "name": "Nanaam School",
+            "school_code": "SCHOOL_27",
+            "centre": 24
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 28,
+        "fields": {
+            "name": "Napusimoru School",
+            "school_code": "SCHOOL_28",
+            "centre": 20
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 29,
+        "fields": {
+            "name": "Napuu School",
+            "school_code": "SCHOOL_29",
+            "centre": 19
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 30,
+        "fields": {
+            "name": "Ndovoini High School",
+            "school_code": "SCHOOL_30",
+            "centre": 16
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 31,
+        "fields": {
+            "name": "Ndovoini Primary School",
+            "school_code": "SCHOOL_31",
+            "centre": 16
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 32,
+        "fields": {
+            "name": "Nyakach School",
+            "school_code": "SCHOOL_32",
+            "centre": 41
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 33,
+        "fields": {
+            "name": "Nyayo School",
+            "school_code": "SCHOOL_33",
+            "centre": 14
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 34,
+        "fields": {
+            "name": "Nyeri School",
+            "school_code": "SCHOOL_34",
+            "centre": 39
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 35,
+        "fields": {
+            "name": "Olturot School",
+            "school_code": "SCHOOL_35",
+            "centre": 27
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 36,
+        "fields": {
+            "name": "Pangani School",
+            "school_code": "SCHOOL_36",
+            "centre": 1
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 37,
+        "fields": {
+            "name": "Shambini School",
+            "school_code": "SCHOOL_37",
+            "centre": 43
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 38,
+        "fields": {
+            "name": "Turi High School",
+            "school_code": "SCHOOL_38",
+            "centre": 32
+        }
+    },
+    {
+        "model": "library_app.school",
+        "pk": 39,
+        "fields": {
+            "name": "Turkana High School",
+            "school_code": "SCHOOL_39",
+            "centre": 22
+        }
+    }
+]

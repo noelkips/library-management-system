@@ -3,74 +3,88 @@
 {% block title %}Add Student - LibraryHub{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-6 text-primary flex items-center animate-fade-in">
-    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-    </svg>
-    Add Student
-</h1>
+    <h2 style="color: #333; text-align: center; margin-bottom: 20px;">Add Student</h2>
 
-{% if messages %}
-    <div class="mb-6 space-y-2">
-        {% for message in messages %}
-            <div class="{% if message.tags == 'green' %}bg-green-500{% else %}bg-danger{% endif %} text-white p-3 rounded-lg shadow animate-slide-in">
-                {{ message }}
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
+    {% if messages %}
+        <div class="messages" style="margin-bottom: 20px;">
+            {% for message in messages %}
+                <div class="alert" style="padding: 10px; margin-bottom: 10px; border-radius: 5px; background-color: {% if 'success' in message.tags %}#d4edda{% elif 'error' in message.tags %}#f8d7da{% else %}#cce5ff{% endif %}; color: #333; border: 1px solid {% if 'success' in message.tags %}#c3e6cb{% elif 'error' in message.tags %}#f5c6cb{% else %}#b8daff{% endif %};">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-<div class="bg-white p-6 rounded-lg shadow-lg animate-fade-in">
-    <h2 class="text-xl font-semibold text-primary mb-4">Add Single Student</h2>
-    <p class="text-sm text-neutral mb-4">Only <code>Child ID</code> is required. Other fields are optional.</p>
-    <form method="post" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form method="post" style="background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
         {% csrf_token %}
-        <div class="animate-slide-in">
-            <label class="block mb-1 text-primary">Name</label>
-            <input type="text" name="name" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+      
+        <p style="color: #666; margin-bottom: 20px;">Only Child ID is required. Other fields are optional.</p>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="name" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">Name</label>
+            <input type="text" id="name" name="name" class="form-control" value="{{ request.POST.name|default:'' }}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
         </div>
-        <div class="animate-slide-in">
-            <label class="block mb-1 text-primary">Child ID</label>
-            <input type="number" name="child_ID" required class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="child_ID" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">Child ID</label>
+            <input type="number" id="child_ID" name="child_ID" class="form-control" value="{{ request.POST.child_ID|default:'' }}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" required>
         </div>
-        <div class="animate-slide-in">
-            <label class="block mb-1 text-primary">School</label>
-            <input type="text" name="school" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
-        </div>
-        <div class="animate-slide-in">
-            <label class="block mb-1 text-primary">Centre</label>
-            <select name="centre" class="w-full border border-neutral p-2 rounded focus:ring-2 focus:ring-accent">
+
+        <div class="form-group" style="margin-bottom: 15px;">
+            <label for="centre" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">Centre</label>
+            <select id="centre" name="centre" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
                 <option value="">None</option>
                 {% for centre in centres %}
-                    <option value="{{ centre.id }}">{{ centre.name }}</option>
+                    <option value="{{ centre.id }}" {% if centre.id|stringformat:"s" == request.POST.centre %}selected{% endif %}>{{ centre.name }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="md:col-span-2 animate-slide-in">
-            <button type="submit" class="bg-secondary text-white p-2 rounded flex items-center hover:bg-accent transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="school" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">School</label>
+            <select id="school" name="school" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+                <option value="">Select a school</option>
+                {% for school in schools %}
+                    <option value="{{ school.name }}" {% if school.name == request.POST.school %}selected{% endif %}>{{ school.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">
                 Add Single Student
             </button>
         </div>
     </form>
-</div>
 
-<style>
-    .animate-fade-in {
-        animation: fadeIn 0.5s ease-in;
-    }
-    .animate-slide-in {
-        animation: slideIn 0.5s ease-in;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    @keyframes slideIn {
-        from { transform: translateY(10px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-</style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#centre').change(function() {
+                var centreId = $(this).val();
+                $.ajax({
+                    url: "{% url 'get_schools_by_centre' %}",
+                    data: { centre_id: centreId },
+                    dataType: 'json',
+                    success: function(data) {
+                        console.log(data);
+                        var $schoolSelect = $('#school');
+                        $schoolSelect.empty();
+                        $schoolSelect.append('<option value="">Select a school</option>');
+                        if (data.schools && data.schools.length > 0) {
+                            $.each(data.schools, function(index, school) {
+                                $schoolSelect.append(
+                                    $('<option>').val(school.name).text(school.name)
+                                );
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error fetching schools:', error);
+                        $('#school').empty().append('<option value="">Select a school</option>');
+                    }
+                });
+            });
+        });
+    </script>
 {% endblock %}

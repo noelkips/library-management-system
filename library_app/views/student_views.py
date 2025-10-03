@@ -5,10 +5,23 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from ..models import Student, Centre, CustomUser
+from django.http import JsonResponse
+from ..models import Student, Centre, CustomUser, School
 
 def is_authorized(user):
     return user.is_superuser or user.is_librarian
+
+@login_required
+def get_schools_by_centre(request):
+    centre_id = request.GET.get('centre_id')
+    if not centre_id:
+        return JsonResponse({'schools': []})
+    try:
+        schools = School.objects.filter(centre_id=centre_id).values('id', 'name')
+        return JsonResponse({'schools': list(schools)})
+    except Exception as e:
+        print(f"Error fetching schools for centre {centre_id}: {str(e)}")
+        return JsonResponse({'schools': []}, status=500)
 
 @login_required
 def student_add(request):
@@ -18,6 +31,7 @@ def student_add(request):
         return redirect('dashboard')
 
     centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
+    schools = School.objects.all() if request.user.is_superuser else School.objects.filter(centre=request.user.centre) if request.user.centre else []
 
     if request.method == 'POST':
         print(f"POST request for student_add by {request.user.email}: {request.POST}")
@@ -38,7 +52,7 @@ def student_add(request):
                 )
                 student.full_clean()
                 student.save()
-                messages.success(request, "Student added successfully.", extra_tags='green')
+                messages.success(request, "Student added successfully.", extra_tags='success')
                 print(f"Student added: {student.name or 'Unnamed'} (child_ID: {student.child_ID}) by {request.user.email}")
                 return redirect('student_list')
             except IntegrityError:
@@ -54,7 +68,7 @@ def student_add(request):
             messages.error(request, "Invalid form submission. Please provide student details.")
             print("Error: Invalid form submission, missing student details")
 
-    return render(request, 'students/student_add.html', {'centres': centres})
+    return render(request, 'students/student_add.html', {'centres': centres, 'schools': schools})
 
 @login_required
 def student_list(request):
@@ -93,6 +107,7 @@ def student_update(request, pk):
         return redirect('student_list')
 
     centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
+    schools = School.objects.all() if request.user.is_superuser else School.objects.filter(centre=student.centre) if student.centre else []
 
     if request.method == 'POST':
         print(f"POST request for student_update by {request.user.email}: {request.POST}")
@@ -123,7 +138,7 @@ def student_update(request, pk):
             messages.error(request, f"Error updating student: {str(e)}")
             print(f"Unexpected error updating student: {str(e)}")
 
-    return render(request, 'students/student_update.html', {'student': student, 'centres': centres})
+    return render(request, 'students/student_update.html', {'student': student, 'centres': centres, 'schools': schools})
 
 @login_required
 def student_delete(request, pk):

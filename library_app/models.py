@@ -4,6 +4,13 @@ from django.contrib.auth.models import AbstractUser, PermissionsMixin, Group, Pe
 from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.auth.models import BaseUserManager
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 class Centre(models.Model):
     name = models.CharField(max_length=300)
@@ -11,6 +18,16 @@ class Centre(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.centre_code})"
+    
+
+class School(models.Model):
+    name = models.CharField(max_length=300)
+    school_code = models.CharField(max_length=30, unique=True)
+    centre = models.ForeignKey(Centre, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.name} ({self.school_code})"
+
 
 
 class CustomUserManager(BaseUserManager):
@@ -46,6 +63,7 @@ class CustomUser(AbstractUser):
     is_other = models.BooleanField(default=False)
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, blank=True)
+    force_password_change = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -88,6 +106,7 @@ class Book(models.Model):
         'CustomUser', on_delete=models.SET_NULL, null=True, related_name='books_added')
     is_active = models.BooleanField(default=True)
     history = HistoricalRecords()
+    is_available = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         if 'user' in kwargs:
@@ -114,152 +133,241 @@ class Book(models.Model):
 
 
 class Student(models.Model):
-    CIN = models.IntegerField(unique=True, blank=True, null=True)
+    child_ID = models.IntegerField(unique=True, blank=True, null=True)
     name = models.CharField(max_length=500)
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, blank=True)
     school = models.CharField(max_length=500)
-
+    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, null=True, blank=True, related_name='student_profile')
     def __str__(self):
         return self.name
+    
+
+# Issue Model
+class Issue(models.Model):
+    book = models.ForeignKey(
+        'Book', 
+        on_delete=models.CASCADE, 
+        related_name='issues',
+        help_text="The book being issued."
+    )
+    user = models.ForeignKey(
+        'Student', 
+        on_delete=models.CASCADE, 
+        related_name='issues',
+        help_text="The student to whom the book is issued."
+    )
+    centre = models.ForeignKey(
+        'Centre', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='issues',
+        help_text="The centre where the book is issued."
+    )
+    issued_by = models.ForeignKey(
+        'CustomUser', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='books_issued',
+        help_text="The user (librarian or admin) who issued the book."
+    )
+    issue_date = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date and time when the book was issued."
+    )
+    history = HistoricalRecords()
+
+    def save(self, *args, **kwargs):
+        if 'user' in kwargs:
+            setattr(self, '_history_user', kwargs.pop('user'))
+        super().save(*args, **kwargs)
+        if self.pk is None:  # New issue
+            if not self.issued_by.is_librarian and not self.issued_by.is_site_admin:
+                raise ValueError("Only librarians or site admins can issue books")
+            if self.user.user.is_student and self.user.user.borrows.filter(is_returned=False).count() >= 1:
+                raise ValueError("Students can only borrow one book at a time")
+            if self.user.user.borrows.filter(is_returned=False).count() >= 2 and not (self.user.user.is_student or self.user.user.is_teacher):
+                raise ValueError("General users can only borrow up to two books at a time")
+            if self.book.available_copies < 1:
+                raise ValueError("No available copies of this book")
+            # Create a Borrow record
+            Borrow.objects.create(
+                book=self.book,
+                user=self.user.user,  # Use the related CustomUser for Borrow
+                centre=self.centre,
+                issued_by=self.issued_by,
+                due_date=timezone.now() + timedelta(days=3)
+            )
+            Notification.objects.create(
+                user=self.user.user,  # Notify the related CustomUser
+                message=f"Book '{self.book.title}' issued to you by {self.issued_by.email} at {self.centre.name}.",
+                content_type=ContentType.objects.get_for_model(self),
+                object_id=self.id
+            )
+
+    def __str__(self):
+        return f"{self.book.title} issued to {self.user.name} by {self.issued_by.email if self.issued_by else 'Unknown'}"
+
+# Borrow Model
+class Borrow(models.Model):
+    book = models.ForeignKey(
+        'Book', 
+        on_delete=models.CASCADE, 
+        related_name='borrows',
+        help_text="The book being borrowed."
+    )
+    user = models.ForeignKey(
+        'CustomUser', 
+        on_delete=models.CASCADE, 
+        related_name='borrows',
+        help_text="The user who borrowed the book."
+    )
+    centre = models.ForeignKey(
+        'Centre', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='borrows',
+        help_text="The centre where the book was borrowed."
+    )
+    borrow_date = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date and time when the book was borrowed."
+    )
+    due_date = models.DateTimeField(
+        help_text="The date by which the book must be returned."
+    )
+    return_date = models.DateTimeField(
+        null=True, 
+        blank=True,
+        help_text="The date when the book was returned, if applicable."
+    )
+    renewals = models.PositiveIntegerField(
+        default=0,
+        help_text="The number of times the borrow has been renewed."
+    )
+    is_returned = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the book has been returned."
+    )
+    issued_by = models.ForeignKey(
+        'CustomUser', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='issued_borrows',
+        help_text="The user who issued the book."
+    )
+    history = HistoricalRecords()
+
+    def save(self, *args, **kwargs):
+        if 'user' in kwargs:
+            setattr(self, '_history_user', kwargs.pop('user'))
+        is_new = not self.pk  # Check if this is a new borrow
+        from_issue_view = kwargs.pop('from_issue_view', False)  # Optional parameter
+        super().save(*args, **kwargs)
+
+        if is_new and not from_issue_view:  # Only decrement if not from issue_view
+            self.book.available_copies -= 1
+            self.book.save()
+            Notification.objects.create(
+                user=self.user,
+                message=f"You borrowed '{self.book.title}'. Due: {self.due_date.strftime('%Y-%m-%d')}",
+                content_type=ContentType.objects.get_for_model(self),
+                object_id=self.id
+            )
+        elif self.is_returned and not self.return_date:  # Return processed
+            self.return_date = timezone.now()
+            self.book.available_copies += 1
+            self.book.save()
+            Notification.objects.create(
+                user=self.user,
+                message=f"You returned '{self.book.title}' on {self.return_date.strftime('%Y-%m-%d')}",
+                content_type=ContentType.objects.get_for_model(self),
+                object_id=self.id
+            )
+
+    def renew(self, user):
+        if self.renewals < 2:  # Max 2 renewals
+            self.renewals += 1
+            self.due_date += timedelta(days=3)
+            self.save(user=user)
+            Notification.objects.create(
+                user=self.user,
+                message=f"'{self.book.title}' renewed. New due date: {self.due_date.strftime('%Y-%m-%d')}",
+                content_type=ContentType.objects.get_for_model(self),
+                object_id=self.id
+            )
+        else:
+            raise ValueError("Maximum renewals reached")
+
+    def __str__(self):
+        return f"{self.user.email} borrowed {self.book.title}"
+
+# Notification Model
+class Notification(models.Model):
+    user = models.ForeignKey(
+        'CustomUser', 
+        on_delete=models.CASCADE, 
+        related_name='notifications',
+        help_text="The user who receives the notification."
+    )
+    message = models.TextField(
+        help_text="The content of the notification."
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date and time when the notification was created."
+    )
+    is_read = models.BooleanField(
+        default=False,
+        help_text="Indicates whether the notification has been read."
+    )
+    responded_by = models.ForeignKey(
+        'CustomUser', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='responded_notifications',
+        help_text="The user who responded to the notification, if applicable."
+    )
+    content_type = models.ForeignKey(
+        ContentType, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True,
+        help_text="The type of object related to the notification."
+    )
+    object_id = models.PositiveIntegerField(
+        null=True, 
+        blank=True,
+        help_text="The ID of the related object."
+    )
+    related_object = GenericForeignKey('content_type', 'object_id')
+    history = HistoricalRecords()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification for {self.user.email}: {self.message}"
+    
+   
+@receiver(post_save, sender=Student)
+def create_user_for_student(sender, instance, created, **kwargs):
+    if created and not instance.user:
+        email = f"student{instance.child_ID}@libraryhub.com"
+        first_name, *last_name = instance.name.split()
+        last_name = ' '.join(last_name)
+        user = CustomUser.objects.create_user(
+            email=email,
+            password="Student123",
+            first_name=first_name,
+            last_name=last_name,
+            is_student=True,
+            centre=instance.centre,
+            force_password_change=True
+        )
+        instance.user = user
+        instance.save()
 
 
-# class Issue(models.Model):
-#     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='issues')
-#     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='issues')
-#     centre = models.ForeignKey('Centre', on_delete=models.SET_NULL, null=True, related_name='issues')
-#     issued_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, related_name='books_issued')
-#     issue_date = models.DateTimeField(auto_now_add=True)
-#     history = HistoricalRecords()
-#
-#     def save(self, *args, **kwargs):
-#         if 'user' in kwargs:
-#             self._history_user = kwargs.pop('user')
-#         super().save(*args, **kwargs)
-#         if self.pk is None:  # New issue
-#             if not self.issued_by.is_librarian and not self.issued_by.is_superuser:
-#                 raise ValueError("Only librarians or admins can issue books")
-#             if self.user.is_student and self.user.borrows.filter(is_returned=False).count() >= 1:
-#                 raise ValueError("Students can only borrow one book at a time")
-#             if self.user.borrows.filter(is_returned=False).count() >= 2 and not (self.user.is_student or self.user.is_teacher):
-#                 raise ValueError("General users can only borrow up to two books at a time")
-#             if self.book.available_copies < 1:
-#                 raise ValueError("No available copies of this book")
-#             # Create a Borrow record
-#             Borrow.objects.create(
-#                 book=self.book,
-#                 user=self.user,
-#                 centre=self.centre,
-#                 issued_by=self.issued_by,
-#                 due_date=timezone.now() + timedelta(days=3)
-#             )
-#             Notification.objects.create(
-#                 user=self.user,
-#                 message=f"Book '{self.book.title}' issued to you by {self.issued_by.username} at {self.centre.name}.",
-#                 content_type=ContentType.objects.get_for_model(self),
-#                 object_id=self.id
-#             )
-#
-#     def __str__(self):
-#         return f"{self.book.title} issued to {self.user.username} by {self.issued_by.username}"
-#
-# class Borrow(models.Model):
-#     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='borrows')
-#     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='borrows')
-#     centre = models.ForeignKey('Centre', on_delete=models.SET_NULL, null=True, related_name='borrows')
-#     borrow_date = models.DateTimeField(auto_now_add=True)
-#     due_date = models.DateTimeField()
-#     return_date = models.DateTimeField(null=True, blank=True)
-#     renewals = models.PositiveIntegerField(default=0)
-#     is_returned = models.BooleanField(default=False)
-#     issued_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, related_name='issued_borrows')
-#     history = HistoricalRecords()
-#
-#     def save(self, *args, **kwargs):
-#         if 'user' in kwargs:
-#             self._history_user = kwargs.pop('user')
-#         if not self.pk:  # New borrow
-#             self.book.available_copies -= 1
-#             self.book.save()
-#             Notification.objects.create(
-#                 user=self.user,
-#                 message=f"You borrowed '{self.book.title}'. Due: {self.due_date.strftime('%Y-%m-%d')}",
-#                 content_type=ContentType.objects.get_for_model(self),
-#                 object_id=self.id
-#             )
-#         elif self.is_returned and not self.return_date:  # Return processed
-#             self.return_date = timezone.now()
-#             self.book.available_copies += 1
-#             self.book.save()
-#             Notification.objects.create(
-#                 user=self.user,
-#                 message=f"You returned '{self.book.title}' on {self.return_date.strftime('%Y-%m-%d')}",
-#                 content_type=ContentType.objects.get_for_model(self),
-#                 object_id=self.id
-#             )
-#             # Notify users with active reservations
-#             reservations = Reservation.objects.filter(book=self.book, is_active=True)
-#             for reservation in reservations:
-#                 Notification.objects.create(
-#                     user=reservation.user,
-#                     message=f"Reserved book '{self.book.title}' is now available at {self.centre.name}.",
-#                     content_type=ContentType.objects.get_for_model(reservation),
-#                     object_id=reservation.id
-#                 )
-#         super().save(*args, **kwargs)
-#
-#     def renew(self, user):
-#         if self.renewals < 2:  # Max 2 renewals
-#             self.renewals += 1
-#             self.due_date += timedelta(days=3)
-#             self.save(user=user)
-#             Notification.objects.create(
-#                 user=self.user,
-#                 message=f"'{self.book.title}' renewed. New due date: {self.due_date.strftime('%Y-%m-%d')}",
-#                 content_type=ContentType.objects.get_for_model(self),
-#                 object_id=self.id
-#             )
-#         else:
-#             raise ValueError("Maximum renewals reached")
-#
-#     def __str__(self):
-#         return f"{self.user.username} borrowed {self.book.title}"
-#
-# class Reservation(models.Model):
-#     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reservations')
-#     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='reservations')
-#     centre = models.ForeignKey('Centre', on_delete=models.SET_NULL, null=True, related_name='reservations')
-#     reservation_date = models.DateTimeField(auto_now_add=True)
-#     is_active = models.BooleanField(default=True)
-#     history = HistoricalRecords()
-#
-#     def save(self, *args, **kwargs):
-#         if 'user' in kwargs:
-#             self._history_user = kwargs.pop('user')
-#         super().save(*args, **kwargs)
-#         if self.pk is None:  # New reservation
-#             Notification.objects.create(
-#                 user=self.user,
-#                 message=f"Your reservation for '{self.book.title}' at {self.centre.name} has been recorded.",
-#                 content_type=ContentType.objects.get_for_model(self),
-#                 object_id=self.id
-#             )
-#
-#     def __str__(self):
-#         return f"{self.user.username} reserved {self.book.title}"
-#
-# class Notification(models.Model):
-#     user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='notifications')
-#     message = models.TextField()
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     is_read = models.BooleanField(default=False)
-#     responded_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True, related_name='responded_notifications')
-#     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True)
-#     object_id = models.PositiveIntegerField(null=True, blank=True)
-#     related_object = GenericForeignKey('content_type', 'object_id')
-#
-#     class Meta:
-#         ordering = ['-created_at']
-#
-#     def __str__(self):
-#         return f"Notification for {self.user.username}: {self.message}"
+

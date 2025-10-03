@@ -43,21 +43,27 @@ def issue_book(request):
                 messages.error(request, error)
         else:
             with transaction.atomic():
+                # Ensure available_copies is checked and updated atomically
+                if book.available_copies <= 0:
+                    messages.error(request, "No available copies of this book.")
+                    return redirect('issue_book')
                 user = student.user
                 issue = Issue.objects.create(
                     book=book,
-                    user=user,
+                    user=Student.objects.get(pk=student_id),
                     centre=centre,
                     issued_by=request.user
                 )
-                Borrow.objects.create(
+                borrow = Borrow.objects.create(
                     book=book,
                     user=user,
                     centre=centre,
                     issued_by=request.user,
                     due_date=timezone.now() + timedelta(days=3)
                 )
-                book.available_copies -= 1
+                borrow.save(from_issue_view=True)  # Pass the flag to save method
+                # Update available_copies only if it's positive
+                book.available_copies = max(0, book.available_copies - 1)  # Prevent negative values
                 book.save()
                 Notification.objects.create(
                     user=user,
@@ -65,11 +71,15 @@ def issue_book(request):
                 )
                 messages.success(request, f"Book '{book.title}' issued successfully to {student.name}.")
                 return redirect('issue_list')
+
+    if request.user.is_librarian:
+        books = Book.objects.filter(is_active=True, available_copies__gt=0, centre=request.user.centre)
+    else:
+        books = Book.objects.filter(is_active=True, available_copies__gt=0)
     
-    books = Book.objects.filter(is_active=True, available_copies__gt=0)
     students = Student.objects.filter(user__isnull=False)  # Only students with linked user accounts
     centres = Centre.objects.all()
-    return render(request, 'issue_book.html', {
+    return render(request, 'issue/issue_book.html', {
         'books': books,
         'students': students,
         'centres': centres
@@ -79,4 +89,4 @@ def issue_book(request):
 @user_passes_test(is_librarian_or_superuser)
 def issue_list(request):
     issues = Issue.objects.select_related('book', 'user', 'centre', 'issued_by').all()
-    return render(request, 'issue_list.html', {'issues': issues})
+    return render(request, 'issue/issue_list.html', {'issues': issues})
