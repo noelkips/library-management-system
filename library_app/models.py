@@ -88,11 +88,31 @@ class CustomUser(AbstractUser):
         return self.email or "Unnamed User"
 
 
+class Category(models.Model):
+    """Book categories for better organization"""
+    name = models.CharField(max_length=200, unique=True)
+    description = models.TextField(blank=True, null=True)
+
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
 class Book(models.Model):
     title = models.CharField(max_length=300)
     author = models.CharField(max_length=200)
-    category = models.CharField(max_length=100)
+    category = models.ForeignKey(
+        'Category', 
+        on_delete=models.SET_NULL, 
+        null=True,
+        related_name='books'
+    )  
     book_code = models.CharField(max_length=50, unique=True)
+    isbn = models.CharField(max_length=50, unique=True, blank=True, null=True)
     publisher = models.CharField(max_length=200)
     year_of_publication = models.PositiveIntegerField()
     total_copies = models.PositiveIntegerField(default=1)
@@ -134,13 +154,112 @@ class Student(models.Model):
     def __str__(self):
         return self.name
     
-    def can_borrow(self):
-        """Check if student can borrow more books"""
-        active_borrows = Borrow.objects.filter(
-            user=self.user, 
-            is_returned=False
-        ).count()
-        return active_borrows < 1  # Students can only have 1 book at a time
+
+
+def get_user_borrow_limit(user):
+    """Get borrow limit based on user type"""
+    if user.is_teacher:
+        return None  # No limit
+    elif user.is_student or user.is_other:
+        return 1
+    return 0  # Default: no borrowing
+
+
+def can_user_borrow(user):
+    """Check if user can borrow more books"""
+    limit = get_user_borrow_limit(user)
+    
+    if limit is None:  # Teachers - no limit
+        return True
+    
+    if limit == 0:  # Not a borrower
+        return False
+    
+    # Check active borrows
+    active_borrows = Borrow.objects.filter(
+        user=user, 
+        status='issued'
+    ).count()
+    
+    return active_borrows < limit
+
+
+# Teacher sub-borrowing system
+class TeacherBookIssue(models.Model):
+    """
+    Tracks books issued by teachers to students from their borrowed books.
+    This is a sub-system - the library only tracks that the teacher has the book.
+    The teacher tracks which students have which books from their allocation.
+    """
+    STATUS_CHOICES = [
+        ('issued', 'Issued to Student'),
+        ('returned', 'Returned to Teacher'),
+    ]
+    
+    parent_borrow = models.ForeignKey(
+        'Borrow',
+        on_delete=models.CASCADE,
+        related_name='teacher_issues',
+        help_text="The original library borrow to the teacher"
+    )
+    teacher = models.ForeignKey(
+        'CustomUser',
+        on_delete=models.CASCADE,
+        related_name='books_issued_to_students',
+        limit_choices_to={'is_teacher': True}
+    )
+    student_name = models.CharField(
+        max_length=500,
+        help_text="Student name (doesn't have to be a system user)"
+    )
+    student_id = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Student ID or identifier"
+    )
+    book = models.ForeignKey(
+        'Book',
+        on_delete=models.CASCADE,
+        related_name='teacher_issues'
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='issued'
+    )
+    issue_date = models.DateTimeField(auto_now_add=True)
+    expected_return_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When teacher expects student to return"
+    )
+    actual_return_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When student actually returned to teacher"
+    )
+    notes = models.TextField(blank=True, null=True)
+    history = HistoricalRecords()
+    
+    def save(self, *args, **kwargs):
+        if 'user' in kwargs:
+            setattr(self, '_history_user', kwargs.pop('user'))
+        super().save(*args, **kwargs)
+    
+    def is_overdue(self):
+        """Check if student's return is overdue"""
+        if self.expected_return_date and self.status == 'issued':
+            return timezone.now() > self.expected_return_date
+        return False
+    
+    def __str__(self):
+        return f"{self.teacher.get_full_name() or self.teacher.email} → {self.student_name}: {self.book.title}"
+    
+    class Meta:
+        ordering = ['-issue_date']
+        verbose_name = "Teacher Book Issue"
+        verbose_name_plural = "Teacher Book Issues"
 
 
 # <CHANGE> New Reservation model for when books are unavailable
@@ -305,41 +424,22 @@ class Borrow(models.Model):
     class Meta:
         ordering = ['-request_date']
 
-
-# Remove the old Issue model as it's now integrated into Borrow
-
-
 class Notification(models.Model):
+    """User notifications"""
     user = models.ForeignKey(
-        'CustomUser', 
-        on_delete=models.CASCADE, 
+        'CustomUser',
+        on_delete=models.CASCADE,
         related_name='notifications'
     )
     message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
-    responded_by = models.ForeignKey(
-        'CustomUser', 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
-        related_name='responded_notifications'
-    )
-    content_type = models.ForeignKey(
-        ContentType, 
-        on_delete=models.CASCADE, 
-        null=True, 
-        blank=True
-    )
-    object_id = models.PositiveIntegerField(null=True, blank=True)
-    related_object = GenericForeignKey('content_type', 'object_id')
-    history = HistoricalRecords()
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    
     class Meta:
         ordering = ['-created_at']
-
+    
     def __str__(self):
-        return f"Notification for {self.user.email}: {self.message}"
+        return f"{self.user.email}: {self.message[:50]}"
 
 
 @receiver(post_save, sender=CustomUser)

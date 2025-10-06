@@ -3,14 +3,14 @@
 {% block title %}Add Book - LibraryHub{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto animate-fade-in">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
     {% if messages %}
         <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
             {% for message in messages %}
-                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
-                            {% if message.tags == 'success' %}
+                            {% if message.tags == 'success' or message.tags == 'green' %}
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
@@ -34,144 +34,242 @@
         </div>
     {% endif %}
 
-    <div class="mb-6">
-        <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
-            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
             Add New Book
         </h1>
-        <p class="text-gray-600 mt-2 text-sm md:text-base">Add a new book to the library collection</p>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">Add a single book or upload multiple books via CSV/Excel</p>
     </div>
 
-    <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg">
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                        </svg>
-                        Title *
-                    </label>
-                    {{ form.title }}
-                    {% if form.title.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.title.errors.0 }}</p>
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100">
+        <div class="mb-10">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                </svg>
+                Add Single Book
+            </h2>
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div class="sm:col-span-2 lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                            </svg>
+                            Title *
+                        </label>
+                        <input type="text" name="title" id="title" value="{{ form.title.value|default_if_none:'' }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        {% if form.title.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.title.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            Author *
+                        </label>
+                        <input type="text" name="author" id="author" value="{{ form.author.value|default_if_none:'' }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        {% if form.author.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.author.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            Book Code
+                        </label>
+                        <input type="text" name="book_code" id="book_code" value="{{ form.book_code.value|default_if_none:'' }}" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        {% if form.book_code.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.book_code.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-3m0 0a1 1 0 001-1"></path>
+                            </svg>
+                            ISBN *
+                        </label>
+                        <input type="text" name="isbn" id="isbn" value="{{ form.isbn.value|default_if_none:'' }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        {% if form.isbn.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.isbn.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-500 text-xs mt-1">Must be unique</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Category *
+                        </label>
+                        <select name="category" id="category" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                            {% for category in categories %}
+                                <option value="{{ category.id }}" {% if form.category.value == category.id %}selected{% endif %}>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.category.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.category.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Publication Year
+                        </label>
+                        <input type="number" name="year_of_publication" id="year_of_publication" value="{{ form.year_of_publication.value|default_if_none:'' }}" max="2025" min="1500" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        {% if form.year_of_publication.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.year_of_publication.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-gray-500 text-xs mt-1">Year must not exceed 2025</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            Publisher
+                        </label>
+                        <input type="text" name="publisher" id="publisher" value="{{ form.publisher.value|default_if_none:'' }}" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        {% if form.publisher.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.publisher.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                            </svg>
+                            Total Copies *
+                        </label>
+                        <input type="number" name="total_copies" id="total_copies" value="{{ form.total_copies.value|default_if_none:'1' }}" required min="1" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        {% if form.total_copies.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.total_copies.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    {% if user.is_superuser %}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path>
+                            </svg>
+                            Centre *
+                        </label>
+                        <select name="centre" id="centre" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                            {% for centre in centres %}
+                                <option value="{{ centre.id }}" {% if form.centre.value == centre.id %}selected{% endif %}>{{ centre.name }}</option>
+                            {% endfor %}
+                        </select>
+                        {% if form.centre.errors %}
+                            <p class="text-red-600 text-sm mt-1">{{ form.centre.errors.0 }}</p>
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                    <a href="{% url 'book_list' %}" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 text-center transition-all transform hover:scale-105 font-medium shadow-sm">
+                        Cancel
+                    </a>
+                    <button type="submit" class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Author *
-                    </label>
-                    {{ form.author }}
-                    {% if form.author.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.author.errors.0 }}</p>
+                        Add Book
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="border-t border-gray-200 pt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                Bulk Upload Books
+            </h2>
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Category *
+                        </label>
+                        <select name="bulk_category" id="bulk_category" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                            {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {% if user.is_superuser %}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path>
+                            </svg>
+                            Centre *
+                        </label>
+                        <select name="bulk_centre" id="bulk_centre" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                            {% for centre in centres %}
+                                <option value="{{ centre.id }}">{{ centre.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     {% endif %}
+
+                    <div class="sm:col-span-2 lg:col-span-3">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Upload CSV/Excel *
+                        </label>
+                        <input type="file" name="file" id="file" accept=".csv,.xlsx" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        <p class="text-gray-500 text-xs mt-1">Upload a CSV or Excel file with columns: book_title, author_name, book_code, isbn, publisher, pub_year, total_no, available_copies. ISBN must be unique.</p>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                    <a href="{% url 'book_list' %}" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 text-center transition-all transform hover:scale-105 font-medium shadow-sm">
+                        Cancel
+                    </a>
+                    <a href="{% url 'download_sample_csv' %}" class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 text-center transition-all transform hover:scale-105 font-medium shadow-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
-                        ISBN *
-                    </label>
-                    {{ form.isbn }}
-                    {% if form.isbn.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.isbn.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                        Download Sample CSV
+                    </a>
+                    <button type="submit" class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
-                        Category *
-                    </label>
-                    {{ form.category }}
-                    {% if form.category.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.category.errors.0 }}</p>
-                    {% endif %}
+                        Upload Books
+                    </button>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        Publication Year
-                    </label>
-                    {{ form.publication_year }}
-                    {% if form.publication_year.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.publication_year.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                        </svg>
-                        Publisher
-                    </label>
-                    {{ form.publisher }}
-                    {% if form.publisher.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.publisher.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
-                        </svg>
-                        Total Copies *
-                    </label>
-                    {{ form.total_copies }}
-                    {% if form.total_copies.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.total_copies.errors.0 }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
-                        </svg>
-                        Description
-                    </label>
-                    {{ form.description }}
-                    {% if form.description.errors %}
-                        <p class="text-danger text-sm mt-1">{{ form.description.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                <a 
-                    href="{% url 'book_list' %}" 
-                    class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 text-center transition-all transform hover:scale-105 font-medium"
-                >
-                    Cancel
-                </a>
-                <button 
-                    type="submit" 
-                    class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center"
-                >
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    Add Book
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -182,28 +280,18 @@
     }
     
     @keyframes slide-in-right {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
     
-    .animate-fade-in {
-        animation: fade-in 0.5s ease-out;
-    }
+    .animate-fade-in { animation: fade-in 0.5s ease-out; }
     
-    .animate-slide-in-right {
-        animation: slide-in-right 0.3s ease-out;
-    }
+    .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
 
     input[type="text"],
     input[type="number"],
-    select,
-    textarea {
+    input[type="file"],
+    select {
         width: 100%;
         border: 1px solid #d1d5db;
         padding: 0.75rem;
@@ -213,17 +301,12 @@
 
     input[type="text"]:focus,
     input[type="number"]:focus,
-    select:focus,
-    textarea:focus {
+    input[type="file"]:focus,
+    select:focus {
         outline: none;
-        ring: 2px;
-        ring-color: #C86450;
+        border: 2px solid #C86450;
         border-color: transparent;
-    }
-
-    textarea {
-        min-height: 100px;
-        resize: vertical;
+        box-shadow: 0 0 0 3px rgba(200, 100, 80, 0.1);
     }
 </style>
 
@@ -233,10 +316,16 @@
         messages.forEach(function(message) {
             message.style.transition = 'opacity 0.5s';
             message.style.opacity = '0';
-            setTimeout(function() {
-                message.remove();
-            }, 500);
+            setTimeout(function() { message.remove(); }, 500);
         });
     }, 5000);
+
+    document.getElementById('year_of_publication').addEventListener('input', function(e) {
+        const currentYear = 2025;
+        if (e.target.value > currentYear) {
+            e.target.value = currentYear;
+            alert('Publication year cannot be in the future.');
+        }
+    });
 </script>
 {% endblock %}

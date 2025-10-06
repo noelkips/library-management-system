@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ book.title }} - LibraryHub{% endblock %}
+{% block title %}Book Details - LibraryHub{% endblock %}
 
 {% block content %}
-<div class="animate-fade-in">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
     {% if messages %}
         <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
             {% for message in messages %}
-                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
-                            {% if message.tags == 'success' %}
+                            {% if message.tags == 'success' or message.tags == 'green' %}
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
@@ -34,247 +34,133 @@
         </div>
     {% endif %}
 
-    <div class="mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-primary">{{ book.title }}</h1>
-                <p class="text-gray-600 mt-2 text-sm md:text-base">by {{ book.author }}</p>
-            </div>
-            <div class="flex gap-2">
-                <a href="{% url 'book_list' %}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-all text-sm md:text-base">
-                    Back to List
-                </a>
-                {% if user.is_librarian or user.is_site_admin %}
-                <a href="{% url 'book_update' book.pk %}" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-secondary transition-all text-sm md:text-base">
-                    Edit Book
-                </a>
-                {% endif %}
-            </div>
-        </div>
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+            </svg>
+            Book Details
+        </h1>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">Details for {{ book.title|default:"Untitled" }}</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         Book Details Card 
-        <div class="lg:col-span-1">
-            <div class="bg-white rounded-lg shadow-lg p-6 sticky top-6">
-                <h2 class="text-xl font-bold text-primary mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Book Details
-                </h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-600">Book Code</p>
-                        <p class="text-base text-gray-900">{{ book.book_code }}</p>
-                    </div>
-                    
-                    <div>
-                        <p class="text-sm font-semibold text-gray-600">Category</p>
-                        <span class="inline-block px-3 py-1 bg-accent bg-opacity-10 text-accent rounded-full text-sm">
-                            {{ book.category }}
-                        </span>
-                    </div>
-                    
-                    <div>
-                        <p class="text-sm font-semibold text-gray-600">Publisher</p>
-                        <p class="text-base text-gray-900">{{ book.publisher }}</p>
-                    </div>
-                    
-                    <div>
-                        <p class="text-sm font-semibold text-gray-600">Year of Publication</p>
-                        <p class="text-base text-gray-900">{{ book.year_of_publication }}</p>
-                    </div>
-                    
-                    <div>
-                        <p class="text-sm font-semibold text-gray-600">Centre</p>
-                        <p class="text-base text-gray-900">{{ book.centre.name }}</p>
-                    </div>
-                    
-                    <div class="pt-4 border-t">
-                        <div class="flex justify-between items-center mb-2">
-                            <p class="text-sm font-semibold text-gray-600">Total Copies</p>
-                            <p class="text-lg font-bold text-gray-900">{{ book.total_copies }}</p>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <p class="text-sm font-semibold text-gray-600">Available</p>
-                            <p class="text-lg font-bold {% if book.available_copies > 0 %}text-green-600{% else %}text-red-600{% endif %}">
-                                {{ book.available_copies }}
-                            </p>
-                        </div>
-                    </div>
-                    
-                    {% if user.is_student %}
-                    <div class="pt-4 border-t">
-                        {% if user_active_borrow %}
-                            {% if user_active_borrow.status == 'requested' %}
-                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                    <p class="text-sm text-blue-800 font-medium">Request Pending</p>
-                                    <p class="text-xs text-blue-600 mt-1">Waiting for librarian approval</p>
-                                </div>
-                            {% elif user_active_borrow.status == 'issued' %}
-                                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <p class="text-sm text-green-800 font-medium">Currently Borrowed</p>
-                                    <p class="text-xs text-green-600 mt-1">Due: {{ user_active_borrow.due_date|date:"M d, Y" }}</p>
-                                </div>
-                            {% endif %}
-                        {% elif user_reservation %}
-                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                                <p class="text-sm text-yellow-800 font-medium">Reserved</p>
-                                <p class="text-xs text-yellow-600 mt-1">You'll be notified when available</p>
-                            </div>
-                        {% else %}
-                            <form method="post" action="{% url 'borrow_request' book.pk %}">
-                                {% csrf_token %}
-                                <button type="submit" class="w-full bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                    </svg>
-                                    {% if book.is_available %}Request to Borrow{% else %}Reserve Book{% endif %}
-                                </button>
-                            </form>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Title</h3>
+                <p class="text-gray-900 font-medium">{{ book.title|default:"Untitled" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Author</h3>
+                <p class="text-gray-900 font-medium">{{ book.author|default:"Unknown" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Book Code</h3>
+                <p class="text-gray-900 font-medium">{{ book.book_code|default:"N/A" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">ISBN</h3>
+                <p class="text-gray-900 font-medium">{{ book.isbn }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Category</h3>
+                <p class="text-gray-900 font-medium">{{ book.category.name }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Centre</h3>
+                <p class="text-gray-900 font-medium">{{ book.centre.name }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Publisher</h3>
+                <p class="text-gray-900 font-medium">{{ book.publisher|default:"N/A" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Publication Year</h3>
+                <p class="text-gray-900 font-medium">{{ book.year_of_publication|default:"N/A" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700">Availability</h3>
+                <p class="text-gray-900 font-medium">{{ book.available_copies }}/{{ book.total_copies }}</p>
             </div>
         </div>
 
-         Transaction History 
-        <div class="lg:col-span-2 space-y-6">
-             Active Reservations 
-            {% if reservations %}
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold text-primary mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        {% if user.is_student or user.is_teacher %}
+        <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <form method="post" action="{% url 'borrow_request' book.id %}">
+                {% csrf_token %}
+                <button type="submit" {% if book.available_copies <= 0 %}disabled{% endif %} class="w-full bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg flex items-center justify-center {% if book.available_copies <= 0 %}opacity-50 cursor-not-allowed{% endif %}">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
                     </svg>
-                    Active Reservations ({{ reservations.count }})
-                </h2>
-                
-                <div class="space-y-3">
-                    {% for reservation in reservations %}
-                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="font-medium text-gray-900">{{ reservation.user.get_full_name }}</p>
-                                <p class="text-sm text-gray-600">{{ reservation.user.email }}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm text-gray-600">Reserved on</p>
-                                <p class="text-sm font-medium text-gray-900">{{ reservation.reservation_date|date:"M d, Y" }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
+                    Borrow Book
+                </button>
+            </form>
+            <form method="post" action="{% url 'reserve_book' book.id %}">
+                {% csrf_token %}
+                <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Reserve Book
+                </button>
+            </form>
+        </div>
+        {% endif %}
 
-             Borrow History 
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold text-primary mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Transaction History
-                </h2>
-                
-                {% if borrows %}
-                <div class="space-y-4">
-                    {% for borrow in borrows %}
-                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <p class="font-medium text-gray-900">{{ borrow.user.get_full_name }}</p>
-                                    {% if borrow.status == 'requested' %}
-                                        <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">Requested</span>
-                                    {% elif borrow.status == 'issued' %}
-                                        <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Issued</span>
-                                    {% elif borrow.status == 'returned' %}
-                                        <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Returned</span>
-                                    {% endif %}
-                                    {% if borrow.is_overdue %}
-                                        <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Overdue</span>
-                                    {% endif %}
-                                </div>
-                                <p class="text-sm text-gray-600">{{ borrow.user.email }}</p>
-                                
-                                <div class="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                    <div>
-                                        <p class="text-gray-500">Requested</p>
-                                        <p class="font-medium text-gray-900">{{ borrow.request_date|date:"M d, Y" }}</p>
-                                    </div>
-                                    {% if borrow.issue_date %}
-                                    <div>
-                                        <p class="text-gray-500">Issued</p>
-                                        <p class="font-medium text-gray-900">{{ borrow.issue_date|date:"M d, Y" }}</p>
-                                    </div>
-                                    {% endif %}
-                                    {% if borrow.due_date %}
-                                    <div>
-                                        <p class="text-gray-500">Due Date</p>
-                                        <p class="font-medium text-gray-900">{{ borrow.due_date|date:"M d, Y" }}</p>
-                                    </div>
-                                    {% endif %}
-                                    {% if borrow.return_date %}
-                                    <div>
-                                        <p class="text-gray-500">Returned</p>
-                                        <p class="font-medium text-gray-900">{{ borrow.return_date|date:"M d, Y" }}</p>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                
-                                {% if borrow.issued_by %}
-                                <p class="text-xs text-gray-500 mt-2">Issued by: {{ borrow.issued_by.get_full_name }}</p>
-                                {% endif %}
-                                {% if borrow.returned_to %}
-                                <p class="text-xs text-gray-500">Returned to: {{ borrow.returned_to.get_full_name }}</p>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-8 text-gray-500">
-                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <p class="text-lg font-medium">No transaction history</p>
-                    <p class="text-sm mt-1">This book hasn't been borrowed yet</p>
-                </div>
-                {% endif %}
-            </div>
+        <div class="mt-8 flex flex-col sm:flex-row gap-4">
+            <a href="{% url 'book_list' %}" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 text-center transition-all transform hover:scale-105 font-medium shadow-sm">
+                Back to List
+            </a>
+            {% if user.is_superuser or user.is_librarian %}
+            <a href="{% url 'book_update' book.pk %}" class="flex-1 bg-yellow-600 text-white py-3 rounded-lg hover:bg-yellow-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Edit Book
+            </a>
+            <a href="{% url 'book_delete' book.pk %}" class="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H7a2 2 0 00-2 2v1h14V5a2 2 0 00-2-2h-3m-1 4v12"/>
+                </svg>
+                Delete Book
+            </a>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <style>
     @keyframes fade-in {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     
     @keyframes slide-in-right {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
     
-    .animate-fade-in {
-        animation: fade-in 0.5s ease-out;
-    }
+    .animate-fade-in { animation: fade-in 0.5s ease-out; }
     
-    .animate-slide-in-right {
-        animation: slide-in-right 0.3s ease-out;
+    .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+        outline: none;
+        border: 2px solid #C86450;
+        border-color: transparent;
+        box-shadow: 0 0 0 3px rgba(200, 100, 80, 0.1);
     }
 </style>
 
@@ -284,9 +170,7 @@
         messages.forEach(function(message) {
             message.style.transition = 'opacity 0.5s';
             message.style.opacity = '0';
-            setTimeout(function() {
-                message.remove();
-            }, 500);
+            setTimeout(function() { message.remove(); }, 500);
         });
     }, 5000);
 </script>

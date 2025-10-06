@@ -1,16 +1,55 @@
-{% extends 'base.html' %}
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script>{% extends 'base.html' %}
 
 {% block title %}My Borrows - LibraryHub{% endblock %}
 
 {% block content %}
-<div class="animate-fade-in">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
     {% if messages %}
         <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
             {% for message in messages %}
-                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
-                            {% if message.tags == 'success' %}
+                            {% if message.tags == 'success' or message.tags == 'green' %}
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
@@ -34,224 +73,165 @@
         </div>
     {% endif %}
 
-    <div class="mb-6">
-        <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
-            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
             </svg>
             My Borrows
         </h1>
-        <p class="text-gray-600 mt-2 text-sm md:text-base">Track your borrowed books and reservations</p>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">Your active borrows, history, and reservations</p>
+        <p class="text-gray-600 mt-1">Borrow Limit: {{ borrow_limit }} book{% if borrow_limit != 1 %}s{% endif %} | Can Borrow More: {% if can_borrow_more %}Yes{% else %}No{% endif %}</p>
     </div>
 
-     Active Borrows 
-    {% if active_borrows %}
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-        <div class="bg-primary text-white px-6 py-4">
-            <h2 class="text-lg font-bold flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Active Borrows ({{ active_borrows.count }})
-            </h2>
-        </div>
-        
-        <div class="divide-y divide-gray-200">
-            {% for borrow in active_borrows %}
-            <div class="p-6 hover:bg-gray-50 transition-colors">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-2">
-                            <h3 class="text-lg font-bold text-gray-900">{{ borrow.book.title }}</h3>
-                            {% if borrow.status == 'requested' %}
-                                <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">Pending Approval</span>
-                            {% elif borrow.status == 'issued' %}
-                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Issued</span>
-                            {% endif %}
-                            {% if borrow.is_overdue %}
-                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Overdue!</span>
-                            {% endif %}
-                        </div>
-                        <p class="text-sm text-gray-600 mb-3">by {{ borrow.book.author }}</p>
-                        
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                            <div>
-                                <p class="text-gray-500">Requested</p>
-                                <p class="font-medium text-gray-900">{{ borrow.request_date|date:"M d, Y" }}</p>
-                            </div>
-                            {% if borrow.issue_date %}
-                            <div>
-                                <p class="text-gray-500">Issued</p>
-                                <p class="font-medium text-gray-900">{{ borrow.issue_date|date:"M d, Y" }}</p>
-                            </div>
-                            {% endif %}
-                            {% if borrow.due_date %}
-                            <div>
-                                <p class="text-gray-500">Due Date</p>
-                                <p class="font-medium {% if borrow.is_overdue %}text-red-600{% else %}text-gray-900{% endif %}">
-                                    {{ borrow.due_date|date:"M d, Y" }}
-                                </p>
-                            </div>
-                            {% endif %}
-                            {% if borrow.renewals > 0 %}
-                            <div>
-                                <p class="text-gray-500">Renewals</p>
-                                <p class="font-medium text-gray-900">{{ borrow.renewals }}/2</p>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-col gap-2">
-                        {% if borrow.status == 'requested' %}
-                            <a href="{% url 'borrow_cancel' borrow.pk %}" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all text-center text-sm">
-                                Cancel Request
-                            </a>
-                        {% elif borrow.status == 'issued' %}
-                            {% if borrow.renewals < 2 %}
-                            <a href="{% url 'borrow_renew' borrow.pk %}" class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-secondary transition-all text-center text-sm">
-                                Renew ({{ 2|add:"-"|add:borrow.renewals }} left)
-                            </a>
-                            {% endif %}
-                            <a href="{% url 'book_detail' borrow.book.pk %}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-all text-center text-sm">
-                                View Book
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-     Reservations 
-    {% if reservations %}
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
-        <div class="bg-accent text-white px-6 py-4">
-            <h2 class="text-lg font-bold flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                My Reservations ({{ reservations.count }})
-            </h2>
-        </div>
-        
-        <div class="divide-y divide-gray-200">
-            {% for reservation in reservations %}
-            <div class="p-6 hover:bg-gray-50 transition-colors">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">{{ reservation.book.title }}</h3>
-                        <p class="text-sm text-gray-600 mb-3">by {{ reservation.book.author }}</p>
-                        
-                        <div class="grid grid-cols-2 gap-3 text-sm">
-                            <div>
-                                <p class="text-gray-500">Reserved On</p>
-                                <p class="font-medium text-gray-900">{{ reservation.reservation_date|date:"M d, Y" }}</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-500">Expires On</p>
-                                <p class="font-medium text-gray-900">{{ reservation.expiry_date|date:"M d, Y" }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-col gap-2">
-                        <a href="{% url 'reservation_cancel' reservation.pk %}" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all text-center text-sm">
-                            Cancel Reservation
-                        </a>
-                        <a href="{% url 'book_detail' reservation.book.pk %}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-all text-center text-sm">
-                            View Book
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-     Borrow History 
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="bg-gray-700 text-white px-6 py-4">
-            <h2 class="text-lg font-bold flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Borrow History
-            </h2>
-        </div>
-        
-        {% if history_borrows %}
-        <div class="divide-y divide-gray-200">
-            {% for borrow in history_borrows %}
-            <div class="p-6 hover:bg-gray-50 transition-colors">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div class="flex-1">
-                        <h3 class="text-lg font-bold text-gray-900 mb-2">{{ borrow.book.title }}</h3>
-                        <p class="text-sm text-gray-600 mb-3">by {{ borrow.book.author }}</p>
-                        
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                            <div>
-                                <p class="text-gray-500">Borrowed</p>
-                                <p class="font-medium text-gray-900">{{ borrow.issue_date|date:"M d, Y" }}</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-500">Returned</p>
-                                <p class="font-medium text-gray-900">{{ borrow.return_date|date:"M d, Y" }}</p>
-                            </div>
-                            <div>
-                                <p class="text-gray-500">Duration</p>
-                                <p class="font-medium text-gray-900">{{ borrow.issue_date|timesince:borrow.return_date }}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <a href="{% url 'book_detail' borrow.book.pk %}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-all text-center text-sm">
-                            View Book
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="p-8 text-center text-gray-500">
-            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
             </svg>
-            <p class="text-lg font-medium">No borrow history yet</p>
-            <p class="text-sm mt-1">Start borrowing books to see your history here</p>
-        </div>
+            Active Borrows
+        </h2>
+        {% if active_borrows %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3">Book</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Request Date</th>
+                            <th class="px-4 py-3">Due Date</th>
+                            <th class="px-4 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrow in active_borrows %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ borrow.book.title|default:"Untitled" }} ({{ borrow.book.isbn }})</td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full {% if borrow.status == 'issued' %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                        {{ borrow.status|title }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">{{ borrow.request_date|date:"Y-m-d" }}</td>
+                                <td class="px-4 py-3">{{ borrow.due_date|date:"Y-m-d"|default:"N/A" }}</td>
+                                <td class="px-4 py-3">
+                                    {% if borrow.status == 'requested' %}
+                                        <a href="{% url 'borrow_cancel' borrow.id %}" class="text-red-600 hover:text-red-800">Cancel</a>
+                                    {% elif borrow.status == 'issued' %}
+                                        <a href="{% url 'borrow_renew' borrow.id %}" class="text-blue-600 hover:text-blue-800">Renew</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600">No active borrows.</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Reservations
+        </h2>
+        {% if reservations %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3">Book</th>
+                            <th class="px-4 py-3">Reservation Date</th>
+                            <th class="px-4 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reservation in reservations %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ reservation.book.title|default:"Untitled" }} ({{ reservation.book.isbn }})</td>
+                                <td class="px-4 py-3">{{ reservation.reservation_date|date:"Y-m-d" }}</td>
+                                <td class="px-4 py-3">
+                                    <a href="{% url 'reservation_cancel' reservation.id %}" class="text-red-600 hover:text-red-800">Cancel</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600">No active reservations.</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            Borrow History
+        </h2>
+        {% if history_borrows %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3">Book</th>
+                            <th class="px-4 py-3">Request Date</th>
+                            <th class="px-4 py-3">Return Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrow in history_borrows %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ borrow.book.title|default:"Untitled" }} ({{ borrow.book.isbn }})</td>
+                                <td class="px-4 py-3">{{ borrow.request_date|date:"Y-m-d" }}</td>
+                                <td class="px-4 py-3">{{ borrow.return_date|date:"Y-m-d"|default:"N/A" }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-gray-600">No borrow history.</p>
         {% endif %}
     </div>
 </div>
 
 <style>
     @keyframes fade-in {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     
     @keyframes slide-in-right {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
     
-    .animate-fade-in {
-        animation: fade-in 0.5s ease-out;
-    }
+    .animate-fade-in { animation: fade-in 0.5s ease-out; }
     
-    .animate-slide-in-right {
-        animation: slide-in-right 0.3s ease-out;
+    .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 0.75rem;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f9fafb;
+        font-weight: 600;
+    }
+
+    tr {
+        transition: background-color 0.2s;
     }
 </style>
 
@@ -261,9 +241,7 @@
         messages.forEach(function(message) {
             message.style.transition = 'opacity 0.5s';
             message.style.opacity = '0';
-            setTimeout(function() {
-                message.remove();
-            }, 500);
+            setTimeout(function() { message.remove(); }, 500);
         });
     }, 5000);
 </script>

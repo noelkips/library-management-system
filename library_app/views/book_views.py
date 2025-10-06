@@ -1,578 +1,440 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.utils import timezone
-from django.db.models import Q, Count, Case, When, IntegerField
-from django.core.paginator import Paginator
-from datetime import timedelta
-from .models import Book, Borrow, Reservation, Student, Centre, School, Notification, CustomUser
-from .forms import BookForm, BorrowForm, ReservationForm  # You'll need to create these forms
+from django.db import transaction, IntegrityError
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.db.models import Q
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+import csv
+import openpyxl
+from io import TextIOWrapper, StringIO
+from ..models import Book, Centre, CustomUser, Category
 
+def is_authorized(user):
+    return user.is_superuser or user.is_librarian
 
-# ==================== BOOK VIEWS ====================
-
-@login_required
-def book_list(request):
-    """List all books with search and filter"""
-    books = Book.objects.filter(is_active=True)
-    
-    # Filter by centre for librarians
-    if request.user.is_librarian:
-        books = books.filter(centre=request.user.centre)
-    
-    # Search functionality
-    search = request.GET.get('search', '')
-    if search:
-        books = books.filter(
-            Q(title__icontains=search) |
-            Q(author__icontains=search) |
-            Q(book_code__icontains=search) |
-            Q(category__icontains=search)
-        )
-    
-    # Filter by category
-    category = request.GET.get('category', '')
-    if category:
-        books = books.filter(category=category)
-    
-    # Filter by centre (for admins)
-    centre_id = request.GET.get('centre', '')
-    if centre_id and request.user.is_site_admin:
-        books = books.filter(centre_id=centre_id)
-    
-    # Filter by availability
-    availability = request.GET.get('availability', '')
-    if availability == 'available':
-        books = books.filter(available_copies__gt=0)
-    elif availability == 'unavailable':
-        books = books.filter(available_copies=0)
-    
-    # Get all centres and categories for filters
-    centres = Centre.objects.all()
-    categories = Book.objects.values_list('category', flat=True).distinct()
-    
-    # Pagination
-    paginator = Paginator(books, 20)
-    page_number = request.GET.get('page')
-    books = paginator.get_page(page_number)
-    
-    context = {
-        'books': books,
-        'centres': centres,
-        'categories': categories,
+def handle_uploaded_file(request, file, user, centre_id, category_id):
+    header_mapping = {
+        'book_title': 'title',
+        'author_name': 'author',
+        'book_code': 'book_code',
+        'isbn': 'isbn',
+        'publisher': 'publisher',
+        'pub_year': 'year_of_publication',
+        'total_no': 'total_copies',
+        'available_copies': 'available_copies',
     }
-    return render(request, 'books/book_list.html', context)
 
+    errors = []
+    created_count = 0
+    skipped_count = 0
+    total_rows = 0
 
-@login_required
-def book_detail(request, pk):
-    """Show book details with transaction history"""
-    book = get_object_or_404(Book, pk=pk)
-    
-    # Check permissions
-    if request.user.is_librarian and book.centre != request.user.centre:
-        messages.error(request, "You don't have permission to view this book.")
-        return redirect('book_list')
-    
-    # Get borrow history
-    borrows = Borrow.objects.filter(book=book).select_related(
-        'user', 'issued_by', 'returned_to'
-    ).order_by('-request_date')
-    
-    # Get active reservations
-    reservations = Reservation.objects.filter(
-        book=book, 
-        status='pending'
-    ).select_related('user').order_by('reservation_date')
-    
-    # Check if current user has active borrow or reservation
-    user_active_borrow = None
-    user_reservation = None
-    
-    if request.user.is_student:
-        user_active_borrow = Borrow.objects.filter(
-            book=book,
-            user=request.user,
-            status__in=['requested', 'issued']
-        ).first()
-        
-        user_reservation = Reservation.objects.filter(
-            book=book,
-            user=request.user,
-            status='pending'
-        ).first()
-    
-    context = {
-        'book': book,
-        'borrows': borrows,
-        'reservations': reservations,
-        'user_active_borrow': user_active_borrow,
-        'user_reservation': user_reservation,
-    }
-    return render(request, 'books/book_detail.html', context)
+    try:
+        centre = None
+        if centre_id:
+            try:
+                centre = Centre.objects.get(id=centre_id)
+                print(f"Selected centre: {centre.name} (ID: {centre_id})")
+            except Centre.DoesNotExist:
+                messages.error(request, f"Selected centre with ID {centre_id} not found.")
+                print(f"Error: Centre ID {centre_id} not found.")
+                return
 
+        if user.is_librarian and not user.is_superuser and user.centre and centre != user.centre:
+            messages.error(request, "You can only add books for your own centre.")
+            print(f"Error: User {user.email} attempted to add books to unauthorized centre {centre.name}.")
+            return
+
+        try:
+            category = Category.objects.get(id=category_id)
+            print(f"Selected category: {category.name} (ID: {category_id})")
+        except Category.DoesNotExist:
+            messages.error(request, f"Selected category with ID {category_id} not found.")
+            print(f"Error: Category ID {category_id} not found.")
+            return
+
+        book_instances = []
+        if file.name.lower().endswith('.csv'):
+            print(f"Processing CSV file: {file.name}")
+            file.seek(0)
+            decoded_file = TextIOWrapper(file.file, encoding='utf-8-sig')
+            reader = csv.reader(decoded_file)
+            headers = next(reader, None)
+            if not headers:
+                messages.error(request, "File is empty or has no headers.")
+                print(f"Error: File {file.name} is empty or has no headers.")
+                return
+            headers = [h.lower().strip() for h in headers]
+            print(f"CSV headers: {headers}")
+
+            if 'isbn' not in headers:
+                messages.error(request, "CSV file must include 'isbn' column.")
+                print(f"Error: CSV file {file.name} missing required column: isbn")
+                return
+
+            all_rows = list(reader)
+            total_rows = len(all_rows) + 1
+            print(f"Total rows in CSV: {total_rows}")
+
+            for row_index, row in enumerate(all_rows, start=2):
+                if not any(row):
+                    print(f"Skipping empty row {row_index}")
+                    skipped_count += 1
+                    continue
+                data = {header_mapping.get(header, header): value.strip() if value else None for header, value in zip(headers, row) if header in header_mapping}
+                print(f"Row {row_index} data: {data}")
+                if not data.get('isbn'):
+                    errors.append(f"Row {row_index}: Missing ISBN")
+                    print(f"Error in row {row_index}: Missing ISBN")
+                    continue
+                book_instances.append((row_index, data))
+
+        elif file.name.lower().endswith('.xlsx'):
+            print(f"Processing Excel file: {file.name}")
+            wb = openpyxl.load_workbook(file)
+            ws = wb.active
+            headers = [cell.value.lower().strip() if cell.value else '' for cell in ws[1]]
+            if not headers:
+                messages.error(request, "Excel file is empty or has no headers.")
+                print(f"Error: Excel file {file.name} is empty or has no headers.")
+                return
+            print(f"Excel headers: {headers}")
+
+            if 'isbn' not in headers:
+                messages.error(request, "Excel file must include 'isbn' column.")
+                print(f"Error: Excel file {file.name} missing required column: isbn")
+                return
+
+            all_rows = list(ws.iter_rows(min_row=2))
+            total_rows = len(all_rows) + 1
+            print(f"Total rows in Excel: {total_rows}")
+
+            for row_index, row in enumerate(all_rows, start=2):
+                data = {header_mapping.get(headers[i], headers[i]): cell.value if cell.value else None for i, cell in enumerate(row) if i < len(headers) and headers[i] in header_mapping}
+                print(f"Row {row_index} data: {data}")
+                if not data.get('isbn'):
+                    errors.append(f"Row {row_index}: Missing ISBN")
+                    print(f"Error in row {row_index}: Missing ISBN")
+                    continue
+                book_instances.append((row_index, data))
+
+        else:
+            messages.error(request, "Unsupported file format. Only CSV and XLSX are allowed.")
+            print(f"Error: Unsupported file format: {file.name}")
+            return
+
+        print(f"Parsed {len(book_instances)} book entries from {file.name}")
+        for row_index, data in book_instances:
+            try:
+                with transaction.atomic():
+                    book = Book(
+                        title=data.get('title') or '',
+                        author=data.get('author') or '',
+                        category=category,
+                        book_code=data.get('book_code') or '',
+                        isbn=str(data.get('isbn')),
+                        publisher=data.get('publisher') or '',
+                        year_of_publication=int(data.get('year_of_publication')) if data.get('year_of_publication') and str(data.get('year_of_publication')).isdigit() else None,
+                        total_copies=int(data.get('total_copies')) if data.get('total_copies') and str(data.get('total_copies')).isdigit() else 1,
+                        available_copies=int(data.get('available_copies') or data.get('total_copies')) if (data.get('available_copies') or data.get('total_copies')) and str(data.get('available_copies') or data.get('total_copies')).isdigit() else 1,
+                        centre=centre or (user.centre if user.is_librarian and not user.is_superuser else None),
+                        added_by=user,
+                    )
+                    book.full_clean()
+                    book.save()
+                    created_count += 1
+                    print(f"Saved book: {book.title or 'Untitled'} (ISBN: {book.isbn})")
+            except IntegrityError:
+                errors.append(f"Row {row_index}: Book with ISBN {data.get('isbn')} already exists")
+                print(f"IntegrityError for ISBN {data.get('isbn')} in row {row_index}: Already exists")
+            except ValueError as ve:
+                errors.append(f"Row {row_index}: Invalid data ({str(ve)})")
+                print(f"ValueError for ISBN {data.get('isbn')} in row {row_index}: {str(ve)}")
+            except Exception as e:
+                errors.append(f"Row {row_index}: Error saving ({str(e)})")
+                print(f"Unexpected error for ISBN {data.get('isbn')} in row {row_index}: {str(e)}")
+
+        if created_count > 0:
+            messages.success(request, f"{created_count} books imported successfully.", extra_tags='green')
+            print(f"Successfully imported {created_count} books")
+        if errors:
+            messages.error(request, f"Failed to import {len(errors)} rows: {', '.join(errors[:5])}{'...' if len(errors) > 5 else ''}")
+            print(f"Errors encountered: {errors}")
+        messages.info(request, f"Processed {total_rows} rows: {created_count} added, {len(errors)} failed, {skipped_count} skipped.")
+
+        if created_count == 0 and not errors:
+            messages.error(request, "No books were imported. Please check the file format and data.")
+            print("No books imported from file")
+
+    except Exception as e:
+        messages.error(request, f"Error processing file: {str(e)}")
+        print(f"Error processing file {file.name}: {str(e)}")
 
 @login_required
 def book_add(request):
-    """Add a new book"""
-    if not (request.user.is_librarian or request.user.is_site_admin):
-        messages.error(request, "You don't have permission to add books.")
+    if not is_authorized(request.user):
+        messages.error(request, "You do not have permission to access this page.")
+        print(f"Unauthorized access attempt by {request.user.email} to book_add")
         return redirect('book_list')
-    
-    if request.method == 'POST':
-        form = BookForm(request.POST)
-        if form.is_valid():
-            book = form.save(commit=False)
-            book.added_by = request.user
-            
-            # Auto-assign centre for librarians
-            if request.user.is_librarian:
-                book.centre = request.user.centre
-            
-            book.save(user=request.user)
-            messages.success(request, f"Book '{book.title}' added successfully!")
-            return redirect('book_list')
-    else:
-        form = BookForm()
-        
-        # Restrict centre selection for librarians
-        if request.user.is_librarian:
-            form.fields['centre'].initial = request.user.centre
-            form.fields['centre'].widget.attrs['disabled'] = True
-    
-    context = {'form': form}
-    return render(request, 'books/book_add.html', context)
 
+    centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
+    categories = Category.objects.all()
+
+    if request.method == 'POST':
+        print(f"POST request for book_add by {request.user.email}: {request.POST}, Files: {request.FILES}")
+        if 'file' in request.FILES and request.FILES['file']:
+            centre_id = request.POST.get('bulk_centre')
+            category_id = request.POST.get('bulk_category')
+            if not centre_id or not category_id:
+                messages.error(request, "Please select both a centre and a category for bulk upload.")
+                print(f"Error: Missing centre or category for bulk upload by {request.user.email}")
+                return redirect('book_add')
+            print(f"Handling file upload: {request.FILES['file'].name}")
+            handle_uploaded_file(request, request.FILES['file'], request.user, centre_id, category_id)
+            return redirect('book_list')
+        elif 'title' in request.POST and request.POST.get('title').strip():
+            try:
+                centre_id = request.POST.get('centre')
+                centre = Centre.objects.get(id=centre_id) if centre_id else None
+                if request.user.is_librarian and not request.user.is_superuser and centre != request.user.centre:
+                    messages.error(request, "You can only add books for your own centre.")
+                    print(f"Error: User {request.user.email} attempted to add book to unauthorized centre")
+                    return redirect('book_add')
+
+                category_id = request.POST.get('category')
+                try:
+                    category = Category.objects.get(id=category_id)
+                except Category.DoesNotExist:
+                    messages.error(request, "Invalid category selected.")
+                    print(f"Error: Invalid category ID {category_id}")
+                    return redirect('book_add')
+
+                book = Book(
+                    title=request.POST.get('title') or '',
+                    author=request.POST.get('author') or '',
+                    category=category,
+                    book_code=request.POST.get('book_code') or '',
+                    isbn=request.POST.get('isbn'),
+                    publisher=request.POST.get('publisher') or '',
+                    year_of_publication=int(request.POST.get('year_of_publication')) if request.POST.get('year_of_publication') and request.POST.get('year_of_publication').isdigit() else None,
+                    total_copies=int(request.POST.get('total_copies')) if request.POST.get('total_copies') and request.POST.get('total_copies').isdigit() else 1,
+                    available_copies=int(request.POST.get('available_copies') or request.POST.get('total_copies')) if (request.POST.get('available_copies') or request.POST.get('total_copies')) and (request.POST.get('available_copies') or request.POST.get('total_copies')).isdigit() else 1,
+                    centre=centre,
+                    added_by=request.user,
+                )
+                book.full_clean()
+                book.save()
+                messages.success(request, "Book added successfully.", extra_tags='green')
+                print(f"Book added: {book.title or 'Untitled'} (ISBN: {book.isbn}) by {request.user.email}")
+                return redirect('book_list')
+            except IntegrityError:
+                messages.error(request, "Book with this ISBN already exists.")
+                print(f"IntegrityError: ISBN {request.POST.get('isbn')} already exists")
+            except ValueError as ve:
+                messages.error(request, f"Invalid data: {str(ve)}")
+                print(f"ValueError: Invalid data for book: {str(ve)}")
+            except Exception as e:
+                messages.error(request, f"Error adding book: {str(e)}")
+                print(f"Unexpected error adding book: {str(e)}")
+        else:
+            messages.error(request, "Please provide either a file for bulk upload or book details for single book addition.")
+            print("Error: Invalid form submission, missing file or book details")
+
+    return render(request, 'books/book_add.html', {'centres': centres, 'categories': categories})
+
+@login_required
+def download_sample_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="sample_book_upload.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['book_title', 'author_name', 'book_code', 'isbn', 'publisher', 'pub_year', 'total_no', 'available_copies'])
+    writer.writerow([
+        'Sample Book Title',
+        'John Doe',
+        'ABC123',
+        '978-3-16-148410-0',
+        'Sample Publisher',
+        '2023',
+        '10',
+        '10'
+    ])
+
+    return response
+
+@login_required
+def book_list(request):
+    if request.user.is_superuser:
+        books = Book.objects.all()
+    elif (request.user.is_librarian or request.user.is_student or request.user.is_teacher)  and request.user.centre:
+        books = Book.objects.filter(centre=request.user.centre)
+    else:
+        books = Book.objects.none()
+
+    query = request.GET.get('q', '')
+    category_id = request.GET.get('category', '')
+    centre_id = request.GET.get('centre', '')
+    available_only = 'available' in request.GET
+
+    if query:
+        books = books.filter(
+            Q(title__icontains=query) |
+            Q(author__icontains=query) |
+            Q(book_code__icontains=query) |
+            Q(isbn__icontains=query)
+        )
+    if category_id:
+        books = books.filter(category_id=category_id)
+    if centre_id and request.user.is_superuser:
+        books = books.filter(centre_id=centre_id)
+    if available_only:
+        books = books.filter(available_copies__gt=0)
+
+    books = books.order_by('title')
+
+    items_per_page = 10
+    paginator = Paginator(books, items_per_page)
+    page_number = request.GET.get('page')
+    try:
+        page_obj = paginator.page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.page(1)
+    except EmptyPage:
+        page_obj = paginator.page(paginator.num_pages)
+
+    print(f"Book list for {request.user.email}: {books.count()} books retrieved")
+    return render(request, 'books/book_list.html', {
+        'page_obj': page_obj,
+        'books': page_obj.object_list,
+        'centres': Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else [],
+        'categories': Category.objects.all(),
+        'query': query,
+        'selected_category': category_id,
+        'selected_centre': centre_id,
+        'available_only': available_only,
+    })
+
+@login_required
+def book_detail(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    if request.user.is_librarian and not request.user.is_superuser and book.centre != request.user.centre:
+        messages.error(request, "You can only view books for your own centre.")
+        print(f"Unauthorized access attempt by {request.user.email} to book {book.isbn}")
+        return redirect('book_list')
+
+    if request.method == 'POST':
+        if not request.user.is_student:
+            messages.error(request, "Only students can borrow or reserve books.")
+            print(f"Non-student {request.user.email} attempted to borrow/reserve book {book.isbn}")
+            return redirect('book_detail', pk=pk)
+
+        action = request.POST.get('action')
+        if action == 'borrow' and book.available_copies > 0:
+            try:
+                with transaction.atomic():
+                    book.available_copies -= 1
+                    book.save()
+                    messages.success(request, "Book borrowed successfully.", extra_tags='green')
+                    print(f"Book {book.isbn} borrowed by {request.user.email}")
+                    return redirect('book_detail', pk=pk)
+            except Exception as e:
+                messages.error(request, f"Error borrowing book: {str(e)}")
+                print(f"Error borrowing book {book.isbn}: {str(e)}")
+        elif action == 'reserve':
+            try:
+                with transaction.atomic():
+                    messages.success(request, "Book reserved successfully.", extra_tags='green')
+                    print(f"Book {book.isbn} reserved by {request.user.email}")
+                    return redirect('book_detail', pk=pk)
+            except Exception as e:
+                messages.error(request, f"Error reserving book: {str(e)}")
+                print(f"Error reserving book {book.isbn}: {str(e)}")
+        else:
+            messages.error(request, "Invalid action or book not available.")
+            print(f"Invalid action or unavailable book {book.isbn} by {request.user.email}")
+
+    return render(request, 'books/book_detail.html', {
+        'book': book,
+    })
 
 @login_required
 def book_update(request, pk):
-    """Update book details"""
-    book = get_object_or_404(Book, pk=pk)
-    
-    # Check permissions
-    if request.user.is_librarian and book.centre != request.user.centre:
-        messages.error(request, "You don't have permission to edit this book.")
+    if not is_authorized(request.user):
+        messages.error(request, "You do not have permission to access this page.")
+        print(f"Unauthorized access attempt by {request.user.email} to book_update")
         return redirect('book_list')
-    
-    if request.method == 'POST':
-        form = BookForm(request.POST, instance=book)
-        if form.is_valid():
-            book = form.save(commit=False)
-            book.save(user=request.user)
-            messages.success(request, f"Book '{book.title}' updated successfully!")
-            return redirect('book_detail', pk=book.pk)
-    else:
-        form = BookForm(instance=book)
-        
-        # Restrict centre selection for librarians
-        if request.user.is_librarian:
-            form.fields['centre'].widget.attrs['disabled'] = True
-    
-    context = {'form': form, 'book': book}
-    return render(request, 'books/book_update.html', context)
 
+    book = get_object_or_404(Book, pk=pk)
+    if request.user.is_librarian and not request.user.is_superuser and book.centre != request.user.centre:
+        messages.error(request, "You can only update books for your own centre.")
+        print(f"Unauthorized update attempt by {request.user.email} on book {book.isbn}")
+        return redirect('book_list')
+
+    centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
+    categories = Category.objects.all()
+
+    if request.method == 'POST':
+        try:
+            centre_id = request.POST.get('centre')
+            centre = Centre.objects.get(id=centre_id) if centre_id else book.centre
+            if request.user.is_librarian and not request.user.is_superuser and centre != request.user.centre:
+                messages.error(request, "You can only update books for your own centre.")
+                print(f"Unauthorized centre update by {request.user.email} on book {book.isbn}")
+                return redirect('book_update', pk=pk)
+
+            category_id = request.POST.get('category')
+            try:
+                category = Category.objects.get(id=category_id)
+            except Category.DoesNotExist:
+                messages.error(request, "Invalid category selected.")
+                print(f"Error: Invalid category ID {category_id}")
+                return redirect('book_update', pk=pk)
+
+            book.title = request.POST.get('title', book.title)
+            book.author = request.POST.get('author', book.author)
+            book.category = category
+            book.book_code = request.POST.get('book_code', book.book_code)
+            book.isbn = request.POST.get('isbn', book.isbn)
+            book.publisher = request.POST.get('publisher', book.publisher)
+            book.year_of_publication = int(request.POST.get('year_of_publication')) if request.POST.get('year_of_publication') and request.POST.get('year_of_publication').isdigit() else book.year_of_publication
+            book.total_copies = int(request.POST.get('total_copies')) if request.POST.get('total_copies') and request.POST.get('total_copies').isdigit() else book.total_copies
+            book.available_copies = int(request.POST.get('available_copies') or request.POST.get('total_copies')) if (request.POST.get('available_copies') or request.POST.get('total_copies')) and (request.POST.get('available_copies') or request.POST.get('total_copies')).isdigit() else book.available_copies
+            book.centre = centre
+            book.full_clean()
+            book.save()
+            messages.success(request, "Book updated successfully.", extra_tags='green')
+            print(f"Book updated: {book.title or 'Untitled'} (ISBN: {book.isbn}) by {request.user.email}")
+            return redirect('book_list')
+        except IntegrityError:
+            messages.error(request, "Book with this ISBN already exists.")
+            print(f"IntegrityError: ISBN {request.POST.get('isbn')} already exists")
+        except ValueError as ve:
+            messages.error(request, f"Invalid data: {str(ve)}")
+            print(f"ValueError: Invalid data for book: {str(ve)}")
+        except Exception as e:
+            messages.error(request, f"Error updating book: {str(e)}")
+            print(f"Unexpected error updating book: {str(e)}")
+
+    return render(request, 'books/book_update.html', {'book': book, 'centres': centres, 'categories': categories})
 
 @login_required
 def book_delete(request, pk):
-    """Soft delete a book"""
+    if not is_authorized(request.user):
+        messages.error(request, "You do not have permission to access this page.")
+        print(f"Unauthorized access attempt by {request.user.email} to book_delete")
+        return redirect('book_list')
+
     book = get_object_or_404(Book, pk=pk)
-    
-    # Check permissions
-    if not request.user.is_site_admin:
-        messages.error(request, "Only admins can delete books.")
+    if request.user.is_librarian and not request.user.is_superuser and book.centre != request.user.centre:
+        messages.error(request, "You can only delete books for your own centre.")
+        print(f"Unauthorized delete attempt by {request.user.email} on book {book.isbn}")
         return redirect('book_list')
-    
+
     if request.method == 'POST':
-        book.is_active = False
-        book.save(user=request.user)
-        messages.success(request, f"Book '{book.title}' deleted successfully!")
+        book.delete()
+        messages.success(request, "Book deleted successfully.", extra_tags='green')
+        print(f"Book deleted: {book.title or 'Untitled'} (ISBN: {book.isbn}) by {request.user.email}")
         return redirect('book_list')
-    
+
     return render(request, 'books/book_delete.html', {'book': book})
-
-
-# ==================== BORROW VIEWS (STUDENT) ====================
-
-@login_required
-def borrow_request(request, book_id):
-    """Student requests to borrow a book"""
-    if not request.user.is_student:
-        messages.error(request, "Only students can borrow books.")
-        return redirect('book_list')
-    
-    book = get_object_or_404(Book, pk=book_id, is_active=True)
-    student = request.user.student_profile
-    
-    # Check if student can borrow
-    if not student.can_borrow():
-        messages.error(request, "You already have an active borrow. Return it before borrowing another book.")
-        return redirect('book_detail', pk=book_id)
-    
-    # Check if student already has active borrow for this book
-    existing_borrow = Borrow.objects.filter(
-        book=book,
-        user=request.user,
-        status__in=['requested', 'issued']
-    ).first()
-    
-    if existing_borrow:
-        messages.warning(request, "You already have an active request/borrow for this book.")
-        return redirect('book_detail', pk=book_id)
-    
-    # Check if book is available
-    if book.is_available():
-        # Create borrow request
-        borrow = Borrow.objects.create(
-            book=book,
-            user=request.user,
-            centre=book.centre,
-            status='requested',
-            notes=request.POST.get('notes', '')
-        )
-        
-        # Notify librarians
-        librarians = CustomUser.objects.filter(
-            is_librarian=True,
-            centre=book.centre
-        )
-        for librarian in librarians:
-            Notification.objects.create(
-                user=librarian,
-                message=f"{request.user.get_full_name()} requested to borrow '{book.title}'"
-            )
-        
-        messages.success(request, f"Borrow request for '{book.title}' submitted! Wait for librarian approval.")
-    else:
-        # Book not available - create reservation
-        reservation = Reservation.objects.create(
-            book=book,
-            user=request.user,
-            centre=book.centre
-        )
-        messages.info(request, f"'{book.title}' is currently unavailable. You've been added to the reservation list.")
-    
-    return redirect('book_detail', pk=book_id)
-
-
-@login_required
-def my_borrows(request):
-    """Student views their borrow history"""
-    if not request.user.is_student:
-        messages.error(request, "This page is for students only.")
-        return redirect('book_list')
-    
-    # Get all borrows
-    borrows = Borrow.objects.filter(user=request.user).select_related(
-        'book', 'issued_by', 'returned_to'
-    ).order_by('-request_date')
-    
-    # Separate active and history
-    active_borrows = borrows.filter(status__in=['requested', 'issued'])
-    history_borrows = borrows.filter(status='returned')
-    
-    # Get reservations
-    reservations = Reservation.objects.filter(
-        user=request.user,
-        status='pending'
-    ).select_related('book')
-    
-    context = {
-        'active_borrows': active_borrows,
-        'history_borrows': history_borrows,
-        'reservations': reservations,
-    }
-    return render(request, 'borrows/my_borrows.html', context)
-
-
-@login_required
-def borrow_cancel(request, borrow_id):
-    """Student cancels their borrow request"""
-    borrow = get_object_or_404(Borrow, pk=borrow_id, user=request.user)
-    
-    if borrow.status != 'requested':
-        messages.error(request, "You can only cancel pending requests.")
-        return redirect('my_borrows')
-    
-    if request.method == 'POST':
-        borrow.delete()
-        messages.success(request, "Borrow request cancelled.")
-        return redirect('my_borrows')
-    
-    return render(request, 'borrows/borrow_cancel.html', {'borrow': borrow})
-
-
-@login_required
-def borrow_renew(request, borrow_id):
-    """Student requests to renew their borrow"""
-    borrow = get_object_or_404(Borrow, pk=borrow_id, user=request.user)
-    
-    if borrow.status != 'issued':
-        messages.error(request, "You can only renew issued books.")
-        return redirect('my_borrows')
-    
-    if borrow.renew(user=request.user):
-        messages.success(request, f"'{borrow.book.title}' renewed successfully! New due date: {borrow.due_date.strftime('%Y-%m-%d')}")
-    else:
-        messages.error(request, "Maximum renewals reached (2). Please return the book.")
-    
-    return redirect('my_borrows')
-
-
-# ==================== BORROW VIEWS (LIBRARIAN) ====================
-
-@login_required
-def borrow_requests_list(request):
-    """Librarian views pending borrow requests"""
-    if not (request.user.is_librarian or request.user.is_site_admin):
-        messages.error(request, "You don't have permission to view this page.")
-        return redirect('book_list')
-    
-    # Get pending requests
-    requests_qs = Borrow.objects.filter(status='requested').select_related(
-        'book', 'user', 'centre'
-    )
-    
-    # Filter by centre for librarians
-    if request.user.is_librarian:
-        requests_qs = requests_qs.filter(centre=request.user.centre)
-    
-    # Search
-    search = request.GET.get('search', '')
-    if search:
-        requests_qs = requests_qs.filter(
-            Q(user__first_name__icontains=search) |
-            Q(user__last_name__icontains=search) |
-            Q(user__email__icontains=search) |
-            Q(book__title__icontains=search)
-        )
-    
-    # Pagination
-    paginator = Paginator(requests_qs, 20)
-    page_number = request.GET.get('page')
-    borrow_requests = paginator.get_page(page_number)
-    
-    context = {'borrow_requests': borrow_requests}
-    return render(request, 'borrows/borrow_requests_list.html', context)
-
-
-@login_required
-def borrow_issue(request, borrow_id):
-    """Librarian issues a book (approves borrow request)"""
-    if not (request.user.is_librarian or request.user.is_site_admin):
-        messages.error(request, "You don't have permission to issue books.")
-        return redirect('book_list')
-    
-    borrow = get_object_or_404(Borrow, pk=borrow_id)
-    
-    # Check permissions
-    if request.user.is_librarian and borrow.centre != request.user.centre:
-        messages.error(request, "You can only issue books from your centre.")
-        return redirect('borrow_requests_list')
-    
-    if borrow.status != 'requested':
-        messages.error(request, "This borrow request has already been processed.")
-        return redirect('borrow_requests_list')
-    
-    # Check if book is still available
-    if not borrow.book.is_available():
-        messages.error(request, f"'{borrow.book.title}' is no longer available.")
-        return redirect('borrow_requests_list')
-    
-    if request.method == 'POST':
-        # Issue the book
-        borrow.status = 'issued'
-        borrow.issue_date = timezone.now()
-        borrow.due_date = timezone.now() + timedelta(days=3)  # 3 days borrow period
-        borrow.issued_by = request.user
-        borrow.save(user=request.user)
-        
-        # Decrease available copies
-        borrow.book.available_copies -= 1
-        borrow.book.save(user=request.user)
-        
-        # Notify student
-        Notification.objects.create(
-            user=borrow.user,
-            message=f"Your request for '{borrow.book.title}' has been approved! Due date: {borrow.due_date.strftime('%Y-%m-%d')}"
-        )
-        
-        messages.success(request, f"Book '{borrow.book.title}' issued to {borrow.user.get_full_name()}!")
-        return redirect('borrow_requests_list')
-    
-    context = {'borrow': borrow}
-    return render(request, 'borrows/borrow_issue.html', context)
-
-
-@login_required
-def borrow_reject(request, borrow_id):
-    """Librarian rejects a borrow request"""
-    if not (request.user.is_librarian or request.user.is_site_admin):
-        messages.error(request, "You don't have permission to reject requests.")
-        return redirect('book_list')
-    
-    borrow = get_object_or_404(Borrow, pk=borrow_id)
-    
-    # Check permissions
-    if request.user.is_librarian and borrow.centre != request.user.centre:
-        messages.error(request, "You can only manage requests from your centre.")
-        return redirect('borrow_requests_list')
-    
-    if borrow.status != 'requested':
-        messages.error(request, "This borrow request has already been processed.")
-        return redirect('borrow_requests_list')
-    
-    if request.method == 'POST':
-        reason = request.POST.get('reason', 'No reason provided')
-        
-        # Notify student
-        Notification.objects.create(
-            user=borrow.user,
-            message=f"Your request for '{borrow.book.title}' was rejected. Reason: {reason}"
-        )
-        
-        # Delete the request
-        book_title = borrow.book.title
-        student_name = borrow.user.get_full_name()
-        borrow.delete()
-        
-        messages.success(request, f"Borrow request for '{book_title}' by {student_name} rejected.")
-        return redirect('borrow_requests_list')
-    
-    context = {'borrow': borrow}
-    return render(request, 'borrows/borrow_reject.html', context)
-
-
-@login_required
-def active_borrows_list(request):
-    """Librarian views all active borrows (issued books)"""
-    if not (request.user.is_librarian or request.user.is_site_admin):
-        messages.error(request, "You don't have permission to view this page.")
-        return redirect('book_list')
-    
-    # Get active borrows
-    borrows = Borrow.objects.filter(status='issued').select_related(
-        'book', 'user', 'issued_by', 'centre'
-    )
-    
-    # Filter by centre for librarians
-    if request.user.is_librarian:
-        borrows = borrows.filter(centre=request.user.centre)
-    
-    # Search
-    search = request.GET.get('search', '')
-    if search:
-        borrows = borrows.filter(
-            Q(user__first_name__icontains=search) |
-            Q(user__last_name__icontains=search) |
-            Q(user__email__icontains=search) |
-            Q(book__title__icontains=search)
-        )
-    
-    # Filter by status
-    status_filter = request.GET.get('status', '')
-    if status_filter == 'overdue':
-        borrows = [b for b in borrows if b.is_overdue()]
-    
-    # Pagination
-    paginator = Paginator(borrows, 20)
-    page_number = request.GET.get('page')
-    borrows = paginator.get_page(page_number)
-    
-    context = {'borrows': borrows}
-    return render(request, 'borrows/active_borrows_list.html', context)
-
-
-@login_required
-def borrow_receive_return(request, borrow_id):
-    """Librarian receives a returned book"""
-    if not (request.user.is_librarian or request.user.is_site_admin):
-        messages.error(request, "You don't have permission to receive returns.")
-        return redirect('book_list')
-    
-    borrow = get_object_or_404(Borrow, pk=borrow_id)
-    
-    # Check permissions
-    if request.user.is_librarian and borrow.centre != request.user.centre:
-        messages.error(request, "You can only receive returns for your centre.")
-        return redirect('active_borrows_list')
-    
-    if borrow.status != 'issued':
-        messages.error(request, "This book is not currently issued.")
-        return redirect('active_borrows_list')
-    
-    if request.method == 'POST':
-        # Mark as returned
-        borrow.status = 'returned'
-        borrow.return_date = timezone.now()
-        borrow.returned_to = request.user
-        borrow.save(user=request.user)
-        
-        # Increase available copies
-        borrow.book.available_copies += 1
-        borrow.book.save(user=request.user)
-        
-        # Check for pending reservations
-        pending_reservation = Reservation.objects.filter(
-            book=borrow.book,
-            status='pending'
-        ).order_by('reservation_date').first()
-        
-        if pending_reservation:
-            # Notify user with reservation
-            Notification.objects.create(
-                user=pending_reservation.user,
-                message=f"'{borrow.book.title}' is now available! Your reservation is ready."
-            )
-            pending_reservation.notified = True
-            pending_reservation.save()
-        
-        # Notify student
-        Notification.objects.create(
-            user=borrow.user,
-            message=f"Thank you for returning '{borrow.book.title}'!"
-        )
-        
-        messages.success(request, f"Book '{borrow.book.title}' returned by {borrow.user.get_full_name()}!")
-        return redirect('active_borrows_list')
-    
-    context = {'borrow': borrow}
-    return render(request, 'borrows/borrow_receive_return.html', context)
-
-
-# ==================== RESERVATION VIEWS ====================
-
-@login_required
-def reservation_cancel(request, reservation_id):
-    """Cancel a reservation"""
-    reservation = get_object_or_404(Reservation, pk=reservation_id, user=request.user)
-    
-    if reservation.status != 'pending':
-        messages.error(request, "This reservation is no longer active.")
-        return redirect('my_borrows')
-    
-    if request.method == 'POST':
-        reservation.status = 'cancelled'
-        reservation.save()
-        messages.success(request, f"Reservation for '{reservation.book.title}' cancelled.")
-        return redirect('my_borrows')
-    
-    return render(request, 'reservations/reservation_cancel.html', {'reservation': reservation})
-
-
-@login_required
-def reservations_list(request):
-    """Librarian views all reservations"""
-    if not (request.user.is_librarian or request.user.is_site_admin):
-        messages.error(request, "You don't have permission to view this page.")
-        return redirect('book_list')
-    
-    reservations = Reservation.objects.filter(status='pending').select_related(
-        'book', 'user', 'centre'
-    )
-    
-    # Filter by centre for librarians
-    if request.user.is_librarian:
-        reservations = reservations.filter(centre=request.user.centre)
-    
-    context = {'reservations': reservations}
-    return render(request, 'reservations/reservations_list.html', context)

@@ -1,0 +1,66 @@
+[
+    {
+        "model": "library_app.category",
+        "pk": 1,
+        "fields": {
+            "name": "FICTION",
+            "description": "General fiction books for readers of all ages."
+        }
+    },
+    {
+        "model": "library_app.category",
+        "pk": 2,
+        "fields": {
+            "name": "CHRISTIAN",
+            "description": "Books focused on Christian living, faith, and values."
+        }
+    },
+    {
+        "model": "library_app.category",
+        "pk": 3,
+        "fields": {
+            "name": "BIBLE STORIES",
+            "description": "Simplified Bible stories suitable for all readers."
+        }
+    },
+    {
+        "model": "library_app.category",
+        "pk": 4,
+        "fields": {
+            "name": "EASY FICTION",
+            "description": "Short, easy-to-read fiction books for young or beginner readers."
+        }
+    },
+    {
+        "model": "library_app.category",
+        "pk": 5,
+        "fields": {
+            "name": "DEVO",
+            "description": "Devotional books that inspire daily spiritual growth."
+        }
+    },
+    {
+        "model": "library_app.category",
+        "pk": 6,
+        "fields": {
+            "name": "SCIENCE",
+            "description": "Books related to scientific concepts and discoveries."
+        }
+    },
+    {
+        "model": "library_app.category",
+        "pk": 7,
+        "fields": {
+            "name": "EDUCATION",
+            "description": "Educational and learning resources for academic support."
+        }
+    },
+    {
+        "model": "library_app.category",
+        "pk": 8,
+        "fields": {
+            "name": "GENERAL ENCYCLOPEDIA",
+            "description": "Reference materials covering a wide range of subjects."
+        }
+    }
+]

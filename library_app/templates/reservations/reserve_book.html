@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Reserve Book - LibraryHub{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Reserve Book
+        </h1>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">Reserve {{ book.title|default:"Untitled" }}</p>
+    </div>
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100">
+        <form method="post" id="reserve-form" style="display:none;">
+            {% csrf_token %}
+        </form>
+
+        <!-- Modal -->
+        <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+                <h2 class="text-xl font-bold text-primary mb-4">Confirm Reservation</h2>
+                <p class="mb-4">Are you sure you want to reserve <strong>{{ book.title|default:"Untitled" }}</strong>?</p>
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                        <button type="button" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 text-center transition-all transform hover:scale-105 font-medium shadow-sm" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                            <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Confirm
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <button type="button" onclick="openModal()" class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg">
+            <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+            Confirm Reservation
+        </button>
+    </div>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slide-in-right {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .animate-fade-in { animation: fade-in 0.5s ease-out; }
+    
+    .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+    input, textarea, select {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+        outline: none;
+        border: 2px solid #C86450;
+        border-color: transparent;
+        box-shadow: 0 0 0 3px rgba(200, 100, 80, 0.1);
+    }
+</style>
+
+<script>
+    setTimeout(function() {
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            message.style.transition = 'opacity 0.5s';
+            message.style.opacity = '0';
+            setTimeout(function() { message.remove(); }, 500);
+        });
+    }, 5000);
+    
+    function openModal() {
+        document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+    function closeModal() {
+        document.getElementById('confirm-modal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

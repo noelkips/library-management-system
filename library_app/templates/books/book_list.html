@@ -3,14 +3,14 @@
 {% block title %}Books - LibraryHub{% endblock %}
 
 {% block content %}
-<div class="animate-fade-in">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
     {% if messages %}
         <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
             {% for message in messages %}
-                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
-                            {% if message.tags == 'success' %}
+                            {% if message.tags == 'success' or message.tags == 'green' %}
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
@@ -34,230 +34,170 @@
         </div>
     {% endif %}
 
-    <div class="mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-                <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
-                    <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                    </svg>
-                    Books
-                </h1>
-                <p class="text-gray-600 mt-2 text-sm md:text-base">Manage your library collection</p>
-            </div>
-            {% if user.is_site_admin or user.is_librarian %}
-            <a href="{% url 'book_add' %}" class="bg-secondary text-white px-4 py-2 md:px-6 md:py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg flex items-center justify-center text-sm md:text-base">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Add New Book
-            </a>
-            {% endif %}
-        </div>
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+            </svg>
+            Books
+        </h1>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">Manage your library collection</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="p-4 md:p-6 border-b border-gray-200">
-            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Search</label>
-                    <input 
-                        type="text" 
-                        name="search" 
-                        value="{{ request.GET.search }}" 
-                        placeholder="Search by title, author, ISBN..." 
-                        class="w-full border border-gray-300 p-2 md:p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all text-sm md:text-base"
-                    >
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-                    <select 
-                        name="category" 
-                        class="w-full border border-gray-300 p-2 md:p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all text-sm md:text-base"
-                    >
-                        <option value="">All Categories</option>
-                        {% for category in categories %}
-                            <option value="{{ category }}" {% if request.GET.category == category %}selected{% endif %}>{{ category }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="flex items-end">
-                    <button 
-                        type="submit" 
-                        class="w-full bg-accent text-white px-4 py-2 md:py-3 rounded-lg hover:bg-secondary transition-all transform hover:scale-105 flex items-center justify-center text-sm md:text-base"
-                    >
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        Search
-                    </button>
-                </div>
-            </form>
+    {% if user.is_superuser or user.is_librarian %}
+    <div class="mb-6">
+        <a href="{% url 'book_add' %}" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg">
+            <svg class="w-5 h-5 mr-2 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add New Book
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+            <div>
+                <input type="text" id="search" name="search" placeholder="Search" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary">
+            </div>
+            <div>
+                <select id="category" name="category" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if user.is_superuser %}
+            <div>
+                <select id="centre" name="centre" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary">
+                    <option value="">All Centres</option>
+                    {% for centre in centres %}
+                        <option value="{{ centre.id }}">{{ centre.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" id="available_only" name="available_only" class="mr-2">
+                    <span>Available Only</span>
+                </label>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-primary text-white">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold">Title</th>
-                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden md:table-cell">Author</th>
-                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden lg:table-cell">ISBN</th>
-                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden sm:table-cell">Category</th>
-                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold">Available</th>
-                        <th class="px-4 py-3 text-center text-xs md:text-sm font-semibold">Actions</th>
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-primary text-white">
+                        <th class="p-3">Title</th>
+                        <th class="p-3">Author</th>
+                        <th class="p-3">Book Code</th>
+                        <th class="p-3">ISBN</th>
+                        <th class="p-3">Category</th>
+                        <th class="p-3">Centre</th>
+                        <th class="p-3">Availability</th>
+                        <th class="p-3">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-200">
+                <tbody>
                     {% for book in books %}
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-4 py-3 text-sm md:text-base">
-                            <div class="font-medium text-gray-900">{{ book.title }}</div>
-                            <div class="text-xs text-gray-500 md:hidden">{{ book.author }}</div>
-                        </td>
-                        <td class="px-4 py-3 text-sm md:text-base text-gray-700 hidden md:table-cell">{{ book.author }}</td>
-                        <td class="px-4 py-3 text-sm md:text-base text-gray-700 hidden lg:table-cell">{{ book.isbn }}</td>
-                        <td class="px-4 py-3 hidden sm:table-cell">
-                            <span class="px-2 py-1 text-xs font-medium bg-accent bg-opacity-10 text-accent rounded-full">
-                                {{ book.category }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3">
-                            {% if book.available_copies > 0 %}
-                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                    {{ book.available_copies }} / {{ book.total_copies }}
-                                </span>
-                            {% else %}
-                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                                    Out of Stock
-                                </span>
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3">{{ book.title|default:"Untitled" }}</td>
+                        <td class="p-3">{{ book.author|default:"Unknown" }}</td>
+                        <td class="p-3">{{ book.book_code|default:"N/A" }}</td>
+                        <td class="p-3">{{ book.isbn }}</td>
+                        <td class="p-3">{{ book.category.name }}</td>
+                        <td class="p-3">{{ book.centre.name }}</td>
+                        <td class="p-3">{{ book.available_copies }}/{{ book.total_copies }}</td>
+                        <td class="p-3">
+                            {% if user.is_student or user.is_teacher %}
+                                <form method="post" action="{% url 'borrow_request' book.id %}" class="inline-block mr-2">
+                                    {% csrf_token %}
+                                    <button type="submit" {% if book.available_copies <= 0 %}disabled{% endif %} class="bg-secondary text-white py-2 px-4 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg {% if book.available_copies <= 0 %}opacity-50 cursor-not-allowed{% endif %}">
+                                        Borrow
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'reserve_book' book.id %}" class="inline-block">
+                                    {% csrf_token %}
+                                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg">
+                                        Reserve
+                                    </button>
+                                </form>
+                            {% elif user.is_superuser or user.is_librarian %}
+                                <a href="{% url 'book_detail' book.pk %}" class="bg-neutral text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-all transform hover:scale-105 mr-2">View</a>
+                                <a href="{% url 'book_update' book.pk %}" class="bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-all transform hover:scale-105 mr-2">Edit</a>
+                                <a href="{% url 'book_delete' book.pk %}" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105">Delete</a>
                             {% endif %}
-                        </td>
-                        <td class="px-4 py-3">
-                            <div class="flex items-center justify-center gap-2">
-                                {% if user.is_site_admin or user.is_librarian %}
-                                <a href="{% url 'book_update' book.pk %}" class="text-accent hover:text-secondary transition-colors" title="Edit">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                </a>
-                                <button onclick="confirmDelete('{% url 'book_delete' book.pk %}')" class="text-danger hover:text-red-700 transition-colors" title="Delete">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                                {% endif %}
-                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                            <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                            </svg>
-                            <p class="text-lg font-medium">No books found</p>
-                            <p class="text-sm mt-1">Try adjusting your search criteria</p>
-                        </td>
+                        <td colspan="8" class="p-3 text-center">No books found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        {% if books.has_other_pages %}
-        <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="text-sm text-gray-700">
-                    Showing page {{ books.number }} of {{ books.paginator.num_pages }}
-                </div>
-                <div class="flex gap-2">
-                    {% if books.has_previous %}
-                        <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">First</a>
-                        <a href="?page={{ books.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Previous</a>
-                    {% endif %}
-                    
-                    {% if books.has_next %}
-                        <a href="?page={{ books.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Next</a>
-                        <a href="?page={{ books.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm">Last</a>
-                    {% endif %}
-                </div>
+        {% if page_obj.has_previous or page_obj.has_next %}
+        <div class="mt-6 flex justify-between items-center">
+            <span class="text-gray-600">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} books</span>
+            <div>
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-all transform hover:scale-105 mr-2">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-all transform hover:scale-105">Next</a>
+                {% endif %}
             </div>
         </div>
         {% endif %}
     </div>
 </div>
 
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 animate-fade-in">
-        <div class="flex items-center mb-4">
-            <div class="bg-red-100 rounded-full p-3 mr-4">
-                <svg class="w-6 h-6 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-            </div>
-            <div>
-                <h3 class="text-lg font-bold text-gray-900">Confirm Delete</h3>
-                <p class="text-sm text-gray-600 mt-1">Are you sure you want to delete this book?</p>
-            </div>
-        </div>
-        <div class="flex gap-3 mt-6">
-            <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
-                Cancel
-            </button>
-            <form id="deleteForm" method="post" class="flex-1">
-                {% csrf_token %}
-                <button type="submit" class="w-full px-4 py-2 bg-danger text-white rounded-lg hover:bg-red-700 transition-colors">
-                    Delete
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
 <style>
     @keyframes fade-in {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
     
     @keyframes slide-in-right {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
     
-    .animate-fade-in {
-        animation: fade-in 0.5s ease-out;
-    }
+    .animate-fade-in { animation: fade-in 0.5s ease-out; }
     
-    .animate-slide-in-right {
-        animation: slide-in-right 0.3s ease-out;
+    .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+        outline: none;
+        border: 2px solid #C86450;
+        border-color: transparent;
+        box-shadow: 0 0 0 3px rgba(200, 100, 80, 0.1);
     }
 </style>
 
 <script>
-    function confirmDelete(url) {
-        document.getElementById('deleteForm').action = url;
-        document.getElementById('deleteModal').classList.remove('hidden');
-    }
-
-    function closeDeleteModal() {
-        document.getElementById('deleteModal').classList.add('hidden');
-    }
-
     setTimeout(function() {
         const messages = document.querySelectorAll('[role="alert"]');
         messages.forEach(function(message) {
             message.style.transition = 'opacity 0.5s';
             message.style.opacity = '0';
-            setTimeout(function() {
-                message.remove();
-            }, 500);
+            setTimeout(function() { message.remove(); }, 500);
         });
     }, 5000);
 </script>
