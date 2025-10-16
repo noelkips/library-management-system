@@ -27,11 +27,9 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
         .animate-fade-in {
             animation: fade-in 0.6s ease-out;
         }
-        
         .gradient-bg {
             background: linear-gradient(135deg, #143C50 0%, #288CC8 100%);
         }
@@ -49,10 +47,11 @@
                 </defs>
             </svg>
         </div>
-        
+
         <div class="relative z-10 text-center text-white">
             <svg class="w-24 h-24 md:w-32 md:h-32 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
             </svg>
             <h1 class="text-3xl md:text-4xl font-bold mb-4">LibraryHub</h1>
             <p class="text-lg md:text-xl opacity-90">Your Digital Library Management System</p>
@@ -63,7 +62,8 @@
         <div class="bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-2xl w-full max-w-md animate-fade-in">
             <div class="lg:hidden text-center mb-6">
                 <svg class="w-16 h-16 mx-auto mb-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
                 </svg>
                 <h2 class="text-2xl font-bold text-primary">LibraryHub</h2>
             </div>
@@ -90,22 +90,25 @@
                 </div>
             {% endif %}
 
+            <!-- ✅ Updated: username field now correctly matches Django's authenticate() -->
             <form method="POST" action="{% url 'login_view' %}" class="space-y-4">
                 {% csrf_token %}
                 
                 <div class="form-group">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2" for="email">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2" for="username">
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
-                        Email or CIN
+                        Email or Student ID
                     </label>
                     <input 
                         type="text" 
-                        name="email" 
-                        id="email" 
+                        name="username"   <!-- ✅ must be "username" -->
+                        id="username" 
+                        value="{{ request.POST.username|default_if_none:'' }}" 
                         class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all" 
-                        placeholder="Enter your email or CIN" 
+                        placeholder="Enter your email or student ID" 
                         required
                     >
                 </div>
@@ -113,7 +116,8 @@
                 <div class="form-group">
                     <label class="block text-sm font-semibold text-gray-700 mb-2" for="password">
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                         Password
                     </label>
@@ -144,9 +148,10 @@
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
                     <p class="text-xs text-blue-800 text-center">
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        Students can log in using their CIN as username
+                        Students can log in using their Student ID
                     </p>
                 </div>
             </form>
