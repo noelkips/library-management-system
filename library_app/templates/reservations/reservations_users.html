@@ -1,7 +1,7 @@
-<!-- borrows/all_borrows_history.html -->
+<!-- reservations/reservations_users.html -->
 {% extends 'base.html' %}
 
-{% block title %}Borrow History - LibraryHub{% endblock %}
+{% block title %}Reservations (Teachers) - LibraryHub{% endblock %}
 
 {% block content %}
 <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
@@ -40,26 +40,20 @@
             <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
             </svg>
-            Borrow History{% if user_type == 'students' %} (Students){% endif %}
+            Reservations (Teachers)
         </h1>
-        <p class="text-gray-600 mt-2 text-base sm:text-lg">View complete borrow history</p>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">Teachers with pending reservations</p>
     </div>
 
     <div class="mb-6">
-        <a href="{% url 'all_borrows_history' %}?user_type=students" class="px-4 py-2 rounded {% if user_type == 'students' %}bg-secondary text-white{% else %}bg-gray-200{% endif %}">Students</a>
-        <a href="{% url 'all_borrows_history' %}?user_type=teachers" class="px-4 py-2 rounded {% if user_type == 'teachers' %}bg-secondary text-white{% else %}bg-gray-200{% endif %}">Teachers</a>
+        <a href="{% url 'reservations_list' %}?user_type=students" class="px-4 py-2 rounded bg-gray-200">Students</a>
+        <a href="{% url 'reservations_list' %}?user_type=teachers" class="px-4 py-2 rounded bg-secondary text-white">Teachers</a>
     </div>
 
     <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100 mb-8">
         <form method="get" class="mb-6 flex flex-col sm:flex-row gap-4">
             <input type="hidden" name="user_type" value="{{ user_type }}">
-            <input type="text" name="search" value="{{ search }}" placeholder="Search by user or book..." class="flex-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-            <select name="status" class="border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
-                <option value="requested" {% if status_filter == 'requested' %}selected{% endif %}>Requested</option>
-                <option value="issued" {% if status_filter == 'issued' %}selected{% endif %}>Issued</option>
-                <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
-            </select>
+            <input type="text" name="search" value="{{ search }}" placeholder="Search by teacher..." class="flex-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
             <button type="submit" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -68,48 +62,50 @@
             </button>
         </form>
 
-        {% if borrows %}
+        {% if users_with_reservations %}
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-500">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
-                            <th class="px-4 py-3">Book</th>
-                            <th class="px-4 py-3">User</th>
+                            <th class="px-4 py-3">Teacher</th>
+                            <th class="px-4 py-3">Email</th>
                             <th class="px-4 py-3">Centre</th>
-                            <th class="px-4 py-3">Request Date</th>
-                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Pending Reservations</th>
+                            <th class="px-4 py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for borrow in borrows %}
+                        {% for user in users_with_reservations %}
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="px-4 py-3">{{ borrow.book.title|default:"Untitled" }} ({{ borrow.book.isbn|default:"N/A" }})</td>
-                                <td class="px-4 py-3">{{ borrow.user.get_full_name|default:borrow.user.email }}</td>
-                                <td class="px-4 py-3">{{ borrow.centre.name|default:"N/A" }}</td>
-                                <td class="px-4 py-3">{{ borrow.request_date|date:"Y-m-d"|default:"N/A" }}</td>
-                                <td class="px-4 py-3">{{ borrow.status|title }}</td>
+                                <td class="px-4 py-3">{{ user.get_full_name|default:user.email }}</td>
+                                <td class="px-4 py-3">{{ user.email }}</td>
+                                <td class="px-4 py-3">{{ user.centre.name|default:"N/A" }}</td>
+                                <td class="px-4 py-3">{{ user.reservation_count }}</td>
+                                <td class="px-4 py-3">
+                                    <a href="{% url 'user_reservations' user.id %}" class="text-blue-600 hover:text-blue-800">Manage Reservations</a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            {% if borrows.has_other_pages %}
+            {% if users_with_reservations.has_other_pages %}
                 <div class="mt-6 flex justify-between items-center">
                     <div>
-                        {% if borrows.has_previous %}
-                            <a href="?page={{ borrows.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&user_type={{ user_type }}" class="text-primary hover:text-accent">Previous</a>
+                        {% if users_with_reservations.has_previous %}
+                            <a href="?page={{ users_with_reservations.previous_page_number }}{% if search %}&search={{ search }}{% endif %}&user_type={{ user_type }}" class="text-primary hover:text-accent">Previous</a>
                         {% endif %}
                     </div>
-                    <div class="text-gray-600">Page {{ borrows.number }} of {{ borrows.paginator.num_pages }}</div>
+                    <div class="text-gray-600">Page {{ users_with_reservations.number }} of {{ users_with_reservations.paginator.num_pages }}</div>
                     <div>
-                        {% if borrows.has_next %}
-                            <a href="?page={{ borrows.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}&user_type={{ user_type }}" class="text-primary hover:text-accent">Next</a>
+                        {% if users_with_reservations.has_next %}
+                            <a href="?page={{ users_with_reservations.next_page_number }}{% if search %}&search={{ search }}{% endif %}&user_type={{ user_type }}" class="text-primary hover:text-accent">Next</a>
                         {% endif %}
                     </div>
                 </div>
             {% endif %}
         {% else %}
-            <p class="text-gray-600">No borrow history.</p>
+            <p class="text-gray-600">No teachers with pending reservations.</p>
         {% endif %}
     </div>
 </div>

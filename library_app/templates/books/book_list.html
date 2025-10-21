@@ -111,21 +111,12 @@
                         <td class="p-3">{{ book.centre.name }}</td>
                         <td class="p-3">{{ book.available_copies }}/{{ book.total_copies }}</td>
                         <td class="p-3">
+                            <a href="{% url 'book_detail' book.pk %}" class="bg-neutral text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-all transform hover:scale-105 mr-2">View</a>
                             {% if user.is_student or user.is_teacher %}
-                                <form method="post" action="{% url 'borrow_request' book.id %}" class="inline-block mr-2">
-                                    {% csrf_token %}
-                                    <button type="submit" {% if book.available_copies <= 0 %}disabled{% endif %} class="bg-secondary text-white py-2 px-4 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg {% if book.available_copies <= 0 %}opacity-50 cursor-not-allowed{% endif %}">
-                                        Borrow
-                                    </button>
-                                </form>
-                                <form method="post" action="{% url 'reserve_book' book.id %}" class="inline-block">
-                                    {% csrf_token %}
-                                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-lg">
-                                        Reserve
-                                    </button>
-                                </form>
+                            
+                                
                             {% elif user.is_superuser or user.is_librarian %}
-                                <a href="{% url 'book_detail' book.pk %}" class="bg-neutral text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-all transform hover:scale-105 mr-2">View</a>
+                               
                                 <a href="{% url 'book_update' book.pk %}" class="bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-all transform hover:scale-105 mr-2">Edit</a>
                                 <a href="{% url 'book_delete' book.pk %}" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105">Delete</a>
                             {% endif %}

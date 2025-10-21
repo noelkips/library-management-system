@@ -1,8 +1,7 @@
-<!-- Full borrow_requests_list.html -->
-
+<!-- borrows/user_history_borrows.html -->
 {% extends 'base.html' %}
 
-{% block title %}Borrow Requests - LibraryHub{% endblock %}
+{% block title %}Borrow History for {{ user.get_full_name|default:user.email }} - LibraryHub{% endblock %}
 
 {% block content %}
 <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
@@ -39,69 +38,60 @@
     <div class="mb-8">
         <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
             <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
             </svg>
-            Borrow Requests
+            Borrow History for {{ user.get_full_name|default:user.email }}
         </h1>
-        <p class="text-gray-600 mt-2 text-base sm:text-lg">Manage pending borrow requests by user</p>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">View borrow history for this user</p>
     </div>
 
-    <form method="get" class="mb-6 flex flex-col sm:flex-row gap-4">
-        <div class="flex-1">
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Search by user or book</label>
-            <input type="text" name="search" value="{{ search }}" placeholder="Search user name, email, or book title..." class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-        </div>
-        <button type="submit" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105">Search</button>
-    </form>
-
-    {% if users_with_requests %}
-        <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="p-3 text-left font-semibold text-gray-700">User</th>
-                        <th class="p-3 text-left font-semibold text-gray-700">Email</th>
-                        <th class="p-3 text-left font-semibold text-gray-700">Pending Requests</th>
-                        <th class="p-3 text-left font-semibold text-gray-700">Centre</th>
-                        <th class="p-3 text-left font-semibold text-gray-700">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {% for user in users_with_requests %}
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="p-3">{{ user.get_full_name|default:user.email }}</td>
-                        <td class="p-3">{{ user.email }}</td>
-                        <td class="p-3">{{ user.pending_count }}</td>
-                        <td class="p-3">{{ user.centre.name|default:"N/A" }}</td>
-                        <td class="p-3">
-                            <a href="{% url 'user_borrow_details' user.id %}" class="bg-secondary text-white py-2 px-4 rounded-lg hover:bg-accent transition-all transform hover:scale-105">Manage Requests</a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" class="p-3 text-center">No pending borrow requests.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {% if users_with_requests.has_other_pages %}
-        <div class="mt-6 flex justify-between items-center">
-            <span class="text-gray-600">Showing {{ users_with_requests.start_index }} to {{ users_with_requests.end_index }} of {{ users_with_requests.paginator.count }} users</span>
-            <div>
-                {% if users_with_requests.has_previous %}
-                    <a href="?page={{ users_with_requests.previous_page_number }}{% if search %}&search={{ search }}{% endif %}" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-all transform hover:scale-105 mr-2">Previous</a>
-                {% endif %}
-                {% if users_with_requests.has_next %}
-                    <a href="?page={{ users_with_requests.next_page_number }}{% if search %}&search={{ search }}{% endif %}" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-all transform hover:scale-105">Next</a>
-                {% endif %}
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100 mb-8">
+        {% if history_borrows %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3">Book</th>
+                            <th class="px-4 py-3">Centre</th>
+                            <th class="px-4 py-3">Request Date</th>
+                            <th class="px-4 py-3">Issue Date</th>
+                            <th class="px-4 py-3">Return Date</th>
+                            <th class="px-4 py-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrow in history_borrows %}
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ borrow.book.title|default:"Untitled" }} ({{ borrow.book.isbn|default:"N/A" }})</td>
+                                <td class="px-4 py-3">{{ borrow.centre.name|default:"N/A" }}</td>
+                                <td class="px-4 py-3">{{ borrow.request_date|date:"Y-m-d"|default:"N/A" }}</td>
+                                <td class="px-4 py-3">{{ borrow.issue_date|date:"Y-m-d"|default:"N/A" }}</td>
+                                <td class="px-4 py-3">{{ borrow.return_date|date:"Y-m-d"|default:"N/A" }}</td>
+                                <td class="px-4 py-3">{{ borrow.status|title }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
+            {% if history_borrows.has_other_pages %}
+                <div class="mt-6 flex justify-between items-center">
+                    <div>
+                        {% if history_borrows.has_previous %}
+                            <a href="?page={{ history_borrows.previous_page_number }}" class="text-primary hover:text-accent">Previous</a>
+                        {% endif %}
+                    </div>
+                    <div class="text-gray-600">Page {{ history_borrows.number }} of {{ history_borrows.paginator.num_pages }}</div>
+                    <div>
+                        {% if history_borrows.has_next %}
+                            <a href="?page={{ history_borrows.next_page_number }}" class="text-primary hover:text-accent">Next</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="text-gray-600">No borrow history for this user.</p>
         {% endif %}
-    {% else %}
-        <p class="text-gray-600">No pending borrow requests.</p>
-    {% endif %}
+    </div>
 </div>
 
 <style>

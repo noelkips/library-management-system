@@ -448,7 +448,10 @@ def create_student_profile(sender, instance, created, **kwargs):
         school = None
         if hasattr(instance, '_school_id') and instance._school_id:
             try:
-                school = School.objects.get(id=instance._school_id)
+                school_obj = School.objects.get(id=instance._school_id)
+                # take only the first 4 letters of the school name
+                school_name = school_obj.name[:4] if school_obj.name else ""
+                school = school_name
             except School.DoesNotExist:
                 school = None
             del instance._school_id
@@ -466,7 +469,7 @@ def create_student_profile(sender, instance, created, **kwargs):
             name=f"{instance.first_name} {instance.last_name}".strip(),
             centre=instance.centre,
             child_ID=child_ID,
-            school=school,
+            school=school,  # now only the first 4 letters of the school name
         )
 
 

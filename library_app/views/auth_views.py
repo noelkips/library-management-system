@@ -39,22 +39,25 @@ def landing_page(request):
         return redirect('dashboard')
     return render(request, 'landing.html')
 
+
 def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    if request.method == 'POST':
-        username = request.POST.get('email')  # Note: field is still 'email' in form, but backend handles child_ID
-        password = request.POST.get('password')
+    if request.method == "POST":
+        username = request.POST.get("email")  # can be email or CIN
+        password = request.POST.get("password")
+
         user = authenticate(request, username=username, password=password)
+
         if user is not None:
             login(request, user)
-            if user.force_password_change:
-                messages.info(request, "Please change your password before proceeding.")
-                return redirect('change_password')
-            return redirect('dashboard')
+            messages.success(request, "Login successful! Welcome back.")
+            return redirect("dashboard")  # update to your home/dashboard URL
         else:
-            messages.error(request, 'Invalid username or password.')
-    return render(request, 'auth/login.html')
+            messages.error(request, "Invalid credentials. Please try again.")
+            return redirect("login_view")
+            
+    return render(request, "auth/login.html")
+
+
 
 @login_required
 def logout_view(request):

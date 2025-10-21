@@ -1,0 +1,185 @@
+<!-- Full user_borrow_details.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}User Borrow Details - LibraryHub{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+    {% if messages %}
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+            {% for message in messages %}
+                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            {% if message.tags == 'success' or message.tags == 'green' %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            {% else %}
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium">{{ message|safe }}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Borrow Requests for {{ user.get_full_name|default:user.email }}
+        </h1>
+        <p class="text-gray-600 mt-2 text-base sm:text-lg">Manage pending requests for this user</p>
+    </div>
+
+    <form method="post" class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+        {% csrf_token %}
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="p-3 text-left">
+                        <input type="checkbox" onclick="document.querySelectorAll('input[name=borrow_ids]').forEach(cb => cb.checked = this.checked)">
+                    </th>
+                    <th class="p-3 text-left font-semibold text-gray-700">Book Title</th>
+                    <th class="p-3 text-left font-semibold text-gray-700">ISBN</th>
+                    <th class="p-3 text-left font-semibold text-gray-700">Request Date</th>
+                    <th class="p-3 text-left font-semibold text-gray-700">Notes</th>
+                    <th class="p-3 text-left font-semibold text-gray-700">Available?</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for borrow in pending_borrows %}
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-3">
+                        <input type="checkbox" name="borrow_ids" value="{{ borrow.id }}">
+                    </td>
+                    <td class="p-3">{{ borrow.book.title|default:"Untitled" }}</td>
+                    <td class="p-3">{{ borrow.book.isbn }}</td>
+                    <td class="p-3">{{ borrow.request_date|date:"Y-m-d" }}</td>
+                    <td class="p-3">{{ borrow.notes|default:"N/A" }}</td>
+                    <td class="p-3">
+                        {% if borrow.book.is_available %}
+                            <span class="text-green-600">Yes</span>
+                        {% else %}
+                            <span class="text-red-600">No</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-3 text-center">No pending requests for this user.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if pending_borrows %}
+        <div class="p-6 border-t border-gray-200">
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Borrow Duration (days) for Issued Books
+                </label>
+                <input type="number" name="days" value="3" min="1" max="30" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                <p class="text-gray-500 text-xs mt-1">1-30 days; due date not beyond 2025.</p>
+            </div>
+            <div class="flex justify-end gap-4">
+                <button type="submit" formaction="{% url 'bulk_issue_borrows' user.id %}" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Issue Selected
+                </button>
+                <button type="submit" formaction="{% url 'bulk_reject_borrows' user.id %}" class="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    Reject Selected
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </form>
+
+    <a href="{% url 'borrow_requests_list' %}" class="mt-6 inline-block bg-gray-200 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-300 transition-all transform hover:scale-105">Back to Requests List</a>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes slide-in-right {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .animate-fade-in { animation: fade-in 0.5s ease-out; }
+    
+    .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 0.75rem;
+        text-align: left;
+    }
+
+    th {
+        background-color: #f9fafb;
+        font-weight: 600;
+    }
+
+    tr {
+        transition: background-color 0.2s;
+    }
+
+    input, textarea, select {
+        width: 100%;
+        border: 1px solid #d1d5db;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+        outline: none;
+        border: 2px solid #C86450;
+        border-color: transparent;
+        box-shadow: 0 0 0 3px rgba(200, 100, 80, 0.1);
+    }
+</style>
+
+<script>
+    setTimeout(function() {
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            message.style.transition = 'opacity 0.5s';
+            message.style.opacity = '0';
+            setTimeout(function() { message.remove(); }, 500);
+        });
+    }, 5000);
+
+    document.querySelector('input[name=days]').addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        if (val < 1 || val > 30) e.target.value = 3;
+    });
+</script>
+{% endblock %}
