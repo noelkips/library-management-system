@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Issue Book to Student - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-100 border-l-4 border-green-500 text-green-700{% else %}bg-red-100 border-l-4 border-red-500 text-red-700{% endif %} p-4 mb-2" role="alert">
+            {{ message|safe }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">Issue Book to Student</h2>
+        <p class="text-gray-600">Book: {{ parent_borrow.book.title|default:"Untitled" }} ({{ parent_borrow.book.isbn }})</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow-md p-6 max-w-lg">
+        <form method="POST" action="{% url 'teacher_issue_to_student' parent_borrow.id %}">
+            {% csrf_token %}
+            <div class="mb-4">
+                <label for="student_name" class="block text-gray-700 font-medium mb-2">Student Name *</label>
+                <input type="text" id="student_name" name="student_name" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                       required>
+            </div>
+            <div class="mb-4">
+                <label for="student_id" class="block text-gray-700 font-medium mb-2">Student ID</label>
+                <input type="text" id="student_id" name="student_id" 
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label for="expected_days" class="block text-gray-700 font-medium mb-2">Expected Return Days</label>
+                <input type="number" id="expected_days" name="expected_days" value="7"
+                       class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="mb-4">
+                <label for="notes" class="block text-gray-700 font-medium mb-2">Notes</label>
+                <textarea id="notes" name="notes" 
+                          class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                          rows="4"></textarea>
+            </div>
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'teacher_manage_book' parent_borrow.id %}" 
+                   class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</a>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                    Issue Book
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Back Link -->
+    <div class="mt-6">
+        <a href="{% url 'teacher_my_books' %}" 
+           class="text-blue-600 hover:underline">← Back to My Books</a>
+    </div>
+</div>
+{% endblock %}

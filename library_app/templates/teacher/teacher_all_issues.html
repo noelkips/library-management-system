@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}All Student Issues - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-100 border-l-4 border-green-500 text-green-700{% else %}bg-red-100 border-l-4 border-red-500 text-red-700{% endif %} p-4 mb-2" role="alert">
+            {{ message|safe }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-800">All Student Issues</h2>
+        <p class="text-gray-600">View and manage all books issued to students</p>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+        <form method="GET" class="flex-1 mb-4 sm:mb-0">
+            <input type="text" name="search" value="{{ search }}" placeholder="Search by student name, ID, or book title"
+                   class="w-full sm:w-64 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button type="submit" class="mt-2 sm:mt-0 sm:ml-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                Search
+            </button>
+        </form>
+        <form method="GET" class="flex-1">
+            <select name="status" class="w-full sm:w-32 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+                <option value="issued" {% if status_filter == 'issued' %}selected{% endif %}>Issued</option>
+                <option value="returned" {% if status_filter == 'returned' %}selected{% endif %}>Returned</option>
+            </select>
+            <button type="submit" class="mt-2 sm:mt-0 sm:ml-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                Filter
+            </button>
+        </form>
+    </div>
+
+    <!-- Issues Table -->
+    <div class="mb-8">
+        <h3 class="text-xl font-semibold text-gray-700 mb-4">Student Issues</h3>
+        {% if issues %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Issue Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Return</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for issue in issues %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ issue.book.title|default:"Untitled" }} ({{ issue.book.isbn }})</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ issue.student_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ issue.student_id|default:"N/A" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ issue.issue_date|date:"Y-m-d" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ issue.expected_return_date|date:"Y-m-d"|default:"N/A" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">{{ issue.status|title }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if issue.status == 'issued' %}
+                            <a href="{% url 'teacher_receive_return' issue.id %}" class="text-blue-600 hover:underline">Receive Return</a>
+                            |
+                            <a href="{% url 'teacher_issue_update' issue.id %}" class="text-blue-600 hover:underline">Update</a>
+                            {% else %}
+                            <a href="{% url 'teacher_issue_update' issue.id %}" class="text-blue-600 hover:underline">View</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination -->
+        {% if issues.has_other_pages %}
+        <div class="mt-4 flex justify-center">
+            <nav class="inline-flex rounded-md shadow">
+                {% if issues.has_previous %}
+                <a href="?page={{ issues.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                   class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+                {% for num in issues.paginator.page_range %}
+                <a href="?page={{ num }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                   class="px-3 py-2 border border-gray-300 {% if issues.number == num %}bg-blue-600 text-white{% else %}bg-white text-gray-500 hover:bg-gray-50{% endif %}">
+                    {{ num }}
+                </a>
+                {% endfor %}
+                {% if issues.has_next %}
+                <a href="?page={{ issues.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" 
+                   class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    Next
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+        {% else %}
+        <p class="text-gray-500">No student issues found.</p>
+        <a href="{% url 'teacher_my_books' %}" class="mt-4 inline-block text-blue-600 hover:underline">Back to My Books</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
