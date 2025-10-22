@@ -101,8 +101,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
+    'library_app.auth_backends.EmailOrChildIDBackend', 
     'django.contrib.auth.backends.ModelBackend',
-    'library_app.auth_backends.EmailOrCINBackend', 
+   
     
 ]
 

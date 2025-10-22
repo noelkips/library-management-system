@@ -42,7 +42,7 @@ def landing_page(request):
 
 def login_view(request):
     if request.method == "POST":
-        username = request.POST.get("email")  # can be email or CIN
+        username = request.POST.get("username")  # can be email or CIN
         password = request.POST.get("password")
 
         user = authenticate(request, username=username, password=password)

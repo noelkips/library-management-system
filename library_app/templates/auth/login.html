@@ -102,9 +102,9 @@
                         </svg>
                         Email or Student ID
                     </label>
-                    <input 
+                    <input
                         type="text" 
-                        name="username"   <!-- ✅ must be "username" -->
+                        name="username" 
                         id="username" 
                         value="{{ request.POST.username|default_if_none:'' }}" 
                         class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition-all" 

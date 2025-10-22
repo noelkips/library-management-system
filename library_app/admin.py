@@ -8,24 +8,25 @@ admin.site.register(Student)
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'book_code', 'centre', 'total_copies', 'is_available', 'is_active')
-    list_filter = ('centre', 'is_active', 'is_available')
+    list_display = ('title', 'author', 'book_code', 'centre', 'total_copies', 'is_active')
+    list_filter = ('centre', 'is_active')
     search_fields = ('title', 'author', 'book_code')
     readonly_fields = ()
     fieldsets = (
-        ('Book Information', {
-            'fields': ('title', 'author', 'book_code', 'category', 'publisher', 'year_of_publication')
-        }),
-        ('Inventory', {
-            'fields': ('total_copies', 'is_available')
-        }),
-        ('Location', {
-            'fields': ('centre', 'added_by')
-        }),
-        ('Status', {
-            'fields': ('is_active',)
-        }),
-    )
+    ('Book Information', {
+        'fields': ('title', 'author', 'book_code', 'category', 'publisher', 'year_of_publication')
+    }),
+    ('Inventory', {
+        'fields': ('total_copies',)
+    }),
+    ('Location', {
+        'fields': ('centre', 'added_by')
+    }),
+    ('Status', {
+        'fields': ('is_active',)
+    }),
+)
+
 
 
 @admin.register(Catalogue)
