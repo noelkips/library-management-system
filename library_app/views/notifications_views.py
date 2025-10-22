@@ -74,16 +74,14 @@ def notification_center(request):
 
     return render(request, 'notifications/notification_center.html', context)
 
-
 @login_required
 @require_http_methods(["POST"])
 def mark_notification_read(request, notification_id):
     """Mark a single notification as read"""
-    notification = get_object_or_404(
-        Notification,
-        pk=notification_id,
-        user=request.user
-    )
+    if request.user.is_site_admin:
+        notification = get_object_or_404(Notification, pk=notification_id)
+    else:
+        notification = get_object_or_404(Notification, pk=notification_id, user=request.user)
     notification.mark_as_read()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -91,31 +89,14 @@ def mark_notification_read(request, notification_id):
     
     return redirect('notification_center')
 
-
-@login_required
-@require_http_methods(["POST"])
-def mark_all_notifications_read(request):
-    """Mark all notifications as read"""
-    Notification.objects.filter(
-        user=request.user,
-        is_read=False
-    ).update(is_read=True)
-    
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return JsonResponse({'status': 'success'})
-    
-    return redirect('notification_center')
-
-
 @login_required
 @require_http_methods(["POST"])
 def delete_notification(request, notification_id):
     """Delete a single notification"""
-    notification = get_object_or_404(
-        Notification,
-        pk=notification_id,
-        user=request.user
-    )
+    if request.user.is_site_admin:
+        notification = get_object_or_404(Notification, pk=notification_id)
+    else:
+        notification = get_object_or_404(Notification, pk=notification_id, user=request.user)
     notification.delete()
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -124,37 +105,54 @@ def delete_notification(request, notification_id):
     return redirect('notification_center')
 
 
+
 @login_required
 @require_http_methods(["POST"])
-def clear_all_notifications(request):
-    """Delete all notifications for the user"""
-    Notification.objects.filter(user=request.user).delete()
+def mark_all_notifications_read(request):
+    """Mark all notifications as read"""
+    if request.user.is_site_admin:
+        Notification.objects.update(is_read=True)
+    else:
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'status': 'success'})
     
     return redirect('notification_center')
 
+@login_required
+@require_http_methods(["POST"])
+def clear_all_notifications(request):
+    """Delete all notifications for the user"""
+    if request.user.is_site_admin:
+        Notification.objects.all().delete()
+    else:
+        Notification.objects.filter(user=request.user).delete()
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'status': 'success'})
+    
+    return redirect('notification_center')
 
 @login_required
 def get_unread_count(request):
     """Get unread notification count (for AJAX badge updates)"""
-    unread_count = Notification.objects.filter(
-        user=request.user,
-        is_read=False
-    ).count()
+    if request.user.is_site_admin:
+        unread_count = Notification.objects.filter(is_read=False).count()
+    else:
+        unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
     
     return JsonResponse({
         'unread_count': unread_count
     })
 
-
 @login_required
 def get_recent_notifications(request):
     """Get recent notifications for dropdown preview (AJAX)"""
-    notifications = Notification.objects.filter(
-        user=request.user
-    ).select_related('book').order_by('-created_at')[:5]
+    if request.user.is_site_admin:
+        notifications = Notification.objects.all().select_related('book', 'user').order_by('-created_at')[:5]
+    else:
+        notifications = Notification.objects.filter(user=request.user).select_related('book').order_by('-created_at')[:5]
     
     data = {
         'notifications': [
@@ -166,6 +164,7 @@ def get_recent_notifications(request):
                 'created_at': n.created_at.isoformat(),
                 'icon': n.get_icon(),
                 'color': n.get_color(),
+                'user_email': n.user.email if request.user.is_site_admin else None,
             }
             for n in notifications
         ]
