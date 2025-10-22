@@ -22,7 +22,6 @@ def handle_uploaded_file(request, file, user, centre_id, category_id):
         'publisher': 'publisher',
         'pub_year': 'year_of_publication',
         'total_no': 'total_copies',
-        'available_copies': 'available_copies',
     }
 
     errors = []
@@ -402,6 +401,9 @@ def book_update(request, pk):
             book.available_copies = int(request.POST.get('available_copies') or request.POST.get('total_copies')) if (request.POST.get('available_copies') or request.POST.get('total_copies')) and (request.POST.get('available_copies') or request.POST.get('total_copies')).isdigit() else book.available_copies
             book.centre = centre
             book.full_clean()
+            book.year_of_publication = request.POST.get('year_of_publication', book.year_of_publication)
+            book.total_copies = request.POST.get('total_copies', book.total_copies)
+            book.centre = centre or book.centre
             book.save()
             messages.success(request, "Book updated successfully.", extra_tags='green')
             print(f"Book updated: {book.title or 'Untitled'} (ISBN: {book.isbn}) by {request.user.email}")
@@ -438,3 +440,4 @@ def book_delete(request, pk):
         return redirect('book_list')
 
     return render(request, 'books/book_delete.html', {'book': book})
+    

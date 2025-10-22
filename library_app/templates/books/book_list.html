@@ -87,38 +87,40 @@
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="bg-primary text-white">
-                        <th class="p-3">Title</th>
-                        <th class="p-3">Author</th>
-                        <th class="p-3">Book Code</th>
-                        <th class="p-3">ISBN</th>
-                        <th class="p-3">Category</th>
-                        <th class="p-3">Centre</th>
-                        <th class="p-3">Availability</th>
-                        <th class="p-3">Actions</th>
+            <table class="w-full">
+                <thead class="bg-primary text-white">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold">Title</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden md:table-cell">Author</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden lg:table-cell">ISBN</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold hidden sm:table-cell">Category</th>
+                        <th class="px-4 py-3 text-left text-xs md:text-sm font-semibold">Availability</th>
+                        <th class="px-4 py-3 text-center text-xs md:text-sm font-semibold">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for book in books %}
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-3">{{ book.title|default:"Untitled" }}</td>
-                        <td class="p-3">{{ book.author|default:"Unknown" }}</td>
-                        <td class="p-3">{{ book.book_code|default:"N/A" }}</td>
-                        <td class="p-3">{{ book.isbn }}</td>
-                        <td class="p-3">{{ book.category.name }}</td>
-                        <td class="p-3">{{ book.centre.name }}</td>
-                        <td class="p-3">{{ book.available_copies }}/{{ book.total_copies }}</td>
-                        <td class="p-3">
-                            <a href="{% url 'book_detail' book.pk %}" class="bg-neutral text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-all transform hover:scale-105 mr-2">View</a>
-                            {% if user.is_student or user.is_teacher %}
-                            
-                                
-                            {% elif user.is_superuser or user.is_librarian %}
-                               
-                                <a href="{% url 'book_update' book.pk %}" class="bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-all transform hover:scale-105 mr-2">Edit</a>
-                                <a href="{% url 'book_delete' book.pk %}" class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105">Delete</a>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-3 text-sm md:text-base">
+                            <div class="font-medium text-gray-900">{{ book.title }}</div>
+                            <div class="text-xs text-gray-500 md:hidden">{{ book.author }}</div>
+                        </td>
+                        <td class="px-4 py-3 text-sm md:text-base text-gray-700 hidden md:table-cell">{{ book.author }}</td>
+                        <td class="px-4 py-3 text-sm md:text-base text-gray-700 hidden lg:table-cell">{{ book.isbn }}</td>
+                        <td class="px-4 py-3 hidden sm:table-cell">
+                            <span class="px-2 py-1 text-xs font-medium bg-accent bg-opacity-10 text-accent rounded-full">
+                                {{ book.category }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if book.Availability_copies > 0 %}
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                    {{ book.Availability_copies }} / {{ book.total_copies }}
+                                </span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                    Not Available
+                                </span>
                             {% endif %}
                         </td>
                     </tr>

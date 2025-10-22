@@ -116,7 +116,6 @@ class Book(models.Model):
     publisher = models.CharField(max_length=200)
     year_of_publication = models.PositiveIntegerField()
     total_copies = models.PositiveIntegerField(default=1)
-    available_copies = models.PositiveIntegerField(default=1)
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, related_name='books')
     added_by = models.ForeignKey(
@@ -127,8 +126,6 @@ class Book(models.Model):
     def save(self, *args, **kwargs):
         if 'user' in kwargs:
             setattr(self, '_history_user', kwargs.pop('user'))
-        if self.available_copies > self.total_copies:
-            self.available_copies = self.total_copies
         super().save(*args, **kwargs)
 
     def is_available(self):
@@ -308,7 +305,24 @@ class Reservation(models.Model):
         if not self.expiry_date:
             self.expiry_date = timezone.now() + timedelta(days=7)
         super().save(*args, **kwargs)
-
+        if self.pk is None:  # New issue
+            if not self.issued_by.is_librarian and not self.issued_by.is_site_admin:
+                raise ValueError("Only librarians or site admins can issue books")
+            if self.user.user.is_student and self.user.user.borrows.filter(is_returned=False).count() >= 1:
+                raise ValueError("Students can only borrow one book at a time")
+            if self.user.user.borrows.filter(is_returned=False).count() >= 2 and not (self.user.user.is_student or self.user.user.is_teacher):
+                raise ValueError("General users can only borrow up to two books at a time")
+            if not self.book.is_available:
+                raise ValueError("This book is not available")
+            # Create a Borrow record
+            Borrow.objects.create(
+                book=self.book,
+                user=self.user.user,  # Use the related CustomUser for Borrow
+                centre=self.centre,
+                issued_by=self.issued_by,
+                due_date=timezone.now() + timedelta(days=3)
+            )
+    
     def __str__(self):
         return f"{self.user.email} reserved {self.book.title} - {self.status}"
 
@@ -400,6 +414,7 @@ class Borrow(models.Model):
         if self.due_date and self.status == 'issued':
             return timezone.now() > self.due_date
         return False
+     
 
     def is_returned(self):
         """Check if book has been returned"""
@@ -555,3 +570,64 @@ def create_student_profile(sender, instance, created, **kwargs):
         )
 
 
+
+class Catalogue(models.Model):
+    """
+    Catalogue model to manage book placement on shelves.
+    Links books to specific shelf locations with tracking information.
+    """
+    book = models.ForeignKey(
+        Book,  # Reference the Book model from the same app
+        on_delete=models.CASCADE,
+        related_name='catalogue_entries',
+        help_text="The book being catalogued."
+    )
+    shelf_number = models.CharField(
+        max_length=50,
+        help_text="The shelf location (e.g., 'A1', 'B2-3', 'Reference-1')"
+    )
+    centre = models.ForeignKey(
+        Centre,  # Reference the Centre model from the same app
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='catalogues',
+        help_text="The centre where the book is shelved."
+    )
+    added_by = models.ForeignKey(
+        CustomUser,  # Reference the CustomUser model from the same app
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='catalogues_added',
+        help_text="The user who added this catalogue entry."
+    )
+    added_date = models.DateTimeField(
+        auto_now_add=True,
+        help_text="The date when the catalogue entry was created."
+    )
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        help_text="The date when the catalogue entry was last updated."
+    )
+    notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Additional notes about the book's location or condition."
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this catalogue entry is currently active."
+    )
+    history = HistoricalRecords()
+
+    class Meta:
+        unique_together = ('book', 'centre')
+        ordering = ['shelf_number']
+        verbose_name_plural = 'Catalogues'
+
+    def save(self, *args, **kwargs):
+        if 'user' in kwargs:
+            setattr(self, '_history_user', kwargs.pop('user'))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.book.title} - Shelf {self.shelf_number}"
