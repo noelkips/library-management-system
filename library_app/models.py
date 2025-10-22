@@ -6,7 +6,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from datetime import timedelta
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 
@@ -25,7 +25,6 @@ class School(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.school_code})"
-
 
 
 class CustomUserManager(BaseUserManager):
@@ -50,6 +49,7 @@ class CustomUserManager(BaseUserManager):
 
         return self.create_user(email, password, **extra_fields)
 
+
 class CustomUser(AbstractUser):
     username = None
     email = models.EmailField(unique=True)
@@ -66,7 +66,7 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()  # Assign the custom manager here
+    objects = CustomUserManager()
 
     groups = models.ManyToManyField(
         Group,
@@ -92,7 +92,6 @@ class Category(models.Model):
     """Book categories for better organization"""
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField(blank=True, null=True)
-
     
     class Meta:
         verbose_name_plural = "Categories"
@@ -116,6 +115,7 @@ class Book(models.Model):
     publisher = models.CharField(max_length=200)
     year_of_publication = models.PositiveIntegerField()
     total_copies = models.PositiveIntegerField(default=1)
+    available_copies = models.BooleanField(default=True, help_text="Indicates if any copies are available (Yes/No).")
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, related_name='books')
     added_by = models.ForeignKey(
@@ -128,9 +128,18 @@ class Book(models.Model):
             setattr(self, '_history_user', kwargs.pop('user'))
         super().save(*args, **kwargs)
 
+    def update_available_copies(self):
+        """Update available_copies based on issued borrows."""
+        issued_copies = Borrow.objects.filter(
+            book=self,
+            status='issued'
+        ).count()
+        self.available_copies = (self.total_copies - issued_copies) > 0
+        super().save()
+
     def is_available(self):
-        """Check if book has available copies"""
-        return self.available_copies > 0
+        """Check if book has available copies."""
+        return self.available_copies
 
     def __str__(self):
         centre_name = self.centre.name if self.centre and self.centre.name else "No Centre"
@@ -151,7 +160,6 @@ class Student(models.Model):
     def __str__(self):
         return self.name
     
-
 
 def get_user_borrow_limit(user):
     """Get borrow limit based on user type"""
@@ -181,7 +189,6 @@ def can_user_borrow(user):
     return active_borrows < limit
 
 
-# Teacher sub-borrowing system
 class TeacherBookIssue(models.Model):
     """
     Tracks books issued by teachers to students from their borrowed books.
@@ -259,7 +266,6 @@ class TeacherBookIssue(models.Model):
         verbose_name_plural = "Teacher Book Issues"
 
 
-# <CHANGE> New Reservation model for when books are unavailable
 class Reservation(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -305,23 +311,24 @@ class Reservation(models.Model):
         if not self.expiry_date:
             self.expiry_date = timezone.now() + timedelta(days=7)
         super().save(*args, **kwargs)
-        if self.pk is None:  # New issue
-            if not self.issued_by.is_librarian and not self.issued_by.is_site_admin:
-                raise ValueError("Only librarians or site admins can issue books")
-            if self.user.user.is_student and self.user.user.borrows.filter(is_returned=False).count() >= 1:
+        if self.pk is None:  # New reservation
+            if not self.user.is_librarian and not self.user.is_site_admin:
+                raise ValueError("Only librarians or site admins can create reservations")
+            if self.user.is_student and self.user.borrows.filter(status='issued').count() >= 1:
                 raise ValueError("Students can only borrow one book at a time")
-            if self.user.user.borrows.filter(is_returned=False).count() >= 2 and not (self.user.user.is_student or self.user.user.is_teacher):
+            if self.user.borrows.filter(status='issued').count() >= 2 and not (self.user.is_student or self.user.is_teacher):
                 raise ValueError("General users can only borrow up to two books at a time")
-            if not self.book.is_available:
-                raise ValueError("This book is not available")
-            # Create a Borrow record
-            Borrow.objects.create(
-                book=self.book,
-                user=self.user.user,  # Use the related CustomUser for Borrow
-                centre=self.centre,
-                issued_by=self.issued_by,
-                due_date=timezone.now() + timedelta(days=3)
-            )
+            if self.book.is_available():
+                # Create a Borrow record if book is available
+                Borrow.objects.create(
+                    book=self.book,
+                    user=self.user,
+                    centre=self.centre,
+                    issued_by=self.user,
+                    due_date=timezone.now() + timedelta(days=3)
+                )
+                self.status = 'fulfilled'
+                self.save()
     
     def __str__(self):
         return f"{self.user.email} reserved {self.book.title} - {self.status}"
@@ -330,7 +337,6 @@ class Reservation(models.Model):
         ordering = ['reservation_date']
 
 
-# <CHANGE> Updated Borrow model with clearer workflow
 class Borrow(models.Model):
     STATUS_CHOICES = [
         ('requested', 'Requested'),  # Student requested to borrow
@@ -439,7 +445,7 @@ class Borrow(models.Model):
     class Meta:
         ordering = ['-request_date']
 
-        
+
 class Notification(models.Model):
     """User notifications with types and grouping"""
     NOTIFICATION_TYPES = [
@@ -489,7 +495,6 @@ class Notification(models.Model):
         blank=True,
         related_name='notifications'
     )
-    # For grouping multiple notifications (e.g., teacher bulk requests)
     group_id = models.CharField(
         max_length=100,
         null=True,
@@ -546,7 +551,6 @@ def create_student_profile(sender, instance, created, **kwargs):
         if hasattr(instance, '_school_id') and instance._school_id:
             try:
                 school_obj = School.objects.get(id=instance._school_id)
-                # take only the first 4 letters of the school name
                 school_name = school_obj.name[:4] if school_obj.name else ""
                 school = school_name
             except School.DoesNotExist:
@@ -566,9 +570,20 @@ def create_student_profile(sender, instance, created, **kwargs):
             name=f"{instance.first_name} {instance.last_name}".strip(),
             centre=instance.centre,
             child_ID=child_ID,
-            school=school,  # now only the first 4 letters of the school name
+            school=school,
         )
 
+
+@receiver(post_save, sender=Borrow)
+def update_book_availability(sender, instance, **kwargs):
+    """Update book's available_copies field when a borrow record is created or updated."""
+    instance.book.update_available_copies()
+
+
+@receiver(post_delete, sender=Borrow)
+def update_book_availability_on_delete(sender, instance, **kwargs):
+    """Update book's available_copies field when a borrow record is deleted."""
+    instance.book.update_available_copies()
 
 
 class Catalogue(models.Model):
@@ -577,7 +592,7 @@ class Catalogue(models.Model):
     Links books to specific shelf locations with tracking information.
     """
     book = models.ForeignKey(
-        Book,  # Reference the Book model from the same app
+        Book,
         on_delete=models.CASCADE,
         related_name='catalogue_entries',
         help_text="The book being catalogued."
@@ -587,14 +602,14 @@ class Catalogue(models.Model):
         help_text="The shelf location (e.g., 'A1', 'B2-3', 'Reference-1')"
     )
     centre = models.ForeignKey(
-        Centre,  # Reference the Centre model from the same app
+        Centre,
         on_delete=models.SET_NULL,
         null=True,
         related_name='catalogues',
         help_text="The centre where the book is shelved."
     )
     added_by = models.ForeignKey(
-        CustomUser,  # Reference the CustomUser model from the same app
+        CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         related_name='catalogues_added',

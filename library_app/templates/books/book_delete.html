@@ -36,42 +36,46 @@
 
     <div class="mb-6">
         <h1 class="text-2xl md:text-3xl font-bold text-primary flex items-center">
-            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H7a2 2 0 00-2 2v1h14V5a2 2 0 00-2-2h-3m-1 4v12"></path>
             </svg>
             Delete Book
         </h1>
-        <p class="text-gray-600 mt-2 text-sm md:text-base">Are you sure you want to delete "{{ book.title|default:"Untitled" }}"?</p>
     </div>
 
-    <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg">
-        <div class="mb-4">
-            <p class="text-gray-700">This action cannot be undone. Please confirm the details below:</p>
+    <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+        <div class="text-center mb-6">
+            <svg class="w-16 h-16 mx-auto text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-xl font-semibold text-gray-900">Are you sure you want to delete "{{ book.title|default:"Untitled" }}"?</p>
+            <p class="text-gray-600 mt-2">This action cannot be undone.</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 p-4 bg-gray-50 rounded-lg">
             <div>
-                <h3 class="text-sm font-semibold text-gray-700">Title</h3>
-                <p class="text-gray-900">{{ book.title|default:"Untitled" }}</p>
+                <p class="text-sm text-gray-600 mb-1">Author</p>
+                <p class="font-semibold text-gray-900">{{ book.author|default:"Unknown" }}</p>
             </div>
             <div>
-                <h3 class="text-sm font-semibold text-gray-700">Author</h3>
-                <p class="text-gray-900">{{ book.author|default:"Unknown" }}</p>
+                <p class="text-sm text-gray-600 mb-1">Publisher</p>
+                <p class="font-semibold text-gray-900">{{ book.publisher|default:"Unknown" }}</p>
             </div>
             <div>
-                <h3 class="text-sm font-semibold text-gray-700">Book Code</h3>
-                <p class="text-gray-900">{{ book.book_code|default:"N/A" }}</p>
+                <p class="text-sm text-gray-600 mb-1">Year</p>
+                <p class="font-semibold text-gray-900">{{ book.year_of_publication|default:"Unknown" }}</p>
             </div>
             <div>
-                <h3 class="text-sm font-semibold text-gray-700">ISBN</h3>
-                <p class="text-gray-900">{{ book.isbn }}</p>
+                <p class="text-sm text-gray-600 mb-1">ISBN</p>
+                <p class="font-semibold text-gray-900">{{ book.isbn }}</p>
             </div>
             <div>
-                <h3 class="text-sm font-semibold text-gray-700">Category</h3>
-                <p class="text-gray-900">{{ book.category.name }}</p>
+                <p class="text-sm text-gray-600 mb-1">Category</p>
+                <p class="font-semibold text-gray-900">{{ book.category.name|default:"Uncategorized" }}</p>
             </div>
             <div>
-                <h3 class="text-sm font-semibold text-gray-700">Centre</h3>
-                <p class="text-gray-900">{{ book.centre.name }}</p>
+                <p class="text-sm text-gray-600 mb-1">Centre</p>
+                <p class="font-semibold text-gray-900">{{ book.centre.name|default:"Unknown" }}</p>
             </div>
         </div>
 

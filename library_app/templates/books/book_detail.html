@@ -1,5 +1,3 @@
-<!-- Full updated book_detail.html -->
-
 {% extends 'base.html' %}
 
 {% block title %}Book Details - LibraryHub{% endblock %}
@@ -39,162 +37,91 @@
     <div class="mb-8">
         <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
             <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
             </svg>
             {{ book.title|default:"Untitled" }}
         </h1>
-        <p class="text-gray-600 mt-2 text-base sm:text-lg">Details about the book</p>
     </div>
 
-    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-200">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <h2 class="text-2xl font-bold text-primary mb-4">Book Information</h2>
-                <dl class="space-y-4">
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-                            </svg>
-                            Author
-                        </dt>
-                        <dd class="text-gray-900">{{ book.author|default:"Unknown" }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h12M6 15h12"></path>
-                            </svg>
-                            Category
-                        </dt>
-                        <dd class="text-gray-900">{{ book.category.name|default:"Uncategorized" }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Book Code
-                        </dt>
-                        <dd class="text-gray-900">{{ book.book_code|default:"N/A" }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h18M3 12h18M3 19h18"></path>
-                            </svg>
-                            ISBN
-                        </dt>
-                        <dd class="text-gray-900">{{ book.isbn|default:"N/A" }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 4v12l-4-2-4 2V4M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            Publisher
-                        </dt>
-                        <dd class="text-gray-900">{{ book.publisher|default:"Unknown" }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
-                            Year of Publication
-                        </dt>
-                        <dd class="text-gray-900">{{ book.year_of_publication|default:"Unknown" }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2m-6 4m0 0"></path>
-                            </svg>
-                            Copies
-                        </dt>
-                        <dd class="text-gray-900">{{ book.available_copies }} available out of {{ book.total_copies }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-sm font-semibold text-gray-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                            Centre
-                        </dt>
-                        <dd class="text-gray-900">{{ book.centre.name|default:"No centre assigned" }}</dd>
-                    </div>
-                </dl>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Author</h3>
+                <p class="text-gray-900">{{ book.author|default:"Unknown" }}</p>
             </div>
-            <div class="mt-8 md:mt-0">
-                <h2 class="text-2xl font-bold text-primary mb-4">Actions</h2>
-                <div class="flex flex-col space-y-4">
-                    {% if user.is_student or user.is_teacher %}
-                        {% if book.available_copies > 0 %}
-                            <button onclick="document.getElementById('borrowModal').classList.remove('hidden')" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                Borrow Book
-                            </button>
-                        {% else %}
-                            <button onclick="document.getElementById('reserveModal').classList.remove('hidden')" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
-                                Reserve Book
-                            </button>
-                        {% endif %}
-                    {% endif %}
-                    <a href="{% url 'book_list' %}" class="bg-gray-200 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-300 transition-all transform hover:scale-105 shadow-sm text-center">
-                        Back to List
-                    </a>
-                    {% if user.is_superuser or user.is_librarian %}
-                        <a href="{% url 'book_update' book.pk %}" class="bg-yellow-600 text-white py-3 px-6 rounded-lg hover:bg-yellow-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            Edit Book
-                        </a>
-                        <a href="{% url 'book_delete' book.pk %}" class="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H7a2 2 0 00-2 2v1h14V5a2 2 0 00-2-2h-3m-1 4v12"></path>
-                            </svg>
-                            Delete Book
-                        </a>
-                    {% endif %}
-                </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Publisher</h3>
+                <p class="text-gray-900">{{ book.publisher|default:"Unknown" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Year</h3>
+                <p class="text-gray-900">{{ book.year_of_publication|default:"Unknown" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Category</h3>
+                <p class="text-gray-900">{{ book.category.name|default:"Uncategorized" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Book Code</h3>
+                <p class="text-gray-900">{{ book.book_code|default:"Unknown" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">ISBN</h3>
+                <p class="text-gray-900">{{ book.isbn|default:"Unknown" }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Total Copies</h3>
+                <p class="text-gray-900">{{ book.total_copies }}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Available</h3>
+                <p class="text-gray-900">{% if book.available_copies %}Yes{% else %}No{% endif %}</p>
+            </div>
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Centre</h3>
+                <p class="text-gray-900">{{ book.centre.name|default:"Unknown" }}</p>
             </div>
         </div>
-    </div>
 
-    <!-- Borrow Modal -->
-    <div id="borrowModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-        <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-primary">Borrow {{ book.title|default:"Untitled" }}</h3>
-                <button onclick="document.getElementById('borrowModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <form method="post" action="{% url 'borrow_request' book.pk %}">
+        {% if request.user.is_authenticated and request.user.is_student %}
+        <div class="mt-8 flex space-x-4">
+            {% if book.available_copies %}
+            <form method="post" action="{% url 'borrow_book' book.pk %}">
                 {% csrf_token %}
-                <div class="mb-4">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Notes (Optional)</label>
-                    <textarea name="notes" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all" rows="3"></textarea>
-                </div>
-                <div class="flex justify-end space-x-4">
-                    <button type="button" onclick="document.getElementById('borrowModal').classList.add('hidden')" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300">
-                        Cancel
-                    </button>
-                    <button type="submit" class="bg-secondary text-white py-2 px-4 rounded-lg hover:bg-accent">
-                        Submit Borrow Request
-                    </button>
-                </div>
+                <button type="submit" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H8m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                    Borrow Book
+                </button>
             </form>
+            {% else %}
+            <button onclick="document.getElementById('reserveModal').classList.remove('hidden')" class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Reserve Book
+            </button>
+            {% endif %}
         </div>
+        {% endif %}
+
+        {% if request.user.is_superuser or request.user.is_librarian %}
+        <div class="mt-8 flex space-x-4">
+            <a href="{% url 'book_update' book.pk %}" class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Update Book
+            </a>
+            <a href="{% url 'book_delete' book.pk %}" class="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H7a2 2 0 00-2 2v1h14V5a2 2 0 00-2-2h-3m-1 4v12"></path>
+                </svg>
+                Delete Book
+            </a>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Reserve Modal -->

@@ -5,10 +5,11 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.utils import timezone
 import csv
 import openpyxl
 from io import TextIOWrapper, StringIO
-from ..models import Book, Centre, CustomUser, Category
+from ..models import Book, Centre, CustomUser, Category, Borrow, Reservation
 
 def is_authorized(user):
     return user.is_superuser or user.is_librarian
@@ -127,6 +128,8 @@ def handle_uploaded_file(request, file, user, centre_id, category_id):
         for row_index, data in book_instances:
             try:
                 with transaction.atomic():
+                    available_val = data.get('available_copies') or data.get('total_copies') or '1'
+                    available_bool = int(available_val) > 0 if available_val and str(available_val).isdigit() else True
                     book = Book(
                         title=data.get('title') or '',
                         author=data.get('author') or '',
@@ -136,7 +139,7 @@ def handle_uploaded_file(request, file, user, centre_id, category_id):
                         publisher=data.get('publisher') or '',
                         year_of_publication=int(data.get('year_of_publication')) if data.get('year_of_publication') and str(data.get('year_of_publication')).isdigit() else None,
                         total_copies=int(data.get('total_copies')) if data.get('total_copies') and str(data.get('total_copies')).isdigit() else 1,
-                        available_copies=int(data.get('available_copies') or data.get('total_copies')) if (data.get('available_copies') or data.get('total_copies')) and str(data.get('available_copies') or data.get('total_copies')).isdigit() else 1,
+                        available_copies=available_bool,
                         centre=centre or (user.centre if user.is_librarian and not user.is_superuser else None),
                         added_by=user,
                     )
@@ -188,62 +191,13 @@ def book_add(request):
             if not centre_id or not category_id:
                 messages.error(request, "Please select both a centre and a category for bulk upload.")
                 print(f"Error: Missing centre or category for bulk upload by {request.user.email}")
-                return redirect('book_add')
-            print(f"Handling file upload: {request.FILES['file'].name}")
+                return render(request, 'books/book_add.html', {'centres': centres, 'categories': categories})
             handle_uploaded_file(request, request.FILES['file'], request.user, centre_id, category_id)
             return redirect('book_list')
-        elif 'title' in request.POST and request.POST.get('title').strip():
-            try:
-                centre_id = request.POST.get('centre')
-                centre = Centre.objects.get(id=centre_id) if centre_id else None
-                if request.user.is_librarian and not request.user.is_superuser and centre != request.user.centre:
-                    messages.error(request, "You can only add books for your own centre.")
-                    print(f"Error: User {request.user.email} attempted to add book to unauthorized centre")
-                    return redirect('book_add')
-
-                category_id = request.POST.get('category')
-                try:
-                    category = Category.objects.get(id=category_id)
-                except Category.DoesNotExist:
-                    messages.error(request, "Invalid category selected.")
-                    print(f"Error: Invalid category ID {category_id}")
-                    return redirect('book_add')
-
-                book = Book(
-                    title=request.POST.get('title') or '',
-                    author=request.POST.get('author') or '',
-                    category=category,
-                    book_code=request.POST.get('book_code') or '',
-                    isbn=request.POST.get('isbn'),
-                    publisher=request.POST.get('publisher') or '',
-                    year_of_publication=int(request.POST.get('year_of_publication')) if request.POST.get('year_of_publication') and request.POST.get('year_of_publication').isdigit() else None,
-                    total_copies=int(request.POST.get('total_copies')) if request.POST.get('total_copies') and request.POST.get('total_copies').isdigit() else 1,
-                    available_copies=int(request.POST.get('available_copies') or request.POST.get('total_copies')) if (request.POST.get('available_copies') or request.POST.get('total_copies')) and (request.POST.get('available_copies') or request.POST.get('total_copies')).isdigit() else 1,
-                    centre=centre,
-                    added_by=request.user,
-                )
-                book.full_clean()
-                book.save()
-                messages.success(request, "Book added successfully.", extra_tags='green')
-                print(f"Book added: {book.title or 'Untitled'} (ISBN: {book.isbn}) by {request.user.email}")
-                return redirect('book_list')
-            except IntegrityError:
-                messages.error(request, "Book with this ISBN already exists.")
-                print(f"IntegrityError: ISBN {request.POST.get('isbn')} already exists")
-            except ValueError as ve:
-                messages.error(request, f"Invalid data: {str(ve)}")
-                print(f"ValueError: Invalid data for book: {str(ve)}")
-            except Exception as e:
-                messages.error(request, f"Error adding book: {str(e)}")
-                print(f"Unexpected error adding book: {str(e)}")
-        else:
-            messages.error(request, "Please provide either a file for bulk upload or book details for single book addition.")
-            print("Error: Invalid form submission, missing file or book details")
 
     return render(request, 'books/book_add.html', {'centres': centres, 'categories': categories})
 
-@login_required
-def download_sample_csv(request):
+def sample_csv_download(request):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="sample_book_upload.csv"'
 
@@ -257,7 +211,7 @@ def download_sample_csv(request):
         'Sample Publisher',
         '2023',
         '10',
-        '10'
+        '1'  # Since boolean, but sample shows 1 for True, 0 for False, but processing converts >0 to True
     ])
 
     return response
@@ -266,7 +220,7 @@ def download_sample_csv(request):
 def book_list(request):
     if request.user.is_superuser:
         books = Book.objects.all()
-    elif (request.user.is_librarian or request.user.is_student or request.user.is_teacher)  and request.user.centre:
+    elif (request.user.is_librarian or request.user.is_student or request.user.is_teacher) and request.user.centre:
         books = Book.objects.filter(centre=request.user.centre)
     else:
         books = Book.objects.none()
@@ -288,7 +242,7 @@ def book_list(request):
     if centre_id and request.user.is_superuser:
         books = books.filter(centre_id=centre_id)
     if available_only:
-        books = books.filter(available_copies__gt=0)
+        books = books.filter(available_copies=True)
 
     books = books.order_by('title')
 
@@ -329,11 +283,20 @@ def book_detail(request, pk):
             return redirect('book_detail', pk=pk)
 
         action = request.POST.get('action')
-        if action == 'borrow' and book.available_copies > 0:
+        if action == 'borrow' and book.is_available():
             try:
                 with transaction.atomic():
-                    book.available_copies -= 1
-                    book.save()
+                    Borrow.objects.create(
+                        book=book,
+                        user=request.user,
+                        centre=book.centre,
+                        status='issued',
+                        request_date=timezone.now(),
+                        issue_date=timezone.now(),
+                        due_date=timezone.now() + timedelta(days=14),
+                        issued_by=request.user  # Assuming self-issue for students
+                    )
+                    # Signal will update book.available_copies
                     messages.success(request, "Book borrowed successfully.", extra_tags='green')
                     print(f"Book {book.isbn} borrowed by {request.user.email}")
                     return redirect('book_detail', pk=pk)
@@ -343,6 +306,12 @@ def book_detail(request, pk):
         elif action == 'reserve':
             try:
                 with transaction.atomic():
+                    Reservation.objects.create(
+                        book=book,
+                        user=request.user,
+                        centre=book.centre,
+                        expiry_date=timezone.now() + timedelta(days=7)
+                    )
                     messages.success(request, "Book reserved successfully.", extra_tags='green')
                     print(f"Book {book.isbn} reserved by {request.user.email}")
                     return redirect('book_detail', pk=pk)
@@ -398,12 +367,10 @@ def book_update(request, pk):
             book.publisher = request.POST.get('publisher', book.publisher)
             book.year_of_publication = int(request.POST.get('year_of_publication')) if request.POST.get('year_of_publication') and request.POST.get('year_of_publication').isdigit() else book.year_of_publication
             book.total_copies = int(request.POST.get('total_copies')) if request.POST.get('total_copies') and request.POST.get('total_copies').isdigit() else book.total_copies
-            book.available_copies = int(request.POST.get('available_copies') or request.POST.get('total_copies')) if (request.POST.get('available_copies') or request.POST.get('total_copies')) and (request.POST.get('available_copies') or request.POST.get('total_copies')).isdigit() else book.available_copies
+            available_val = request.POST.get('available_copies', '0')
+            book.available_copies = True if available_val.lower() in ['on', 'true', 'yes'] or (available_val.isdigit() and int(available_val) > 0) else False
             book.centre = centre
             book.full_clean()
-            book.year_of_publication = request.POST.get('year_of_publication', book.year_of_publication)
-            book.total_copies = request.POST.get('total_copies', book.total_copies)
-            book.centre = centre or book.centre
             book.save()
             messages.success(request, "Book updated successfully.", extra_tags='green')
             print(f"Book updated: {book.title or 'Untitled'} (ISBN: {book.isbn}) by {request.user.email}")
@@ -440,4 +407,3 @@ def book_delete(request, pk):
         return redirect('book_list')
 
     return render(request, 'books/book_delete.html', {'book': book})
-    

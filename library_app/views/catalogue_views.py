@@ -33,7 +33,7 @@ def get_books_by_centre(request):
             is_active=True
         ).exclude(
             id__in=catalogued_books
-        ).order_by('title').values('id', 'title', 'author', 'book_code', 'category', 'available_copies', 'total_copies')
+        ).order_by('title').values('id', 'title', 'author', 'book_code', 'category', 'total_copies')
         
         return JsonResponse({
             'books': list(books),
@@ -73,6 +73,11 @@ def catalogue_add(request):
                 messages.error(request, "You can only add books to your own centre's catalogue.")
                 return redirect('catalogue_add')
 
+            existing_shelf = Catalogue.objects.filter(shelf_number=shelf_number, centre=centre, is_active=True).first()
+            if existing_shelf:
+                messages.error(request, f"Shelf number '{shelf_number}' already exists in this centre. Please use a different shelf number.")
+                return redirect('catalogue_add')
+
             # Check if book already exists in catalogue for this centre
             existing = Catalogue.objects.filter(book=book, centre=centre).first()
             if existing:
@@ -101,17 +106,14 @@ def catalogue_add(request):
             messages.error(request, f"Error adding book to catalogue: {str(e)}")
 
     if request.user.is_superuser:
-        # For superusers, show books from all centres (will be filtered by AJAX)
-        books = Book.objects.filter(is_active=True).order_by('title')
+        catalogued_books = Catalogue.objects.values_list('book_id', flat=True)
+        books = Book.objects.filter(is_active=True).exclude(id__in=catalogued_books).order_by('title')
     else:
-        # For librarians, show only books from their centre that aren't catalogued yet
         catalogued_books = Catalogue.objects.filter(centre=request.user.centre).values_list('book_id', flat=True)
         books = Book.objects.filter(
             centre=request.user.centre,
             is_active=True
-        ).exclude(
-            id__in=catalogued_books
-        ).order_by('title')
+        ).exclude(id__in=catalogued_books).order_by('title')
 
     return render(request, 'catalogue/catalogue_add.html', {
         'books': books,
@@ -173,6 +175,15 @@ def catalogue_update(request, pk):
 
             if not shelf_number:
                 messages.error(request, "Shelf number is required.")
+                return redirect('catalogue_update', pk=pk)
+
+            existing_shelf = Catalogue.objects.filter(
+                shelf_number=shelf_number, 
+                centre=catalogue.centre, 
+                is_active=True
+            ).exclude(pk=pk).first()
+            if existing_shelf:
+                messages.error(request, f"Shelf number '{shelf_number}' already exists in this centre. Please use a different shelf number.")
                 return redirect('catalogue_update', pk=pk)
 
             catalogue.shelf_number = shelf_number
