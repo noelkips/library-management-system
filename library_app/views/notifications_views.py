@@ -11,42 +11,67 @@ from django.db.models import Q
 from django.core.paginator import Paginator
 from ..models import Notification, CustomUser
 
-
 @login_required
 def notification_center(request):
-    """Display all notifications for the user with filtering and pagination"""
-    notifications = Notification.objects.filter(
-        user=request.user
-    ).select_related('book', 'borrow', 'reservation').order_by('-created_at')
-    
+    """Display notifications for the user with filtering and pagination"""
+    # Determine allowed notification types based on user role
+    if request.user.is_site_admin:
+        # Admins see all notifications
+        notifications = Notification.objects.all().select_related('book', 'borrow', 'reservation', 'user').order_by('-created_at')
+        allowed_notification_types = [choice[0] for choice in Notification.NOTIFICATION_TYPES]
+    else:
+        # Non-admins see only their own notifications
+        notifications = Notification.objects.filter(
+            user=request.user
+        ).select_related('book', 'borrow', 'reservation').order_by('-created_at')
+        # Restrict notification types for non-admins (e.g., exclude 'teacher_bulk_request' for non-teachers)
+        allowed_notification_types = [
+            'borrow_request',
+            'borrow_approved',
+            'borrow_rejected',
+            'book_issued',
+            'book_returned',
+            'book_available',
+            'reservation_fulfilled',
+            'overdue_reminder',
+        ]
+        if request.user.is_teacher:
+            allowed_notification_types.append('teacher_bulk_request')
+
+    # Apply type filter
     notification_type = request.GET.get('type', '')
-    if notification_type:
+    if notification_type and notification_type in allowed_notification_types:
         notifications = notifications.filter(notification_type=notification_type)
-    
+    else:
+        notification_type = ''  # Reset if invalid type for user
+
+    # Apply status filter
     read_status = request.GET.get('status', '')
     if read_status == 'unread':
         notifications = notifications.filter(is_read=False)
     elif read_status == 'read':
         notifications = notifications.filter(is_read=True)
-    
+
     # Pagination
     paginator = Paginator(notifications, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     # Get unread count
     unread_count = Notification.objects.filter(
         user=request.user,
         is_read=False
     ).count()
-    
+
     context = {
         'page_obj': page_obj,
         'unread_count': unread_count,
         'notification_type': notification_type,
         'read_status': read_status,
+        'is_admin': request.user.is_site_admin,  # Pass admin status to template
+        'allowed_notification_types': allowed_notification_types,  # Pass allowed types to template
     }
-    
+
     return render(request, 'notifications/notification_center.html', context)
 
 
