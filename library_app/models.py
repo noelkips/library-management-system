@@ -424,22 +424,104 @@ class Borrow(models.Model):
     class Meta:
         ordering = ['-request_date']
 
+        
 class Notification(models.Model):
-    """User notifications"""
+    """User notifications with types and grouping"""
+    NOTIFICATION_TYPES = [
+        ('borrow_request', 'Borrow Request'),
+        ('borrow_approved', 'Borrow Approved'),
+        ('borrow_rejected', 'Borrow Rejected'),
+        ('book_issued', 'Book Issued'),
+        ('book_returned', 'Book Returned'),
+        ('book_available', 'Book Available'),
+        ('reservation_fulfilled', 'Reservation Fulfilled'),
+        ('teacher_bulk_request', 'Teacher Bulk Request'),
+        ('overdue_reminder', 'Overdue Reminder'),
+    ]
+    
     user = models.ForeignKey(
         'CustomUser',
         on_delete=models.CASCADE,
         related_name='notifications'
     )
+    notification_type = models.CharField(
+        max_length=50,
+        choices=NOTIFICATION_TYPES,
+        default='borrow_request'
+    )
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    book = models.ForeignKey(
+        'Book',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
+    borrow = models.ForeignKey(
+        'Borrow',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
+    reservation = models.ForeignKey(
+        'Reservation',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='notifications'
+    )
+    # For grouping multiple notifications (e.g., teacher bulk requests)
+    group_id = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True,
+        help_text="Group ID for batched notifications"
+    )
     
     class Meta:
         ordering = ['-created_at']
     
     def __str__(self):
         return f"{self.user.email}: {self.message[:50]}"
+    
+    def mark_as_read(self):
+        """Mark notification as read"""
+        self.is_read = True
+        self.save()
+    
+    def get_icon(self):
+        """Get icon class based on notification type"""
+        icons = {
+            'borrow_request': 'book-open',
+            'borrow_approved': 'check-circle',
+            'borrow_rejected': 'x-circle',
+            'book_issued': 'gift',
+            'book_returned': 'undo',
+            'book_available': 'bell',
+            'reservation_fulfilled': 'star',
+            'teacher_bulk_request': 'books',
+            'overdue_reminder': 'alert-circle',
+        }
+        return icons.get(self.notification_type, 'bell')
+    
+    def get_color(self):
+        """Get color class based on notification type"""
+        colors = {
+            'borrow_request': 'blue',
+            'borrow_approved': 'green',
+            'borrow_rejected': 'red',
+            'book_issued': 'purple',
+            'book_returned': 'teal',
+            'book_available': 'amber',
+            'reservation_fulfilled': 'pink',
+            'teacher_bulk_request': 'indigo',
+            'overdue_reminder': 'orange',
+        }
+        return colors.get(self.notification_type, 'gray')
 
 
 @receiver(post_save, sender=CustomUser)
