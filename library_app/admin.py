@@ -1,9 +1,10 @@
 from django.contrib import admin
-from .models import Centre, CustomUser, Book, Student, Catalogue
+from .models import Centre, CustomUser, Book, Student, Catalogue, Category
 
 admin.site.register(Centre)
 admin.site.register(CustomUser)
 admin.site.register(Student)
+admin.site.register(Category)
 
 
 @admin.register(Book)
