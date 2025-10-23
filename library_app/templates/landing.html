@@ -1,89 +1,84 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to LibraryHub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary': '#143C50',
-                        'secondary': '#C86450',
-                        'neutral': '#A0A0A0',
-                        'light': '#DCDCF0',
-                        'accent': '#288CC8',
-                        'danger': '#B42828',
-                    }
-                }
-            }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MOHILibrary</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#143C50',
+            secondary: '#C86450',
+            neutral: '#A0A0A0',
+            light: '#DCDCF0',
+            accent: '#288CC8',
+            danger: '#B42828',
+            'dark-bg': '#00001A',
+          }
         }
-    </script>
+      }
+    }
+  </script>
+  <style>
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fade-in 0.8s ease-out;
+    }
+    /* Added floating animation to match login.html */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-15px); }
+    }
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    /* Added gradient background to match login.html */
+    .gradient-bg {
+      background: linear-gradient(135deg, #143C50 0%, #288CC8 100%);
+    }
+    body {
+        background-color: #00001A;
+    }
+  </style>
 </head>
-<body class="bg-light min-h-screen flex flex-col font-sans">
-    <header class="bg-primary text-white p-4 text-center">
-        <h1 class="text-3xl font-bold flex items-center justify-center">
-            <svg class="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-            </svg>
-            LibraryHub
-        </h1>
-    </header>
-    <main class="flex-1 flex items-center justify-center p-6">
-        <div class="bg-white p-8 rounded-lg shadow-lg text-center max-w-lg">
-            <h2 class="text-2xl font-semibold text-primary mb-4">Welcome to LibraryHub</h2>
-            <p class="text-neutral mb-6">Manage your library with ease. Access books, track borrows, and stay updated with notifications across multiple centres. Sign in to get started!</p>
-            <a href="{% url 'login_view' %}" class="inline-flex items-center bg-secondary text-white p-3 rounded hover:bg-accent">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14"></path>
-                </svg>
-                Sign In
-            </a>
-        </div>
-    </main>
-    <footer class="bg-primary text-white p-4 text-center">
-        <p>© LibraryHub. All rights reserved.</p>
-    </footer>
+
+<body class="min-h-screen flex flex-col font-sans text-gray-800 overflow-hidden">
+ 
+  
+
+  <!-- Main Section -->
+  <main class="flex-1 flex items-center justify-center px-4 py-10">
+    <!-- Updated card to use gradient background, white text, and floating animation -->
+    <div class="gradient-bg text-white p-8 sm:p-10 rounded-3xl shadow-2xl w-full max-w-md text-center animate-fade-in animate-float">
+      <img src="{% static 'images/logo.png' %}" alt="MOHILibrary Logo"
+           class="h-20 sm:h-24 w-auto mx-auto mb-6 drop-shadow-lg" />
+      <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4">Welcome to MOHILibrary</h2>
+      <p class="text-blue-100 mb-8 leading-relaxed text-sm sm:text-base">
+        Manage your library effortlessly. Browse, borrow, and stay updated with the latest books across multiple centers.
+        <br />Sign in to begin your journey!
+      </p>
+
+      <!-- Updated button to match login.html styling (white background with primary text) -->
+      <a href="{% url 'login_view' %}"
+         class="inline-flex items-center justify-center w-full px-6 py-3 rounded-lg 
+                text-primary font-semibold text-lg shadow-lg 
+                bg-white
+                hover:bg-gray-100 transform hover:scale-105 transition-all duration-300">
+        Sign In
+      </a>
+
+      <!-- Updated footer text color to white -->
+      <footer class="mt-8 text-white/70 text-xs sm:text-sm pt-4">
+        © {% now "Y" %} MOHILibrary. All rights reserved.
+      </footer>
+    </div>
+  </main>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LibraryHub{% endblock %}</title>
+    <title>{% block title %}MOHILibrary{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -15,7 +15,7 @@
                         'neutral': '#A0A0A0',
                         'light': '#DCDCF0',
                         'accent': '#288CC8',
-                        'danger': '#B42828',
+                        'danger': '#34f2ac',
                     }
                 }
             }
@@ -32,10 +32,19 @@
             to { opacity: 1; max-height: 500px; transform: translateY(0); }
         }
 
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
         .slide-in { animation: slideIn 0.3s ease-out; }
         .slide-down { animation: slideDown 0.3s ease-out; }
         .rotate-180 { transform: rotate(180deg); }
         .transition-transform { transition: transform 0.3s ease; }
+        
+        /* Added gradient background and float animation */
+        .gradient-bg { background: linear-gradient(135deg, #143C50 0%, #288CC8 100%); }
+        .animate-float { animation: float 3s ease-in-out infinite; }
 
         .dropdown-menu {
             max-height: 0;
@@ -71,7 +80,7 @@
             top: 0;
             bottom: 0;
             width: 4px;
-            background: #C86450;
+            background: #34f2ac;
             transform: scaleY(0);
             transition: transform 0.3s ease;
         }
@@ -102,7 +111,8 @@
     </style>
 </head>
 <body class="bg-light min-h-screen font-sans">
-    <header class="bg-primary text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
+    <!-- Updated header to use gradient background -->
+    <header class="gradient-bg text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
         <div class="flex items-center">
             <button id="mobile-menu-button" class="lg:hidden mr-4 p-2 hover:bg-secondary rounded-lg transition-all transform hover:scale-105">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,7 +123,7 @@
                 <svg class="w-5 h-5 md:w-6 md:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                 </svg>
-                <span class="hidden sm:inline">LibraryHub</span>
+                <span class="hidden sm:inline">MOHILibrary</span>
                 <span class="sm:hidden">LH</span>
             </div>
         </div>
@@ -154,7 +164,8 @@
     <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <div class="flex flex-col lg:flex-row min-h-screen">
-        <aside id="sidebar" class="bg-primary text-white w-full lg:w-64 fixed lg:sticky top-0 lg:top-[64px] h-screen lg:h-[calc(100vh-64px)] overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
+        <!-- Updated sidebar to use gradient background -->
+        <aside id="sidebar" class="gradient-bg text-white w-full lg:w-64 fixed lg:sticky top-0 lg:top-[64px] h-screen lg:h-[calc(100vh-64px)] overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
             <div class="p-4">
                 <div class="flex justify-between items-center mb-6 lg:hidden pb-4 border-b border-accent">
                     <h2 class="text-lg font-bold">Menu</h2>
@@ -383,7 +394,8 @@
         </main>
     </div>
 
-    <footer class="bg-primary text-white p-4 text-center text-sm sm:text-base">
+    <!-- Updated footer to use gradient background -->
+    <footer class="gradient-bg text-white p-4 text-center text-sm sm:text-base">
         <p>© {% now "Y" %} LibraryHub. All rights reserved.</p>
     </footer>
 
