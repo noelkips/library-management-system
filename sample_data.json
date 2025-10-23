@@ -1,0 +1,2339 @@
+[
+  {
+    "model": "library_app.centre",
+    "pk": 1,
+    "fields": {
+      "name": "Pangani",
+      "centre_code": "CENTRE_1"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 2,
+    "fields": {
+      "name": "Area 2",
+      "centre_code": "CENTRE_2"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 3,
+    "fields": {
+      "name": "Bondeni",
+      "centre_code": "CENTRE_3"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 4,
+    "fields": {
+      "name": "Kosovo",
+      "centre_code": "CENTRE_4"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 5,
+    "fields": {
+      "name": "Gitathuru",
+      "centre_code": "CENTRE_5"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 6,
+    "fields": {
+      "name": "Mathare North",
+      "centre_code": "CENTRE_6"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 7,
+    "fields": {
+      "name": "Mabatini",
+      "centre_code": "CENTRE_7"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 8,
+    "fields": {
+      "name": "Madoya",
+      "centre_code": "CENTRE_8"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 9,
+    "fields": {
+      "name": "Kiamaiko Ngei",
+      "centre_code": "CENTRE_9"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 10,
+    "fields": {
+      "name": "Kariobangi",
+      "centre_code": "CENTRE_10"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 11,
+    "fields": {
+      "name": "Baba Dogo",
+      "centre_code": "CENTRE_11"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 12,
+    "fields": {
+      "name": "Korogocho Grogan",
+      "centre_code": "CENTRE_12"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 13,
+    "fields": {
+      "name": "Korogocho B",
+      "centre_code": "CENTRE_13"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 14,
+    "fields": {
+      "name": "Korogocho Nyayo",
+      "centre_code": "CENTRE_14"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 15,
+    "fields": {
+      "name": "Pangani HQ",
+      "centre_code": "CENTRE_15"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 16,
+    "fields": {
+      "name": "Ndovoini",
+      "centre_code": "CENTRE_16"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 17,
+    "fields": {
+      "name": "Joska",
+      "centre_code": "CENTRE_17"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 18,
+    "fields": {
+      "name": "Sabaki",
+      "centre_code": "CENTRE_18"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 19,
+    "fields": {
+      "name": "Napuu",
+      "centre_code": "CENTRE_19"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 20,
+    "fields": {
+      "name": "Napusimoru",
+      "centre_code": "CENTRE_20"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 21,
+    "fields": {
+      "name": "Kangegetei",
+      "centre_code": "CENTRE_21"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 22,
+    "fields": {
+      "name": "Turkana High School",
+      "centre_code": "CENTRE_22"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 23,
+    "fields": {
+      "name": "Lochoredome",
+      "centre_code": "CENTRE_23"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 24,
+    "fields": {
+      "name": "Nanam",
+      "centre_code": "CENTRE_24"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 25,
+    "fields": {
+      "name": "Ethiopia",
+      "centre_code": "CENTRE_25"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 26,
+    "fields": {
+      "name": "Kargi",
+      "centre_code": "CENTRE_26"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 27,
+    "fields": {
+      "name": "Olturot",
+      "centre_code": "CENTRE_27"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 28,
+    "fields": {
+      "name": "Namarei",
+      "centre_code": "CENTRE_28"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 29,
+    "fields": {
+      "name": "Angaza Discovery Camp",
+      "centre_code": "CENTRE_29"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 30,
+    "fields": {
+      "name": "Molo Milimani",
+      "centre_code": "CENTRE_30"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 31,
+    "fields": {
+      "name": "Coram Deo - Molo",
+      "centre_code": "CENTRE_31"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 32,
+    "fields": {
+      "name": "Molo Turi High School",
+      "centre_code": "CENTRE_32"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 33,
+    "fields": {
+      "name": "MTTI",
+      "centre_code": "CENTRE_33"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 34,
+    "fields": {
+      "name": "Kibarani",
+      "centre_code": "CENTRE_34"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 35,
+    "fields": {
+      "name": "Kiwandani",
+      "centre_code": "CENTRE_35"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 36,
+    "fields": {
+      "name": "Mitangoni",
+      "centre_code": "CENTRE_36"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 37,
+    "fields": {
+      "name": "Chumani",
+      "centre_code": "CENTRE_37"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 38,
+    "fields": {
+      "name": "MCL",
+      "centre_code": "CENTRE_38"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 39,
+    "fields": {
+      "name": "Nyeri",
+      "centre_code": "CENTRE_39"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 40,
+    "fields": {
+      "name": "Elpida",
+      "centre_code": "CENTRE_40"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 41,
+    "fields": {
+      "name": "Nyakach",
+      "centre_code": "CENTRE_41"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 42,
+    "fields": {
+      "name": "Morokani",
+      "centre_code": "CENTRE_42"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 43,
+    "fields": {
+      "name": "Shambini",
+      "centre_code": "CENTRE_43"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 44,
+    "fields": {
+      "name": "Kiamaiko Main",
+      "centre_code": "CENTRE_44"
+    }
+  },
+  {
+    "model": "library_app.centre",
+    "pk": 45,
+    "fields": {
+      "name": "Kang’agetei",
+      "centre_code": "CENTRE_45"
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 1,
+    "fields": {
+      "name": "Area 2 School",
+      "school_code": "SCHOOL_1",
+      "centre": 2
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 2,
+    "fields": {
+      "name": "Babadogo School",
+      "school_code": "SCHOOL_2",
+      "centre": 11
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 3,
+    "fields": {
+      "name": "Bondeni School",
+      "school_code": "SCHOOL_3",
+      "centre": 3
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 4,
+    "fields": {
+      "name": "Chumani School",
+      "school_code": "SCHOOL_4",
+      "centre": 37
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 5,
+    "fields": {
+      "name": "Coram Deo School",
+      "school_code": "SCHOOL_5",
+      "centre": 31
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 6,
+    "fields": {
+      "name": "Gitathuru School",
+      "school_code": "SCHOOL_6",
+      "centre": 5
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 7,
+    "fields": {
+      "name": "Grogan School",
+      "school_code": "SCHOOL_7",
+      "centre": 12
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 8,
+    "fields": {
+      "name": "Joska School",
+      "school_code": "SCHOOL_8",
+      "centre": 17
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 9,
+    "fields": {
+      "name": "Mohi Girls High School",
+      "school_code": "SCHOOL_9",
+      "centre": 17
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 10,
+    "fields": {
+      "name": "Kang’agetei School",
+      "school_code": "SCHOOL_10",
+      "centre": 45
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 11,
+    "fields": {
+      "name": "Kargi School",
+      "school_code": "SCHOOL_11",
+      "centre": 26
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 12,
+    "fields": {
+      "name": "Kariobangi School",
+      "school_code": "SCHOOL_12",
+      "centre": 10
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 13,
+    "fields": {
+      "name": "Kiamaiko School",
+      "school_code": "SCHOOL_13",
+      "centre": 44
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 14,
+    "fields": {
+      "name": "Kiamaiko Ngei School",
+      "school_code": "SCHOOL_14",
+      "centre": 44
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 15,
+    "fields": {
+      "name": "Kibarani School",
+      "school_code": "SCHOOL_15",
+      "centre": 34
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 16,
+    "fields": {
+      "name": "Kiwandani School",
+      "school_code": "SCHOOL_16",
+      "centre": 35
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 17,
+    "fields": {
+      "name": "Korogocho B School",
+      "school_code": "SCHOOL_17",
+      "centre": 13
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 18,
+    "fields": {
+      "name": "Kosovo School",
+      "school_code": "SCHOOL_18",
+      "centre": 4
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 19,
+    "fields": {
+      "name": "Lochoredome School",
+      "school_code": "SCHOOL_19",
+      "centre": 23
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 20,
+    "fields": {
+      "name": "Mabatini School",
+      "school_code": "SCHOOL_20",
+      "centre": 7
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 21,
+    "fields": {
+      "name": "Madoya School",
+      "school_code": "SCHOOL_21",
+      "centre": 8
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 22,
+    "fields": {
+      "name": "Mathare North School",
+      "school_code": "SCHOOL_22",
+      "centre": 6
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 23,
+    "fields": {
+      "name": "Molo Milimani School",
+      "school_code": "SCHOOL_23",
+      "centre": 30
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 24,
+    "fields": {
+      "name": "Mitangoni School",
+      "school_code": "SCHOOL_24",
+      "centre": 36
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 25,
+    "fields": {
+      "name": "Morokani School",
+      "school_code": "SCHOOL_25",
+      "centre": 42
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 26,
+    "fields": {
+      "name": "Namarei School",
+      "school_code": "SCHOOL_26",
+      "centre": 28
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 27,
+    "fields": {
+      "name": "Nanaam School",
+      "school_code": "SCHOOL_27",
+      "centre": 24
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 28,
+    "fields": {
+      "name": "Napusimoru School",
+      "school_code": "SCHOOL_28",
+      "centre": 20
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 29,
+    "fields": {
+      "name": "Napuu School",
+      "school_code": "SCHOOL_29",
+      "centre": 19
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 30,
+    "fields": {
+      "name": "Ndovoini High School",
+      "school_code": "SCHOOL_30",
+      "centre": 16
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 31,
+    "fields": {
+      "name": "Ndovoini Primary School",
+      "school_code": "SCHOOL_31",
+      "centre": 16
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 32,
+    "fields": {
+      "name": "Nyakach School",
+      "school_code": "SCHOOL_32",
+      "centre": 41
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 33,
+    "fields": {
+      "name": "Nyayo School",
+      "school_code": "SCHOOL_33",
+      "centre": 14
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 34,
+    "fields": {
+      "name": "Nyeri School",
+      "school_code": "SCHOOL_34",
+      "centre": 39
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 35,
+    "fields": {
+      "name": "Olturot School",
+      "school_code": "SCHOOL_35",
+      "centre": 27
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 36,
+    "fields": {
+      "name": "Pangani School",
+      "school_code": "SCHOOL_36",
+      "centre": 1
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 37,
+    "fields": {
+      "name": "Shambini School",
+      "school_code": "SCHOOL_37",
+      "centre": 43
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 38,
+    "fields": {
+      "name": "Turi High School",
+      "school_code": "SCHOOL_38",
+      "centre": 32
+    }
+  },
+  {
+    "model": "library_app.school",
+    "pk": 39,
+    "fields": {
+      "name": "Turkana High School",
+      "school_code": "SCHOOL_39",
+      "centre": 22
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 1,
+    "fields": {
+      "email": "admin1@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "is_active": true,
+      "force_password_change": false,
+      "centre": 1,
+      "is_superuser": true,
+      "is_librarian": false,
+      "is_student": false,
+      "is_teacher": false,
+      "is_other": false,
+      "is_staff": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 2,
+    "fields": {
+      "email": "admin2@example.com",
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "is_active": true,
+      "force_password_change": true,
+      "centre": 2,
+      "is_superuser": true,
+      "is_librarian": false,
+      "is_student": false,
+      "is_teacher": false,
+      "is_other": false,
+      "is_staff": true,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 3,
+    "fields": {
+      "email": "librarian1@example.com",
+      "first_name": "Alice",
+      "last_name": "Brown",
+      "is_active": true,
+      "force_password_change": false,
+      "centre": 3,
+      "is_superuser": false,
+      "is_librarian": true,
+      "is_student": false,
+      "is_teacher": false,
+      "is_other": false,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 4,
+    "fields": {
+      "email": "librarian2@example.com",
+      "first_name": "Bob",
+      "last_name": "Wilson",
+      "is_active": false,
+      "force_password_change": true,
+      "centre": 4,
+      "is_superuser": false,
+      "is_librarian": true,
+      "is_student": false,
+      "is_teacher": false,
+      "is_other": false,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 5,
+    "fields": {
+      "email": "student1@example.com",
+      "first_name": "Emma",
+      "last_name": "Davis",
+      "is_active": true,
+      "force_password_change": false,
+      "centre": 5,
+      "is_superuser": false,
+      "is_librarian": false,
+      "is_student": true,
+      "is_teacher": false,
+      "is_other": false,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 6,
+    "fields": {
+      "email": "student2@example.com",
+      "first_name": "Liam",
+      "last_name": "Martinez",
+      "is_active": true,
+      "force_password_change": true,
+      "centre": 6,
+      "is_superuser": false,
+      "is_librarian": false,
+      "is_student": true,
+      "is_teacher": false,
+      "is_other": false,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 7,
+    "fields": {
+      "email": "teacher1@example.com",
+      "first_name": "Olivia",
+      "last_name": "Garcia",
+      "is_active": true,
+      "force_password_change": false,
+      "centre": 7,
+      "is_superuser": false,
+      "is_librarian": false,
+      "is_student": false,
+      "is_teacher": true,
+      "is_other": false,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 8,
+    "fields": {
+      "email": "teacher2@example.com",
+      "first_name": "Noah",
+      "last_name": "Rodriguez",
+      "is_active": false,
+      "force_password_change": true,
+      "centre": 8,
+      "is_superuser": false,
+      "is_librarian": false,
+      "is_student": false,
+      "is_teacher": true,
+      "is_other": false,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 9,
+    "fields": {
+      "email": "other1@example.com",
+      "first_name": "Sophia",
+      "last_name": "Lee",
+      "is_active": true,
+      "force_password_change": false,
+      "centre": 9,
+      "is_superuser": false,
+      "is_librarian": false,
+      "is_student": false,
+      "is_teacher": false,
+      "is_other": true,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.CustomUser",
+    "pk": 10,
+    "fields": {
+      "email": "other2@example.com",
+      "first_name": "James",
+      "last_name": "Hernandez",
+      "is_active": true,
+      "force_password_change": true,
+      "centre": 10,
+      "is_superuser": false,
+      "is_librarian": false,
+      "is_student": false,
+      "is_teacher": false,
+      "is_other": true,
+      "is_staff": false,
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 1,
+    "fields": {
+      "name": "Fiction",
+      "description": "Novels and short stories."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 2,
+    "fields": {
+      "name": "Non-Fiction",
+      "description": "Factual books and essays."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 3,
+    "fields": {
+      "name": "Science",
+      "description": "Books on scientific topics."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 4,
+    "fields": {
+      "name": "History",
+      "description": "Historical accounts and biographies."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 5,
+    "fields": {
+      "name": "Biography",
+      "description": "Life stories of notable individuals."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 6,
+    "fields": {
+      "name": "Fantasy",
+      "description": "Books with magical and fantastical elements."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 7,
+    "fields": {
+      "name": "Mystery",
+      "description": "Crime and detective stories."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 8,
+    "fields": {
+      "name": "Children's",
+      "description": "Books for young readers."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 9,
+    "fields": {
+      "name": "Education",
+      "description": "Textbooks and learning materials."
+    }
+  },
+  {
+    "model": "library_app.Category",
+    "pk": 10,
+    "fields": {
+      "name": "Reference",
+      "description": "Dictionaries and encyclopedias."
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 1,
+    "fields": {
+      "title": "The Great Adventure",
+      "author": "Emma Johnson",
+      "category": 1,
+      "book_code": "BOOK_0001_1234",
+      "isbn": "ISBN-123456789012",
+      "publisher": "Penguin Books",
+      "year_of_publication": 2015,
+      "total_copies": 5,
+      "available_copies": 3,
+      "centre": 1,
+      "added_by": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 2,
+    "fields": {
+      "title": "Science Unveiled",
+      "author": "Liam Brown",
+      "category": 3,
+      "book_code": "BOOK_0002_2345",
+      "isbn": "",
+      "publisher": "Oxford University Press",
+      "year_of_publication": 2018,
+      "total_copies": 4,
+      "available_copies": 2,
+      "centre": 2,
+      "added_by": 2,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 3,
+    "fields": {
+      "title": "History of Empires",
+      "author": "Olivia Davis",
+      "category": 4,
+      "book_code": "BOOK_0003_3456",
+      "isbn": "ISBN-234567890123",
+      "publisher": "HarperCollins",
+      "year_of_publication": 2020,
+      "total_copies": 6,
+      "available_copies": 4,
+      "centre": 3,
+      "added_by": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 4,
+    "fields": {
+      "title": "Mysterious Shadows",
+      "author": "Noah Wilson",
+      "category": 7,
+      "book_code": "BOOK_0004_4567",
+      "isbn": "",
+      "publisher": "Random House",
+      "year_of_publication": 2017,
+      "total_copies": 3,
+      "available_copies": 1,
+      "centre": 4,
+      "added_by": 4,
+      "is_active": false
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 5,
+    "fields": {
+      "title": "Fantasy Realms",
+      "author": "Sophia Martinez",
+      "category": 6,
+      "book_code": "BOOK_0005_5678",
+      "isbn": "ISBN-345678901234",
+      "publisher": "Scholastic",
+      "year_of_publication": 2019,
+      "total_copies": 7,
+      "available_copies": 5,
+      "centre": 5,
+      "added_by": 5,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 6,
+    "fields": {
+      "title": "Children's Tales",
+      "author": "James Lee",
+      "category": 8,
+      "book_code": "BOOK_0006_6789",
+      "isbn": "",
+      "publisher": "McGraw-Hill",
+      "year_of_publication": 2021,
+      "total_copies": 8,
+      "available_copies": 6,
+      "centre": 6,
+      "added_by": 6,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 7,
+    "fields": {
+      "title": "Life of a Leader",
+      "author": "Ava Garcia",
+      "category": 5,
+      "book_code": "BOOK_0007_7890",
+      "isbn": "ISBN-456789012345",
+      "publisher": "Cambridge University Press",
+      "year_of_publication": 2016,
+      "total_copies": 4,
+      "available_copies": 2,
+      "centre": 7,
+      "added_by": 7,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 8,
+    "fields": {
+      "title": "Learning Basics",
+      "author": "William Rodriguez",
+      "category": 9,
+      "book_code": "BOOK_0008_8901",
+      "isbn": "",
+      "publisher": "Penguin Books",
+      "year_of_publication": 2022,
+      "total_copies": 5,
+      "available_copies": 3,
+      "centre": 8,
+      "added_by": 8,
+      "is_active": false
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 9,
+    "fields": {
+      "title": "Reference Guide",
+      "author": "Mia Hernandez",
+      "category": 10,
+      "book_code": "BOOK_0009_9012",
+      "isbn": "ISBN-567890123456",
+      "publisher": "Oxford University Press",
+      "year_of_publication": 2023,
+      "total_copies": 6,
+      "available_copies": 4,
+      "centre": 9,
+      "added_by": 9,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 10,
+    "fields": {
+      "title": "Epic Journeys",
+      "author": "Ethan Smith",
+      "category": 1,
+      "book_code": "BOOK_0010_0123",
+      "isbn": "",
+      "publisher": "HarperCollins",
+      "year_of_publication": 2014,
+      "total_copies": 3,
+      "available_copies": 1,
+      "centre": 10,
+      "added_by": 10,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 11,
+    "fields": {
+      "title": "Quantum World",
+      "author": "Isabella Brown",
+      "category": 3,
+      "book_code": "BOOK_0011_1235",
+      "isbn": "ISBN-678901234567",
+      "publisher": "Random House",
+      "year_of_publication": 2020,
+      "total_copies": 5,
+      "available_copies": 3,
+      "centre": 11,
+      "added_by": 1,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 12,
+    "fields": {
+      "title": "Ancient Civilizations",
+      "author": "Alexander Davis",
+      "category": 4,
+      "book_code": "BOOK_0012_2346",
+      "isbn": "",
+      "publisher": "Scholastic",
+      "year_of_publication": 2019,
+      "total_copies": 4,
+      "available_copies": 2,
+      "centre": 12,
+      "added_by": 2,
+      "is_active": false
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 13,
+    "fields": {
+      "title": "Detective Stories",
+      "author": "Charlotte Wilson",
+      "category": 7,
+      "book_code": "BOOK_0013_3457",
+      "isbn": "ISBN-789012345678",
+      "publisher": "McGraw-Hill",
+      "year_of_publication": 2018,
+      "total_copies": 6,
+      "available_copies": 4,
+      "centre": 13,
+      "added_by": 3,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 14,
+    "fields": {
+      "title": "Magical Lands",
+      "author": "Daniel Martinez",
+      "category": 6,
+      "book_code": "BOOK_0014_4568",
+      "isbn": "",
+      "publisher": "Cambridge University Press",
+      "year_of_publication": 2021,
+      "total_copies": 7,
+      "available_copies": 5,
+      "centre": 14,
+      "added_by": 4,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 15,
+    "fields": {
+      "title": "Young Readers",
+      "author": "Amelia Lee",
+      "category": 8,
+      "book_code": "BOOK_0015_5679",
+      "isbn": "ISBN-890123456789",
+      "publisher": "Penguin Books",
+      "year_of_publication": 2022,
+      "total_copies": 8,
+      "available_copies": 6,
+      "centre": 15,
+      "added_by": 5,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 16,
+    "fields": {
+      "title": "Famous Lives",
+      "author": "Henry Garcia",
+      "category": 5,
+      "book_code": "BOOK_0016_6780",
+      "isbn": "",
+      "publisher": "HarperCollins",
+      "year_of_publication": 2017,
+      "total_copies": 4,
+      "available_copies": 2,
+      "centre": 16,
+      "added_by": 6,
+      "is_active": false
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 17,
+    "fields": {
+      "title": "Study Guide",
+      "author": "Evelyn Rodriguez",
+      "category": 9,
+      "book_code": "BOOK_0017_7891",
+      "isbn": "ISBN-901234567890",
+      "publisher": "Oxford University Press",
+      "year_of_publication": 2023,
+      "total_copies": 5,
+      "available_copies": 3,
+      "centre": 17,
+      "added_by": 7,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 18,
+    "fields": {
+      "title": "Encyclopedia",
+      "author": "Jack Hernandez",
+      "category": 10,
+      "book_code": "BOOK_0018_8902",
+      "isbn": "",
+      "publisher": "Random House",
+      "year_of_publication": 2016,
+      "total_copies": 6,
+      "available_copies": 4,
+      "centre": 18,
+      "added_by": 8,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 19,
+    "fields": {
+      "title": "Adventure Tales",
+      "author": "Lily Smith",
+      "category": 1,
+      "book_code": "BOOK_0019_9013",
+      "isbn": "ISBN-012345678901",
+      "publisher": "Scholastic",
+      "year_of_publication": 2020,
+      "total_copies": 3,
+      "available_copies": 1,
+      "centre": 19,
+      "added_by": 9,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Book",
+    "pk": 20,
+    "fields": {
+      "title": "Science Frontiers",
+      "author": "Lucas Brown",
+      "category": 3,
+      "book_code": "BOOK_0020_0124",
+      "isbn": "",
+      "publisher": "McGraw-Hill",
+      "year_of_publication": 2021,
+      "total_copies": 5,
+      "available_copies": 3,
+      "centre": 20,
+      "added_by": 10,
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Student",
+    "pk": 1,
+    "fields": {
+      "child_ID": 1001,
+      "name": "Emma Davis",
+      "centre": 5,
+      "school": 6,
+      "user": 5,
+      "grade": "8"
+    }
+  },
+  {
+    "model": "library_app.Student",
+    "pk": 2,
+    "fields": {
+      "child_ID": 1002,
+      "name": "Liam Martinez",
+      "centre": 6,
+      "school": 22,
+      "user": 6,
+      "grade": "9"
+    }
+  },
+  {
+    "model": "library_app.Student",
+    "pk": 3,
+    "fields": {
+      "child_ID": 1003,
+      "name": "Ava Wilson",
+      "centre": 7,
+      "school": 20,
+      "user": 5,
+      "grade": "7"
+    }
+  },
+  {
+    "model": "library_app.Student",
+    "pk": 4,
+    "fields": {
+      "child_ID": 1004,
+      "name": "Ethan Lee",
+      "centre": 8,
+      "school": 21,
+      "user": 6,
+      "grade": "10"
+    }
+  },
+  {
+    "model": "library_app.Student",
+    "pk": 5,
+    "fields": {
+      "child_ID": 1005,
+      "name": "Mia Garcia",
+      "centre": 9,
+      "school": 9,
+      "user": 5,
+      "grade": "6"
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 1,
+    "fields": {
+      "book": 1,
+      "user": 5,
+      "centre": 1,
+      "status": "issued",
+      "request_date": "2025-09-23T10:00:00Z",
+      "issue_date": "2025-09-24T10:00:00Z",
+      "due_date": "2025-10-07T10:00:00Z",
+      "return_date": null,
+      "renewals": 0,
+      "issued_by": 3,
+      "returned_to": null,
+      "notes": "Borrowed for class project."
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 2,
+    "fields": {
+      "book": 2,
+      "user": 6,
+      "centre": 2,
+      "status": "returned",
+      "request_date": "2025-09-20T10:00:00Z",
+      "issue_date": "2025-09-21T10:00:00Z",
+      "due_date": "2025-10-04T10:00:00Z",
+      "return_date": "2025-10-01T10:00:00Z",
+      "renewals": 1,
+      "issued_by": 4,
+      "returned_to": 3,
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 3,
+    "fields": {
+      "book": 3,
+      "user": 7,
+      "centre": 3,
+      "status": "requested",
+      "request_date": "2025-10-01T10:00:00Z",
+      "issue_date": null,
+      "due_date": null,
+      "return_date": null,
+      "renewals": 0,
+      "issued_by": null,
+      "returned_to": null,
+      "notes": "Pending approval."
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 4,
+    "fields": {
+      "book": 4,
+      "user": 8,
+      "centre": 4,
+      "status": "issued",
+      "request_date": "2025-09-25T10:00:00Z",
+      "issue_date": "2025-09-26T10:00:00Z",
+      "due_date": "2025-10-09T10:00:00Z",
+      "return_date": null,
+      "renewals": 0,
+      "issued_by": 1,
+      "returned_to": null,
+      "notes": "Teacher borrow."
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 5,
+    "fields": {
+      "book": 5,
+      "user": 9,
+      "centre": 5,
+      "status": "returned",
+      "request_date": "2025-09-15T10:00:00Z",
+      "issue_date": "2025-09-16T10:00:00Z",
+      "due_date": "2025-09-30T10:00:00Z",
+      "return_date": "2025-09-28T10:00:00Z",
+      "renewals": 2,
+      "issued_by": 2,
+      "returned_to": 1,
+      "notes": "Returned early."
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 6,
+    "fields": {
+      "book": 6,
+      "user": 10,
+      "centre": 6,
+      "status": "issued",
+      "request_date": "2025-10-02T10:00:00Z",
+      "issue_date": "2025-10-03T10:00:00Z",
+      "due_date": "2025-10-17T10:00:00Z",
+      "return_date": null,
+      "renewals": 0,
+      "issued_by": 3,
+      "returned_to": null,
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 7,
+    "fields": {
+      "book": 7,
+      "user": 1,
+      "centre": 7,
+      "status": "requested",
+      "request_date": "2025-10-05T10:00:00Z",
+      "issue_date": null,
+      "due_date": null,
+      "return_date": null,
+      "renewals": 0,
+      "issued_by": null,
+      "returned_to": null,
+      "notes": "Admin request."
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 8,
+    "fields": {
+      "book": 8,
+      "user": 2,
+      "centre": 8,
+      "status": "issued",
+      "request_date": "2025-09-27T10:00:00Z",
+      "issue_date": "2025-09-28T10:00:00Z",
+      "due_date": "2025-10-11T10:00:00Z",
+      "return_date": null,
+      "renewals": 1,
+      "issued_by": 4,
+      "returned_to": null,
+      "notes": "Extended loan."
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 9,
+    "fields": {
+      "book": 9,
+      "user": 3,
+      "centre": 9,
+      "status": "returned",
+      "request_date": "2025-09-10T10:00:00Z",
+      "issue_date": "2025-09-11T10:00:00Z",
+      "due_date": "2025-09-25T10:00:00Z",
+      "return_date": "2025-09-24T10:00:00Z",
+      "renewals": 0,
+      "issued_by": 1,
+      "returned_to": 2,
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.Borrow",
+    "pk": 10,
+    "fields": {
+      "book": 10,
+      "user": 4,
+      "centre": 10,
+      "status": "issued",
+      "request_date": "2025-10-01T10:00:00Z",
+      "issue_date": "2025-10-02T10:00:00Z",
+      "due_date": "2025-10-16T10:00:00Z",
+      "return_date": null,
+      "renewals": 0,
+      "issued_by": 3,
+      "returned_to": null,
+      "notes": "Librarian borrow."
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 1,
+    "fields": {
+      "parent_borrow": 4,
+      "teacher": 7,
+      "student_name": "Lucas Brown",
+      "student_id": "STU_1234",
+      "book": 4,
+      "status": "issued",
+      "expected_return_date": "2025-10-09T10:00:00Z",
+      "actual_return_date": null,
+      "notes": "Issued for classroom use."
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 2,
+    "fields": {
+      "parent_borrow": 4,
+      "teacher": 7,
+      "student_name": "Isabella Smith",
+      "student_id": "STU_2345",
+      "book": 5,
+      "status": "returned",
+      "expected_return_date": "2025-10-05T10:00:00Z",
+      "actual_return_date": "2025-10-04T10:00:00Z",
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 3,
+    "fields": {
+      "parent_borrow": 6,
+      "teacher": 8,
+      "student_name": "Alexander Davis",
+      "student_id": "STU_3456",
+      "book": 6,
+      "status": "issued",
+      "expected_return_date": "2025-10-17T10:00:00Z",
+      "actual_return_date": null,
+      "notes": "For group project."
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 4,
+    "fields": {
+      "parent_borrow": 8,
+      "teacher": 7,
+      "student_name": "Charlotte Wilson",
+      "student_id": "STU_4567",
+      "book": 8,
+      "status": "issued",
+      "expected_return_date": "2025-10-11T10:00:00Z",
+      "actual_return_date": null,
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 5,
+    "fields": {
+      "parent_borrow": 10,
+      "teacher": 8,
+      "student_name": "Daniel Martinez",
+      "student_id": "STU_5678",
+      "book": 10,
+      "status": "returned",
+      "expected_return_date": "2025-10-10T10:00:00Z",
+      "actual_return_date": "2025-10-09T10:00:00Z",
+      "notes": "Returned on time."
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 6,
+    "fields": {
+      "parent_borrow": 1,
+      "teacher": 7,
+      "student_name": "Amelia Lee",
+      "student_id": "STU_6789",
+      "book": 1,
+      "status": "issued",
+      "expected_return_date": "2025-10-07T10:00:00Z",
+      "actual_return_date": null,
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 7,
+    "fields": {
+      "parent_borrow": 3,
+      "teacher": 8,
+      "student_name": "Henry Garcia",
+      "student_id": "STU_7890",
+      "book": 3,
+      "status": "issued",
+      "expected_return_date": "2025-10-15T10:00:00Z",
+      "actual_return_date": null,
+      "notes": "Pending request approval."
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 8,
+    "fields": {
+      "parent_borrow": 5,
+      "teacher": 7,
+      "student_name": "Evelyn Rodriguez",
+      "student_id": "STU_8901",
+      "book": 5,
+      "status": "returned",
+      "expected_return_date": "2025-09-30T10:00:00Z",
+      "actual_return_date": "2025-09-28T10:00:00Z",
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 9,
+    "fields": {
+      "parent_borrow": 7,
+      "teacher": 8,
+      "student_name": "Jack Hernandez",
+      "student_id": "STU_9012",
+      "book": 7,
+      "status": "issued",
+      "expected_return_date": "2025-10-19T10:00:00Z",
+      "actual_return_date": null,
+      "notes": "For classroom reading."
+    }
+  },
+  {
+    "model": "library_app.TeacherBookIssue",
+    "pk": 10,
+    "fields": {
+      "parent_borrow": 9,
+      "teacher": 7,
+      "student_name": "Lily Smith",
+      "student_id": "STU_0123",
+      "book": 9,
+      "status": "returned",
+      "expected_return_date": "2025-09-25T10:00:00Z",
+      "actual_return_date": "2025-09-24T10:00:00Z",
+      "notes": ""
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 1,
+    "fields": {
+      "book": 1,
+      "user": 5,
+      "centre": 1,
+      "reservation_date": "2025-09-20T10:00:00Z",
+      "expiry_date": "2025-10-04T10:00:00Z",
+      "status": "pending",
+      "notified": false
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 2,
+    "fields": {
+      "book": 2,
+      "user": 6,
+      "centre": 2,
+      "reservation_date": "2025-09-22T10:00:00Z",
+      "expiry_date": "2025-10-06T10:00:00Z",
+      "status": "fulfilled",
+      "notified": true
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 3,
+    "fields": {
+      "book": 3,
+      "user": 7,
+      "centre": 3,
+      "reservation_date": "2025-09-25T10:00:00Z",
+      "expiry_date": "2025-10-09T10:00:00Z",
+      "status": "cancelled",
+      "notified": false
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 4,
+    "fields": {
+      "book": 4,
+      "user": 8,
+      "centre": 4,
+      "reservation_date": "2025-09-28T10:00:00Z",
+      "expiry_date": "2025-10-12T10:00:00Z",
+      "status": "expired",
+      "notified": true
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 5,
+    "fields": {
+      "book": 5,
+      "user": 9,
+      "centre": 5,
+      "reservation_date": "2025-09-30T10:00:00Z",
+      "expiry_date": "2025-10-14T10:00:00Z",
+      "status": "pending",
+      "notified": false
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 6,
+    "fields": {
+      "book": 6,
+      "user": 10,
+      "centre": 6,
+      "reservation_date": "2025-10-02T10:00:00Z",
+      "expiry_date": "2025-10-16T10:00:00Z",
+      "status": "fulfilled",
+      "notified": true
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 7,
+    "fields": {
+      "book": 7,
+      "user": 1,
+      "centre": 7,
+      "reservation_date": "2025-10-05T10:00:00Z",
+      "expiry_date": "2025-10-19T10:00:00Z",
+      "status": "pending",
+      "notified": false
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 8,
+    "fields": {
+      "book": 8,
+      "user": 2,
+      "centre": 8,
+      "reservation_date": "2025-10-07T10:00:00Z",
+      "expiry_date": "2025-10-21T10:00:00Z",
+      "status": "cancelled",
+      "notified": true
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 9,
+    "fields": {
+      "book": 9,
+      "user": 3,
+      "centre": 9,
+      "reservation_date": "2025-10-10T10:00:00Z",
+      "expiry_date": "2025-10-24T10:00:00Z",
+      "status": "expired",
+      "notified": false
+    }
+  },
+  {
+    "model": "library_app.Reservation",
+    "pk": 10,
+    "fields": {
+      "book": 10,
+      "user": 4,
+      "centre": 10,
+      "reservation_date": "2025-10-12T10:00:00Z",
+      "expiry_date": "2025-10-26T10:00:00Z",
+      "status": "pending",
+      "notified": true
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 1,
+    "fields": {
+      "user": 5,
+      "notification_type": "borrow_request",
+      "message": "Borrow request for The Great Adventure submitted.",
+      "is_read": false,
+      "created_at": "2025-09-23T10:00:00Z",
+      "book": 1,
+      "borrow": 1,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 2,
+    "fields": {
+      "user": 6,
+      "notification_type": "book_issued",
+      "message": "Science Unveiled has been issued to you.",
+      "is_read": true,
+      "created_at": "2025-09-21T10:00:00Z",
+      "book": 2,
+      "borrow": 2,
+      "reservation": null,
+      "group_id": "GROUP_123"
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 3,
+    "fields": {
+      "user": 7,
+      "notification_type": "borrow_approved",
+      "message": "Your borrow request for History of Empires is approved.",
+      "is_read": false,
+      "created_at": "2025-10-01T10:00:00Z",
+      "book": 3,
+      "borrow": 3,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 4,
+    "fields": {
+      "user": 8,
+      "notification_type": "teacher_bulk_request",
+      "message": "Teacher bulk request for Mysterious Shadows submitted.",
+      "is_read": true,
+      "created_at": "2025-09-26T10:00:00Z",
+      "book": 4,
+      "borrow": 4,
+      "reservation": null,
+      "group_id": "GROUP_456"
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 5,
+    "fields": {
+      "user": 9,
+      "notification_type": "book_returned",
+      "message": "Fantasy Realms has been returned.",
+      "is_read": true,
+      "created_at": "2025-09-28T10:00:00Z",
+      "book": 5,
+      "borrow": 5,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 6,
+    "fields": {
+      "user": 10,
+      "notification_type": "reservation_fulfilled",
+      "message": "Your reservation for Children's Tales is fulfilled.",
+      "is_read": false,
+      "created_at": "2025-10-03T10:00:00Z",
+      "book": 6,
+      "borrow": null,
+      "reservation": 6,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 7,
+    "fields": {
+      "user": 1,
+      "notification_type": "overdue_reminder",
+      "message": "Life of a Leader is overdue.",
+      "is_read": false,
+      "created_at": "2025-10-05T10:00:00Z",
+      "book": 7,
+      "borrow": 7,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 8,
+    "fields": {
+      "user": 2,
+      "notification_type": "book_available",
+      "message": "Learning Basics is now available.",
+      "is_read": true,
+      "created_at": "2025-09-28T10:00:00Z",
+      "book": 8,
+      "borrow": null,
+      "reservation": 8,
+      "group_id": "GROUP_789"
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 9,
+    "fields": {
+      "user": 3,
+      "notification_type": "borrow_rejected",
+      "message": "Borrow request for Reference Guide was rejected.",
+      "is_read": false,
+      "created_at": "2025-09-11T10:00:00Z",
+      "book": 9,
+      "borrow": 9,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 10,
+    "fields": {
+      "user": 4,
+      "notification_type": "reservation_fulfilled",
+      "message": "Your reservation for Epic Journeys is fulfilled.",
+      "is_read": true,
+      "created_at": "2025-10-02T10:00:00Z",
+      "book": 10,
+      "borrow": null,
+      "reservation": 10,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 11,
+    "fields": {
+      "user": 5,
+      "notification_type": "borrow_request",
+      "message": "Borrow request for Quantum World submitted.",
+      "is_read": false,
+      "created_at": "2025-10-10T10:00:00Z",
+      "book": 11,
+      "borrow": null,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 12,
+    "fields": {
+      "user": 6,
+      "notification_type": "book_issued",
+      "message": "Ancient Civilizations has been issued to you.",
+      "is_read": true,
+      "created_at": "2025-10-12T10:00:00Z",
+      "book": 12,
+      "borrow": null,
+      "reservation": null,
+      "group_id": "GROUP_234"
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 13,
+    "fields": {
+      "user": 7,
+      "notification_type": "teacher_bulk_request",
+      "message": "Teacher bulk request for Detective Stories submitted.",
+      "is_read": false,
+      "created_at": "2025-10-15T10:00:00Z",
+      "book": 13,
+      "borrow": null,
+      "reservation": null,
+      "group_id": "GROUP_567"
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 14,
+    "fields": {
+      "user": 8,
+      "notification_type": "book_returned",
+      "message": "Magical Lands has been returned.",
+      "is_read": true,
+      "created_at": "2025-10-17T10:00:00Z",
+      "book": 14,
+      "borrow": null,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Notification",
+    "pk": 15,
+    "fields": {
+      "user": 9,
+      "notification_type": "overdue_reminder",
+      "message": "Young Readers is overdue.",
+      "is_read": false,
+      "created_at": "2025-10-20T10:00:00Z",
+      "book": 15,
+      "borrow": null,
+      "reservation": null,
+      "group_id": ""
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 1,
+    "fields": {
+      "book": 1,
+      "shelf_number": "A1",
+      "centre": 1,
+      "added_by": 1,
+      "notes": "Main shelf",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 2,
+    "fields": {
+      "book": 2,
+      "shelf_number": "B2",
+      "centre": 2,
+      "added_by": 2,
+      "notes": "",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 3,
+    "fields": {
+      "book": 3,
+      "shelf_number": "C3",
+      "centre": 3,
+      "added_by": 3,
+      "notes": "History section",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 4,
+    "fields": {
+      "book": 4,
+      "shelf_number": "A4",
+      "centre": 4,
+      "added_by": 4,
+      "notes": "",
+      "is_active": false
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 5,
+    "fields": {
+      "book": 5,
+      "shelf_number": "B5",
+      "centre": 5,
+      "added_by": 5,
+      "notes": "Fantasy collection",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 6,
+    "fields": {
+      "book": 6,
+      "shelf_number": "C6",
+      "centre": 6,
+      "added_by": 6,
+      "notes": "",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 7,
+    "fields": {
+      "book": 7,
+      "shelf_number": "A7",
+      "centre": 7,
+      "added_by": 7,
+      "notes": "Biography section",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 8,
+    "fields": {
+      "book": 8,
+      "shelf_number": "B8",
+      "centre": 8,
+      "added_by": 8,
+      "notes": "",
+      "is_active": false
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 9,
+    "fields": {
+      "book": 9,
+      "shelf_number": "C9",
+      "centre": 9,
+      "added_by": 9,
+      "notes": "Reference materials",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 10,
+    "fields": {
+      "book": 10,
+      "shelf_number": "A10",
+      "centre": 10,
+      "added_by": 10,
+      "notes": "",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 11,
+    "fields": {
+      "book": 11,
+      "shelf_number": "B11",
+      "centre": 11,
+      "added_by": 1,
+      "notes": "Science section",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 12,
+    "fields": {
+      "book": 12,
+      "shelf_number": "C12",
+      "centre": 12,
+      "added_by": 2,
+      "notes": "",
+      "is_active": false
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 13,
+    "fields": {
+      "book": 13,
+      "shelf_number": "A13",
+      "centre": 13,
+      "added_by": 3,
+      "notes": "Mystery collection",
+      "is_active": true
+    }
+  },
+  {
+    "model": "library_app.Catalogue",
+    "pk": 14,
+    "fields": {
+      "book": 14,
+      "shelf_number": "B14",
+      "centre": 14,
+      "added_by":
+      4,
+"notes": "",
+"is_active": true
+}
+},
+{
+"model": "library_app.Catalogue",
+"pk": 15,
+"fields": {
+"book": 15,
+"shelf_number": "C15",
+"centre": 15,
+"added_by": 5,
+"notes": "Children's section",
+"is_active": true
+}
+},
+{
+"model": "library_app.Catalogue",
+"pk": 16,
+"fields": {
+"book": 16,
+"shelf_number": "A16",
+"centre": 16,
+"added_by": 6,
+"notes": "",
+"is_active": false
+}
+},
+{
+"model": "library_app.Catalogue",
+"pk": 17,
+"fields": {
+"book": 17,
+"shelf_number": "B17",
+"centre": 17,
+"added_by": 7,
+"notes": "Education section",
+"is_active": true
+}
+},
+{
+"model": "library_app.Catalogue",
+"pk": 18,
+"fields": {
+"book": 18,
+"shelf_number": "C18",
+"centre": 18,
+"added_by": 8,
+"notes": "",
+"is_active": true
+}
+},
+{
+"model": "library_app.Catalogue",
+"pk": 19,
+"fields": {
+"book": 19,
+"shelf_number": "A19",
+"centre": 19,
+"added_by": 9,
+"notes": "Adventure section",
+"is_active": true
+}
+},
+{
+"model": "library_app.Catalogue",
+"pk": 20,
+"fields": {
+"book": 20,
+"shelf_number": "B20",
+"centre": 20,
+"added_by": 10,
+"notes": "",
+"is_active": true
+}
+}
+]

@@ -150,13 +150,31 @@ class Book(models.Model):
 
 
 class Student(models.Model):
+    GRADE_CHOICES = [
+        ('K', 'Kindergarten'),
+        ('1', 'Grade 1'),
+        ('2', 'Grade 2'),
+        ('3', 'Grade 3'),
+        ('4', 'Grade 4'),
+        ('5', 'Grade 5'),
+        ('6', 'Grade 6'),
+        ('7', 'Grade 7'),
+        ('8', 'Grade 8'),
+        ('9', 'Grade 9'),
+        ('10', 'Grade 10'),
+        ('11', 'Grade 11'),
+        ('12', 'Grade 12'),
+    ]
+    
     child_ID = models.IntegerField(unique=True, blank=True, null=True)
     name = models.CharField(max_length=500)
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, blank=True)
-    school = models.CharField(max_length=500)
+    school = models.ForeignKey(
+        'School', on_delete=models.SET_NULL, null=True, blank=True)  # Changed to ForeignKey
     user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, null=True, blank=True, related_name='student_profile')
-    
+    grade = models.CharField(max_length=2, choices=GRADE_CHOICES, null=True, blank=True)
+
     def __str__(self):
         return self.name
     
@@ -543,16 +561,13 @@ class Notification(models.Model):
         }
         return colors.get(self.notification_type, 'gray')
 
-
 @receiver(post_save, sender=CustomUser)
 def create_student_profile(sender, instance, created, **kwargs):
     if created and instance.is_student and not hasattr(instance, 'student_profile'):
         school = None
         if hasattr(instance, '_school_id') and instance._school_id:
             try:
-                school_obj = School.objects.get(id=instance._school_id)
-                school_name = school_obj.name[:4] if school_obj.name else ""
-                school = school_name
+                school = School.objects.get(id=instance._school_id)  # Get the School object, not name
             except School.DoesNotExist:
                 school = None
             del instance._school_id
@@ -570,7 +585,7 @@ def create_student_profile(sender, instance, created, **kwargs):
             name=f"{instance.first_name} {instance.last_name}".strip(),
             centre=instance.centre,
             child_ID=child_ID,
-            school=school,
+            school=school,  # This should be the School object, not a string
         )
 
 
