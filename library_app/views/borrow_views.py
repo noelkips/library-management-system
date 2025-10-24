@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -283,7 +282,7 @@ def teacher_book_list(request):
     if category_id:
         books = books.filter(category_id=category_id)
     if available_only:
-        books = books.filter(available_copies__gt=0)
+        books = books.filter(available_copies=True)
 
     books = books.order_by("title")
 
@@ -369,31 +368,6 @@ def bulk_borrow_request(request):
             created += 1
         else:
             failed.append(f"{book.title}: Unavailable")
-def borrow_add(request):
-    if request.method == 'POST':
-        student_id = request.POST.get('student')
-        book_id = request.POST.get('book')
-        try:
-            student = Student.objects.get(id=student_id)
-            book = Book.objects.get(id=book_id)
-            if book.is_available:
-                Borrow.objects.create(
-                    user=student.user,
-                    book=book,
-                    centre=request.user.centre,  # Added centre from logged-in user
-                    issued_by=request.user,  # Added issued_by to track who processed the borrow
-                    borrow_date=timezone.now(),
-                    due_date=timezone.now() + timedelta(days=7)
-                )
-                messages.success(request, 'Book borrowed successfully!')
-                return redirect('borrow_list')
-            else:
-                messages.error(request, 'Book is not available.')
-        except (Student.DoesNotExist, Book.DoesNotExist):
-            messages.error(request, 'Invalid student or book.')
-    students = Student.objects.all()
-    books = Book.objects.filter(is_available=True)
-    return render(request, 'borrow/borrow_add.html', {'students': students, 'books': books})
 
     if created:
         messages.success(
@@ -444,7 +418,7 @@ def bulk_reserve_book(request):
             failed.append(f"{book.title}: Already reserved")
             continue
 
-        if book.available_copies > 0:
+        if book.available_copies:
             failed.append(f"{book.title}: Available - borrow instead")
             continue
 
@@ -474,6 +448,71 @@ def bulk_reserve_book(request):
     )
     return redirect("my_borrows")
 
+@login_required
+def borrow_add(request):
+    if not (request.user.is_librarian or request.user.is_site_admin):
+        messages.error(request, "You don't have permission to add borrows.")
+        print(
+            f"Unauthorized borrow add attempt by {request.user.email}"
+        )
+        return redirect("book_list")
+
+    if request.method == 'POST':
+        student_id = request.POST.get('student')
+        book_id = request.POST.get('book')
+        try:
+            student = Student.objects.get(id=student_id)
+            book = Book.objects.get(id=book_id)
+            if book.is_available():
+                if not can_user_borrow(student.user):
+                    messages.error(
+                        request,
+                        f"{student.name} has reached their borrowing limit."
+                    )
+                    print(
+                        f"Borrow limit reached for {student.user.email} "
+                        f"when adding borrow by {request.user.email}"
+                    )
+                    return redirect("borrow_add")
+                borrow = Borrow.objects.create(
+                    user=student.user,
+                    book=book,
+                    centre=book.centre,
+                    status="issued",
+                    issue_date=timezone.now(),
+                    due_date=timezone.now() + timedelta(days=7),
+                    issued_by=request.user,
+                )
+                book.update_available_copies()
+                Notification.objects.create(
+                    user=student.user,
+                    message=(
+                        f"Your borrow request for '{book.title}' has been "
+                        f"approved! Due: {borrow.due_date.strftime('%Y-%m-%d')}"
+                    ),
+                    book=book,
+                    borrow=borrow,
+                    notification_type="borrow_approved",
+                )
+                messages.success(request, 'Book borrowed successfully!', extra_tags="green")
+                print(
+                    f"Borrow created for {student.user.email} "
+                    f"for book '{book.title}' by {request.user.email}"
+                )
+                return redirect('borrow_requests_list')
+            else:
+                messages.error(request, 'Book is not available.')
+                print(
+                    f"Book '{book.title}' not available for borrow "
+                    f"by {request.user.email}"
+                )
+        except (Student.DoesNotExist, Book.DoesNotExist):
+            messages.error(request, 'Invalid student or book.')
+            print(f"Invalid student ID {student_id} or book ID {book_id}")
+    students = Student.objects.all()
+    books = Book.objects.filter(available_copies=True)
+    return render(request, 'borrow/borrow_add.html', {'students': students, 'books': books})
+
 # ==================== LIBRARIAN BORROW MANAGEMENT VIEWS ====================
 
 @login_required
@@ -488,11 +527,10 @@ def borrow_requests_list(request):
         return redirect("book_list")
 
     # Get all users who have pending borrow requests
-    # NOTE: Use 'borrows' (plural) - it's the related_name from the Borrow model
     users_query = CustomUser.objects.filter(
-        borrows__status="requested"  # ✅ Correct - plural
+        borrows__status="requested"
     ).annotate(
-        pending_count=Count('borrows', filter=Q(borrows__status='requested'))  # ✅ Correct - plural
+        pending_count=Count('borrows', filter=Q(borrows__status='requested'))
     ).select_related('centre').distinct()
 
     # Filter by centre for librarians (not site admins)
@@ -604,9 +642,8 @@ def borrow_issue(request, borrow_id):
             borrow.issued_by = request.user
             borrow.save(user=request.user)
 
-            # Decrease available copies
-            borrow.book.available_copies -= 1
-            borrow.book.save(user=request.user)
+            # Update book availability
+            borrow.book.update_available_copies()
 
             # Notify user
             Notification.objects.create(
@@ -616,6 +653,9 @@ def borrow_issue(request, borrow_id):
                     f"approved! Due date: "
                     f"{borrow.due_date.strftime('%Y-%m-%d')}"
                 ),
+                book=borrow.book,
+                borrow=borrow,
+                notification_type="borrow_approved",
             )
 
             messages.success(
@@ -685,6 +725,9 @@ def borrow_reject(request, borrow_id):
                 f"Your request for '{borrow.book.title}' was rejected. "
                 f"Reason: {reason}"
             ),
+            book=borrow.book,
+            borrow=borrow,
+            notification_type="borrow_rejected",
         )
 
         # Delete the request
@@ -841,9 +884,8 @@ def borrow_receive_return(request, borrow_id):
         borrow.returned_to = request.user
         borrow.save(user=request.user)
 
-        # Increase available copies
-        borrow.book.available_copies += 1
-        borrow.book.save(user=request.user)
+        # Update book availability
+        borrow.book.update_available_copies()
 
         # Check for pending reservations
         pending_reservation = Reservation.objects.filter(
@@ -859,6 +901,9 @@ def borrow_receive_return(request, borrow_id):
                     "reservation is ready. Please request to borrow "
                     "within 2 days."
                 ),
+                book=borrow.book,
+                reservation=pending_reservation,
+                notification_type="book_available",
             )
             pending_reservation.notified = True
             pending_reservation.save()
@@ -867,6 +912,9 @@ def borrow_receive_return(request, borrow_id):
         Notification.objects.create(
             user=borrow.user,
             message=f"Thank you for returning '{borrow.book.title}'!",
+            book=borrow.book,
+            borrow=borrow,
+            notification_type="book_returned",
         )
 
         messages.success(
@@ -1118,10 +1166,10 @@ def reserve_book(request, book_id):
         return redirect("book_detail", pk=book_id)
 
     # Check if the book has available copies (suggest borrowing instead)
-    if book.available_copies > 0:
+    if book.available_copies:
         messages.info(
             request,
-            f"'{book.title}' has available copies. Consider borrowing instead.",
+            f"'{book.title}' is available. Consider borrowing instead.",
         )
         return redirect("book_detail", pk=book_id)
 
@@ -1214,8 +1262,7 @@ def bulk_issue_borrows(request, user_id):
         borrow.issued_by = request.user
         borrow.save(user=request.user)
 
-        borrow.book.available_copies -= 1
-        borrow.book.save(user=request.user)
+        borrow.book.update_available_copies()
 
         Notification.objects.create(
             user=borrow.user,
@@ -1223,6 +1270,9 @@ def bulk_issue_borrows(request, user_id):
                 f"Your request for '{borrow.book.title}' has been approved! "
                 f"Due: {due_date.strftime('%Y-%m-%d')}"
             ),
+            book=borrow.book,
+            borrow=borrow,
+            notification_type="borrow_approved",
         )
         issued += 1
 
@@ -1268,6 +1318,9 @@ def bulk_reject_borrows(request, user_id):
                 f"Your request for '{borrow.book.title}' was rejected. "
                 "Contact librarian for details."
             ),
+            book=borrow.book,
+            borrow=borrow,
+            notification_type="borrow_rejected",
         )
         borrow.delete()
         rejected += 1

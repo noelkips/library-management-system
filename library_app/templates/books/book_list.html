@@ -3,11 +3,11 @@
 {% block title %}Books - LibraryHub{% endblock %}
 
 {% block content %}
-<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     {% if messages %}
-        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-[90%] sm:max-w-md">
             {% for message in messages %}
-                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg transition-opacity duration-500" role="alert">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
                             {% if message.tags == 'success' or message.tags == 'green' %}
@@ -34,32 +34,32 @@
         </div>
     {% endif %}
 
-    <div class="mb-8">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
-            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
             </svg>
             Books
         </h1>
-        <p class="text-gray-600 mt-2 text-base sm:text-lg">Browse and manage your library's book collection</p>
+        <p class="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base md:text-lg">Browse and manage your library's book collection</p>
     </div>
 
-    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100">
-        <form method="get" class="flex flex-col sm:flex-row gap-4 mb-6">
+    <div class="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-xl border border-gray-100">
+        <form method="get" class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div class="flex-1 relative">
-                <input type="text" name="q" value="{{ query }}" placeholder="Search books..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search books..." class="w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                <svg class="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <select name="category" class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+            <select name="category" class="px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
                 <option value="">All Categories</option>
                 {% for category in categories %}
                     <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
                 {% endfor %}
             </select>
             {% if request.user.is_superuser %}
-            <select name="centre" class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+            <select name="centre" class="px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
                 <option value="">All Centres</option>
                 {% for centre in centres %}
                     <option value="{{ centre.id }}" {% if selected_centre == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.name }}</option>
@@ -67,11 +67,11 @@
             </select>
             {% endif %}
             <label class="flex items-center space-x-2">
-                <input type="checkbox" name="available" {% if available_only %}checked{% endif %} class="form-checkbox text-[#C86450] rounded focus:ring-[#C86450]">
+                <input type="checkbox" name="available" {% if available_only %}checked{% endif %} class="form-checkbox text-[#C86450] rounded focus:ring-[#C86450] h-4 w-4 sm:h-5 sm:w-5">
                 <span class="text-gray-600 text-sm sm:text-base">Available only</span>
             </label>
-            <button type="submit" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button type="submit" class="bg-secondary text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium flex items-center text-sm sm:text-base">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
                 Filter
@@ -79,8 +79,8 @@
         </form>
 
         {% if request.user.is_superuser or request.user.is_librarian %}
-        <a href="{% url 'book_add' %}" class="inline-flex items-center bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 mb-6 font-medium shadow-sm">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="{% url 'book_add' %}" class="inline-flex items-center bg-secondary text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 mb-4 sm:mb-6 font-medium shadow-sm text-sm sm:text-base">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
             </svg>
             Add Book
@@ -88,59 +88,75 @@
         {% endif %}
 
         <div class="overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500">
+            <table class="w-full text-sm text-left text-gray-500 table-auto">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
-                        <th class="px-4 py-3">Title</th>
-                        <th class="px-4 py-3">Author</th>
-                        <th class="px-4 py-3">Category</th>
-                        <th class="px-4 py-3">Code</th>
-                        <th class="px-4 py-3">ISBN</th>
-                        <th class="px-4 py-3">Publisher</th>
-                        <th class="px-4 py-3">Year</th>
-                        <th class="px-4 py-3">Availability</th>
-                        {% if request.user.is_superuser or request.user.is_librarian %}
-                        <th class="px-4 py-3">Actions</th>
-                        {% endif %}
+                        <th class="px-2 sm:px-4 py-2 sm:py-3">Title</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3 hidden md:table-cell">Author</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3 hidden lg:table-cell">Category</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3 hidden xl:table-cell">Code</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3 hidden xl:table-cell">ISBN</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3 hidden xl:table-cell">Publisher</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3 hidden lg:table-cell">Year</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3">Availability</th>
+                        <th class="px-2 sm:px-4 py-2 sm:py-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for book in books %}
                     <tr class="border-b hover:bg-gray-50 transition-all duration-200">
-                        <td class="px-4 py-3">
-                            <a href="{% url 'book_detail' book.pk %}" class="text-primary hover:text-accent font-medium">{{ book.title|default:"Untitled" }}</a>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3">
+                            <a href="{% url 'book_detail' book.pk %}" class="text-primary hover:text-accent font-medium text-sm sm:text-base">{{ book.title|default:"Untitled" }}</a>
+                            <div class="md:hidden text-xs text-gray-600 mt-1">
+                                {{ book.author|default:"Unknown" }} • {{ book.category.name|default:"Uncategorized" }}
+                            </div>
+                            <div class="lg:hidden text-xs text-gray-600 mt-1">
+                                {{ book.book_code|default:"-" }} • {{ book.isbn|default:"-" }} • {{ book.year_of_publication|default:"-" }}
+                            </div>
                         </td>
-                        <td class="px-4 py-3">{{ book.author|default:"Unknown" }}</td>
-                        <td class="px-4 py-3">{{ book.category.name|default:"Uncategorized" }}</td>
-                        <td class="px-4 py-3">{{ book.book_code|default:"-" }}</td>
-                        <td class="px-4 py-3">{{ book.isbn|default:"-" }}</td>
-                        <td class="px-4 py-3">{{ book.publisher|default:"Unknown" }}</td>
-                        <td class="px-4 py-3">{{ book.year_of_publication|default:"-" }}</td>
-                        <td class="px-4 py-3">
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 hidden md:table-cell">{{ book.author|default:"Unknown" }}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 hidden lg:table-cell">{{ book.category.name|default:"Uncategorized" }}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 hidden xl:table-cell">{{ book.book_code|default:"-" }}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 hidden xl:table-cell">{{ book.isbn|default:"-" }}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 hidden xl:table-cell">{{ book.publisher|default:"Unknown" }}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 hidden lg:table-cell">{{ book.year_of_publication|default:"-" }}</td>
+                        <td class="px-2 sm:px-4 py-2 sm:py-3">
                             {% if book.available_copies %}
                                 <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Available</span>
                             {% else %}
                                 <span class="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Not Available</span>
                             {% endif %}
                         </td>
-                        {% if request.user.is_superuser or request.user.is_librarian %}
-                        <td class="px-4 py-3 space-x-2">
-                            <a href="{% url 'book_update' book.pk %}" class="text-blue-600 hover:text-blue-800">
-                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <td class="px-2 sm:px-4 py-2 sm:py-3 space-x-2">
+                            <a href="{% url 'book_detail' book.pk %}" class="text-gray-600 hover:text-gray-800" title="View Details">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.5-2.5a9 9 0 11-18 0 9 9 0 0118 0zM12 15H8a1 1 0 01-1-1v-4a1 1 0 011-1h4m-1 6h4a1 1 0 001-1v-4a1 1 0 00-1-1h-4"></path>
+                                </svg>
+                            </a>
+                            {% if request.user.is_student or request.user.is_teacher or request.user.is_other %}
+                            <a href="{% url 'borrow_request' book_id=book.pk %}" class="text-green-600 hover:text-green-800" title="Borrow Book">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                            </a>
+                            {% endif %}
+                            {% if request.user.is_superuser or request.user.is_librarian %}
+                            <a href="{% url 'book_update' book.pk %}" class="text-blue-600 hover:text-blue-800" title="Update Book">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                 </svg>
                             </a>
-                            <a href="{% url 'book_delete' book.pk %}" class="text-red-600 hover:text-red-800">
-                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <a href="{% url 'book_delete' book.pk %}" class="text-red-600 hover:text-red-800" title="Delete Book">
+                                <svg class="w-4 h-4 sm:w-5 sm:h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H7a2 2 0 00-2 2v1h14V5a2 2 0 00-2-2h-3m-1 4v12"></path>
                                 </svg>
                             </a>
+                            {% endif %}
                         </td>
-                        {% endif %}
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="{% if request.user.is_superuser or request.user.is_librarian %}9{% else %}8{% endif %}" class="px-4 py-3 text-center text-gray-600">No books found.</td>
+                        <td colspan="9" class="px-2 sm:px-4 py-2 sm:py-3 text-center text-gray-600">No books found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -148,14 +164,14 @@
         </div>
 
         {% if page_obj.has_previous or page_obj.has_next %}
-        <div class="mt-6 flex justify-between items-center">
+        <div class="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4">
             <span class="text-gray-600 text-sm sm:text-base">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} books</span>
             <div class="flex gap-2">
                 {% if page_obj.has_previous %}
-                    <a href="?page={{ page_obj.previous_page_number }}" class="text-primary hover:text-accent py-2 px-4 rounded-lg">Previous</a>
+                    <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_centre %}centre={{ selected_centre }}&{% endif %}{% if available_only %}available=on&{% endif %}page={{ page_obj.previous_page_number }}" class="text-primary hover:text-accent py-1 sm:py-2 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Previous</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}" class="text-primary hover:text-accent py-2 px-4 rounded-lg">Next</a>
+                    <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_centre %}centre={{ selected_centre }}&{% endif %}{% if available_only %}available=on&{% endif %}page={{ page_obj.next_page_number }}" class="text-primary hover:text-accent py-1 sm:py-2 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Next</a>
                 {% endif %}
             </div>
         </div>
@@ -163,64 +179,16 @@
     </div>
 </div>
 
-<style>
-    @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slide-in-right {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    .animate-fade-in { animation: fade-in 0.5s ease-out; }
-    
-    .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    th, td {
-        padding: 0.75rem;
-        text-align: left;
-    }
-
-    th {
-        background-color: #f9fafb;
-        font-weight: 600;
-    }
-
-    tr {
-        transition: background-color 0.2s;
-    }
-
-    input, select {
-        width: 100%;
-        border: 1px solid #d1d5db;
-        padding: 0.75rem;
-        border-radius: 0.5rem;
-        transition: all 0.3s;
-    }
-
-    input:focus, select:focus {
-        outline: none;
-        border: 2px solid #C86450;
-        border-color: transparent;
-        box-shadow: 0 0 0 3px rgba(200, 100, 80, 0.1);
-    }
-</style>
-
 <script>
-    setTimeout(function() {
-        const messages = document.querySelectorAll('[role="alert"]');
-        messages.forEach(function(message) {
-            message.style.transition = 'opacity 0.5s';
-            message.style.opacity = '0';
-            setTimeout(function() { message.remove(); }, 500);
-        });
-    }, 5000);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            const messages = document.querySelectorAll('[role="alert"]');
+            messages.forEach(function(message) {
+                message.style.transition = 'opacity 0.5s';
+                message.style.opacity = '0';
+                setTimeout(function() { message.remove(); }, 500);
+            });
+        }, 5000);
+    });
 </script>
 {% endblock %}

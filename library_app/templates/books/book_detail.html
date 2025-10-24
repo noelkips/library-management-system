@@ -5,17 +5,17 @@
 {% block content %}
 <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
     {% if messages %}
-        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-[90%] sm:max-w-md">
             {% for message in messages %}
                 <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
                             {% if message.tags == 'success' or message.tags == 'green' %}
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                 </svg>
                             {% else %}
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                                 </svg>
                             {% endif %}
@@ -23,8 +23,8 @@
                         <div class="ml-3 flex-1">
                             <p class="text-sm font-medium">{{ message|safe }}</p>
                         </div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100" aria-label="Close message">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
                             </svg>
                         </button>
@@ -35,16 +35,16 @@
     {% endif %}
 
     <div class="mb-8">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
-            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+        <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-primary flex items-center">
+            <svg class="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mr-2 sm:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
             </svg>
             {{ book.title|default:"Untitled" }}
         </h1>
     </div>
 
-    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg space-y-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-lg space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">Author</h3>
                 <p class="text-gray-900">{{ book.author|default:"Unknown" }}</p>
@@ -71,7 +71,7 @@
             </div>
             <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">Total Copies</h3>
-                <p class="text-gray-900">{{ book.total_copies }}</p>
+                <p class="text-gray-900">{{ book.total_copies|default:"Unknown" }}</p>
             </div>
             <div>
                 <h3 class="text-sm font-semibold text-gray-700 mb-2">Available</h3>
@@ -83,71 +83,49 @@
             </div>
         </div>
 
-        {% if request.user.is_authenticated and request.user.is_student %}
-        <div class="mt-8 flex space-x-4">
-            {% if book.available_copies %}
-            <form method="post" action="{% url 'borrow_book' book.pk %}">
+        {% if request.user.is_authenticated and request.user.is_student or request.user.is_teacher or request.user.is_other %}
+        <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <form method="post" action="{% url 'borrow_request' book_id=book.pk %}" class="w-full sm:w-auto">
                 {% csrf_token %}
-                <button type="submit" class="bg-secondary text-white py-3 px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H8m0 0l4 4m-4-4l4-4"></path>
+                <div class="mb-4">
+                    <label for="notes" class="text-sm font-semibold text-gray-700 mb-2 block">Notes (optional)</label>
+                    <textarea id="notes" name="notes" rows="3" class="w-full border border-gray-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all" placeholder="Add any notes for the librarian..."></textarea>
+                </div>
+                <button type="submit" class="bg-secondary text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium shadow-sm flex items-center w-full sm:w-auto" aria-label="Borrow this book">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H8m0 0l4 4m-4-4l4-4"/>
                     </svg>
                     Borrow Book
                 </button>
             </form>
-            {% else %}
-            <button onclick="document.getElementById('reserveModal').classList.remove('hidden')" class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                Reserve Book
-            </button>
-            {% endif %}
+            <form method="post" action="{% url 'reserve_book' book.pk %}" class="w-full sm:w-auto">
+                {% csrf_token %}
+                <button type="submit" class="bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center w-full sm:w-auto" aria-label="Reserve this book">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Reserve Book
+                </button>
+            </form>
         </div>
         {% endif %}
 
         {% if request.user.is_superuser or request.user.is_librarian %}
-        <div class="mt-8 flex space-x-4">
-            <a href="{% url 'book_update' book.pk %}" class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+            <a href="{% url 'book_update' book.pk %}" class="bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center w-full sm:w-auto" aria-label="Update this book">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
                 Update Book
             </a>
-            <a href="{% url 'book_delete' book.pk %}" class="bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H7a2 2 0 00-2 2v1h14V5a2 2 0 00-2-2h-3m-1 4v12"></path>
+            <a href="{% url 'book_delete' book.pk %}" class="bg-red-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-red-700 transition-all transform hover:scale-105 font-medium shadow-sm flex items-center w-full sm:w-auto" aria-label="Delete this book">
+                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0H7a2 2 0 00-2 2v1h14V5a2 2 0 00-2-2h-3m-1 4v12"/>
                 </svg>
                 Delete Book
             </a>
         </div>
         {% endif %}
-    </div>
-
-    <!-- Reserve Modal -->
-    <div id="reserveModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-        <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-semibold text-primary">Reserve {{ book.title|default:"Untitled" }}</h3>
-                <button onclick="document.getElementById('reserveModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <form method="post" action="{% url 'reserve_book' book.pk %}">
-                {% csrf_token %}
-                <p class="text-gray-600 mb-4">The book is currently unavailable. Confirm to reserve it.</p>
-                <div class="flex justify-end space-x-4">
-                    <button type="button" onclick="document.getElementById('reserveModal').classList.add('hidden')" class="bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300">
-                        Cancel
-                    </button>
-                    <button type="submit" class="bg-secondary text-white py-2 px-4 rounded-lg hover:bg-accent">
-                        Confirm Reservation
-                    </button>
-                </div>
-            </form>
-        </div>
     </div>
 </div>
 
@@ -168,17 +146,19 @@
 
     input[type="text"],
     input[type="number"],
-    select {
+    select,
+    textarea {
         width: 100%;
         border: 1px solid #d1d5db;
-        padding: 0.75rem;
+        padding: 0.5rem sm:0.75rem;
         border-radius: 0.5rem;
         transition: all 0.3s;
     }
 
     input[type="text"]:focus,
     input[type="number"]:focus,
-    select:focus {
+    select:focus,
+    textarea:focus {
         outline: none;
         border: 2px solid #C86450;
         border-color: transparent;
@@ -187,13 +167,15 @@
 </style>
 
 <script>
-    setTimeout(function() {
-        const messages = document.querySelectorAll('[role="alert"]');
-        messages.forEach(function(message) {
-            message.style.transition = 'opacity 0.5s';
-            message.style.opacity = '0';
-            setTimeout(function() { message.remove(); }, 500);
-        });
-    }, 5000);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            const messages = document.querySelectorAll('[role="alert"]');
+            messages.forEach(function(message) {
+                message.style.transition = 'opacity 0.5s';
+                message.style.opacity = '0';
+                setTimeout(function() { message.remove(); }, 500);
+            });
+        }, 5000);
+    });
 </script>
 {% endblock %}

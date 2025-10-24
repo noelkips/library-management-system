@@ -8,6 +8,9 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.core.exceptions import ValidationError
+import re
+
 
 
 class Centre(models.Model):
@@ -16,7 +19,7 @@ class Centre(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.centre_code})"
-    
+
 
 class School(models.Model):
     name = models.CharField(max_length=300)
@@ -92,30 +95,33 @@ class Category(models.Model):
     """Book categories for better organization"""
     name = models.CharField(max_length=200, unique=True)
     description = models.TextField(blank=True, null=True)
-    
+
     class Meta:
         verbose_name_plural = "Categories"
         ordering = ['name']
-    
+
     def __str__(self):
         return self.name
 
+
+from django.db import models
+from django.core.exceptions import ValidationError
+from simple_history.models import HistoricalRecords
 
 class Book(models.Model):
     title = models.CharField(max_length=300)
     author = models.CharField(max_length=200)
     category = models.ForeignKey(
-        'Category', 
-        on_delete=models.SET_NULL, 
+        'Category',
+        on_delete=models.SET_NULL,
         null=True,
         related_name='books'
-    )  
-    book_code = models.CharField(max_length=50, unique=True)
-    isbn = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    )
+    book_code = models.CharField(max_length=50, blank=True, null=True)
+    isbn = models.CharField(max_length=50, unique=True)
     publisher = models.CharField(max_length=200)
     year_of_publication = models.PositiveIntegerField()
-    total_copies = models.PositiveIntegerField(default=1)
-    available_copies = models.BooleanField(default=True, help_text="Indicates if any copies are available (Yes/No).")
+    available_copies = models.BooleanField(default=True, help_text="Indicates if the book is available (Yes/No).")
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, related_name='books')
     added_by = models.ForeignKey(
@@ -133,13 +139,21 @@ class Book(models.Model):
         issued_copies = Borrow.objects.filter(
             book=self,
             status='issued'
-        ).count()
-        self.available_copies = (self.total_copies - issued_copies) > 0
+        ).exists()
+        self.available_copies = not issued_copies
         super().save()
 
     def is_available(self):
-        """Check if book has available copies."""
+        """Check if book is available."""
         return self.available_copies
+
+    def clean(self):
+        if self.year_of_publication and (self.year_of_publication < 1500 or self.year_of_publication > 2025):
+            raise ValidationError({'year_of_publication': 'Year must be between 1500 and 2025.'})
+        if not self.isbn:
+            raise ValidationError({'isbn': 'ISBN is required.'})
+        if len(self.isbn) < 8 or len(self.isbn) > 18:
+            raise ValidationError({'isbn': 'ISBN must be between 8 and 18 characters.'})
 
     def __str__(self):
         centre_name = self.centre.name if self.centre and self.centre.name else "No Centre"
@@ -149,6 +163,8 @@ class Book(models.Model):
         unique_together = ('book_code', 'centre')
 
 
+
+        
 class Student(models.Model):
     GRADE_CHOICES = [
         ('K', 'Kindergarten'),
@@ -165,19 +181,19 @@ class Student(models.Model):
         ('11', 'Grade 11'),
         ('12', 'Grade 12'),
     ]
-    
+
     child_ID = models.IntegerField(unique=True, blank=True, null=True)
     name = models.CharField(max_length=500)
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, blank=True)
     school = models.ForeignKey(
-        'School', on_delete=models.SET_NULL, null=True, blank=True)  # Changed to ForeignKey
+        'School', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, null=True, blank=True, related_name='student_profile')
     grade = models.CharField(max_length=2, choices=GRADE_CHOICES, null=True, blank=True)
 
     def __str__(self):
         return self.name
-    
+
 
 def get_user_borrow_limit(user):
     """Get borrow limit based on user type"""
@@ -191,33 +207,27 @@ def get_user_borrow_limit(user):
 def can_user_borrow(user):
     """Check if user can borrow more books"""
     limit = get_user_borrow_limit(user)
-    
+
     if limit is None:  # Teachers - no limit
         return True
-    
+
     if limit == 0:  # Not a borrower
         return False
-    
-    # Check active borrows
+
     active_borrows = Borrow.objects.filter(
-        user=user, 
+        user=user,
         status='issued'
     ).count()
-    
+
     return active_borrows < limit
 
 
 class TeacherBookIssue(models.Model):
-    """
-    Tracks books issued by teachers to students from their borrowed books.
-    This is a sub-system - the library only tracks that the teacher has the book.
-    The teacher tracks which students have which books from their allocation.
-    """
     STATUS_CHOICES = [
         ('issued', 'Issued to Student'),
         ('returned', 'Returned to Teacher'),
     ]
-    
+
     parent_borrow = models.ForeignKey(
         'Borrow',
         on_delete=models.CASCADE,
@@ -263,21 +273,21 @@ class TeacherBookIssue(models.Model):
     )
     notes = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
-    
+
     def save(self, *args, **kwargs):
         if 'user' in kwargs:
             setattr(self, '_history_user', kwargs.pop('user'))
         super().save(*args, **kwargs)
-    
+
     def is_overdue(self):
         """Check if student's return is overdue"""
         if self.expected_return_date and self.status == 'issued':
             return timezone.now() > self.expected_return_date
         return False
-    
+
     def __str__(self):
         return f"{self.teacher.get_full_name() or self.teacher.email} → {self.student_name}: {self.book.title}"
-    
+
     class Meta:
         ordering = ['-issue_date']
         verbose_name = "Teacher Book Issue"
@@ -291,23 +301,23 @@ class Reservation(models.Model):
         ('cancelled', 'Cancelled'),
         ('expired', 'Expired'),
     ]
-    
+
     book = models.ForeignKey(
-        'Book', 
-        on_delete=models.CASCADE, 
+        'Book',
+        on_delete=models.CASCADE,
         related_name='reservations',
         help_text="The book being reserved."
     )
     user = models.ForeignKey(
-        'CustomUser', 
-        on_delete=models.CASCADE, 
+        'CustomUser',
+        on_delete=models.CASCADE,
         related_name='reservations',
         help_text="The user who reserved the book."
     )
     centre = models.ForeignKey(
-        'Centre', 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        'Centre',
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='reservations'
     )
     reservation_date = models.DateTimeField(auto_now_add=True)
@@ -315,8 +325,8 @@ class Reservation(models.Model):
         help_text="Date when reservation expires if not fulfilled"
     )
     status = models.CharField(
-        max_length=20, 
-        choices=STATUS_CHOICES, 
+        max_length=20,
+        choices=STATUS_CHOICES,
         default='pending'
     )
     notified = models.BooleanField(
@@ -330,24 +340,24 @@ class Reservation(models.Model):
             self.expiry_date = timezone.now() + timedelta(days=7)
         super().save(*args, **kwargs)
         if self.pk is None:  # New reservation
-            if not self.user.is_librarian and not self.user.is_site_admin:
-                raise ValueError("Only librarians or site admins can create reservations")
             if self.user.is_student and self.user.borrows.filter(status='issued').count() >= 1:
                 raise ValueError("Students can only borrow one book at a time")
             if self.user.borrows.filter(status='issued').count() >= 2 and not (self.user.is_student or self.user.is_teacher):
                 raise ValueError("General users can only borrow up to two books at a time")
-            if self.book.is_available():
-                # Create a Borrow record if book is available
+            if self.book.is_available() and (self.user.is_librarian or self.user.is_site_admin):
                 Borrow.objects.create(
                     book=self.book,
                     user=self.user,
                     centre=self.centre,
-                    issued_by=self.user,
-                    due_date=timezone.now() + timedelta(days=3)
+                    status='issued',
+                    request_date=timezone.now(),
+                    issue_date=timezone.now(),
+                    due_date=timezone.now() + timedelta(days=3),
+                    issued_by=self.user
                 )
                 self.status = 'fulfilled'
                 self.save()
-    
+
     def __str__(self):
         return f"{self.user.email} reserved {self.book.title} - {self.status}"
 
@@ -357,27 +367,27 @@ class Reservation(models.Model):
 
 class Borrow(models.Model):
     STATUS_CHOICES = [
-        ('requested', 'Requested'),  # Student requested to borrow
-        ('issued', 'Issued'),  # Librarian issued the book
-        ('returned', 'Returned'),  # Book has been returned
+        ('requested', 'Requested'),
+        ('issued', 'Issued'),
+        ('returned', 'Returned'),
     ]
-    
+
     book = models.ForeignKey(
-        'Book', 
-        on_delete=models.CASCADE, 
+        'Book',
+        on_delete=models.CASCADE,
         related_name='borrows',
         help_text="The book being borrowed."
     )
     user = models.ForeignKey(
-        'CustomUser', 
-        on_delete=models.CASCADE, 
+        'CustomUser',
+        on_delete=models.CASCADE,
         related_name='borrows',
         help_text="The user who borrowed the book."
     )
     centre = models.ForeignKey(
-        'Centre', 
-        on_delete=models.SET_NULL, 
-        null=True, 
+        'Centre',
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='borrows'
     )
     status = models.CharField(
@@ -399,9 +409,8 @@ class Borrow(models.Model):
         blank=True,
         help_text="The date by which the book must be returned."
     )
-    
     return_date = models.DateTimeField(
-        null=True, 
+        null=True,
         blank=True,
         help_text="The date when the book was returned."
     )
@@ -410,8 +419,8 @@ class Borrow(models.Model):
         help_text="The number of times the borrow has been renewed."
     )
     issued_by = models.ForeignKey(
-        'CustomUser', 
-        on_delete=models.SET_NULL, 
+        'CustomUser',
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='issued_borrows',
@@ -438,7 +447,6 @@ class Borrow(models.Model):
         if self.due_date and self.status == 'issued':
             return timezone.now() > self.due_date
         return False
-     
 
     def is_returned(self):
         """Check if book has been returned"""
@@ -465,7 +473,6 @@ class Borrow(models.Model):
 
 
 class Notification(models.Model):
-    """User notifications with types and grouping"""
     NOTIFICATION_TYPES = [
         ('borrow_request', 'Borrow Request'),
         ('borrow_approved', 'Borrow Approved'),
@@ -477,7 +484,7 @@ class Notification(models.Model):
         ('teacher_bulk_request', 'Teacher Bulk Request'),
         ('overdue_reminder', 'Overdue Reminder'),
     ]
-    
+
     user = models.ForeignKey(
         'CustomUser',
         on_delete=models.CASCADE,
@@ -491,7 +498,6 @@ class Notification(models.Model):
     message = models.TextField()
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    
     book = models.ForeignKey(
         'Book',
         on_delete=models.SET_NULL,
@@ -519,18 +525,18 @@ class Notification(models.Model):
         blank=True,
         help_text="Group ID for batched notifications"
     )
-    
+
     class Meta:
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"{self.user.email}: {self.message[:50]}"
-    
+
     def mark_as_read(self):
         """Mark notification as read"""
         self.is_read = True
         self.save()
-    
+
     def get_icon(self):
         """Get icon class based on notification type"""
         icons = {
@@ -545,7 +551,7 @@ class Notification(models.Model):
             'overdue_reminder': 'alert-circle',
         }
         return icons.get(self.notification_type, 'bell')
-    
+
     def get_color(self):
         """Get color class based on notification type"""
         colors = {
@@ -561,13 +567,14 @@ class Notification(models.Model):
         }
         return colors.get(self.notification_type, 'gray')
 
+
 @receiver(post_save, sender=CustomUser)
 def create_student_profile(sender, instance, created, **kwargs):
     if created and instance.is_student and not hasattr(instance, 'student_profile'):
         school = None
         if hasattr(instance, '_school_id') and instance._school_id:
             try:
-                school = School.objects.get(id=instance._school_id)  # Get the School object, not name
+                school = School.objects.get(id=instance._school_id)
             except School.DoesNotExist:
                 school = None
             del instance._school_id
@@ -585,7 +592,7 @@ def create_student_profile(sender, instance, created, **kwargs):
             name=f"{instance.first_name} {instance.last_name}".strip(),
             centre=instance.centre,
             child_ID=child_ID,
-            school=school,  # This should be the School object, not a string
+            school=school,
         )
 
 
@@ -602,10 +609,6 @@ def update_book_availability_on_delete(sender, instance, **kwargs):
 
 
 class Catalogue(models.Model):
-    """
-    Catalogue model to manage book placement on shelves.
-    Links books to specific shelf locations with tracking information.
-    """
     book = models.ForeignKey(
         Book,
         on_delete=models.CASCADE,
