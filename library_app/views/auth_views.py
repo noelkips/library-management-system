@@ -8,7 +8,7 @@ from django.utils import timezone
 import csv
 import openpyxl
 from io import TextIOWrapper
-from ..models import Book, Centre, CustomUser, School, Student
+from ..models import Book, Centre, CustomUser, School, Student, Borrow, Reservation, Notification, TeacherBookIssue
 from django.contrib.auth import update_session_auth_hash
 from django.db import transaction
 from django.contrib.auth.models import Group, Permission
@@ -16,6 +16,11 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.crypto import get_random_string
 from django.utils.safestring import mark_safe
 import random
+from django.db.models import Count, Q
+from collections import defaultdict
+import json
+from django.utils import timezone
+from datetime import timedelta
 
 
 def is_site_admin(user):
@@ -64,48 +69,314 @@ def logout_view(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('login_view')
+from django.db.models import Count, Q
+from collections import defaultdict
+import json
+from django.utils import timezone
+from datetime import timedelta
+
 
 @login_required
 def dashboard(request):
+    user = request.user
     context = {
-        'user': request.user,
-        'is_superuser': request.user.is_superuser,
-        'is_librarian': request.user.is_librarian,
-        'is_student': request.user.is_student,
-        'is_teacher': request.user.is_teacher,
+        'user': user,
+        'is_superuser': user.is_superuser,
+        'is_librarian': user.is_librarian,
+        'is_student': user.is_student,
+        'is_teacher': user.is_teacher,
     }
 
-    if request.user.is_superuser:
+    # ------------------------------------------------------------------
+    # 1. Super-user (admin) – system-wide stats
+    # ------------------------------------------------------------------
+    if user.is_superuser:
+        # Centre stats: count TeacherBookIssue via teacher__centre
+        centre_stats = Centre.objects.annotate(
+            book_count=Count('books', distinct=True),
+            student_count=Count('student', distinct=True),
+            borrow_count=Count('borrows', distinct=True),
+            issue_count=Count(
+                'customuser__books_issued_to_students',
+                filter=Q(customuser__is_teacher=True),
+                distinct=True
+            )
+        ).order_by('-borrow_count')[:5]
+
         context.update({
             'total_books': Book.objects.count(),
             'total_centres': Centre.objects.count(),
             'total_users': CustomUser.objects.count(),
             'total_students': Student.objects.count(),
-            'total_issues': 0,  
-            'total_borrows': 0,  
-            'total_reservations': 0,  
-            'total_notifications': 0,  
-        })
-    elif request.user.is_librarian and request.user.centre:
-        context.update({
-            'total_books': Book.objects.filter(centre=request.user.centre).count(),
-            'total_students': Student.objects.filter(centre=request.user.centre).count(),
-            'total_issues': 0,  
-            'total_borrows': 0,  
-            'total_reservations': 0,  
-            'total_notifications': 0,  
-        })
-    elif request.user.is_student or request.user.is_teacher:
-        context.update({
-            'borrowed_books': [], 
-            'notifications': [], 
-        })
-    else:
-        context.update({
-            'message': "Welcome to LibraryHub! Please contact an administrator for access."
+            'total_borrows': Borrow.objects.count(),
+            'total_teacher_issues': TeacherBookIssue.objects.count(),
+            'total_reservations': Reservation.objects.count(),
+
+            # Borrow stats (only from Borrow)
+            'active_borrows': Borrow.objects.filter(status='issued').count(),
+            'overdue_borrows': Borrow.objects.filter(
+                status='issued',
+                due_date__lt=timezone.now()
+            ).count(),
+            'pending_requests': Borrow.objects.filter(status='requested').count(),
+            'available_books': Book.objects.filter(available_copies=True).count(),
+
+            # Recent activity
+            'recent_borrows': Borrow.objects.select_related('user', 'book', 'centre')
+                              .order_by('-request_date')[:5],
+
+            # Centre stats (fixed)
+            'centre_stats': centre_stats,
         })
 
+        # Charts
+        monthly_data = get_monthly_borrow_trends()
+        context.update({
+            'monthly_labels': json.dumps(monthly_data['labels']),
+            'monthly_data': json.dumps(monthly_data['data']),
+        })
+
+        category_data = get_category_distribution()
+        context.update({
+            'category_labels': json.dumps(category_data['labels']),
+            'category_data': json.dumps(category_data['data']),
+        })
+
+        centre_performance = get_centre_performance()
+        context.update({
+            'centre_labels': json.dumps(centre_performance['labels']),
+            'centre_data': json.dumps(centre_performance['borrows']),
+        })
+
+        context['top_borrowed_books'] = get_top_borrowed_books()
+
+    # ------------------------------------------------------------------
+    # 2. Librarian – centre-specific view
+    # ------------------------------------------------------------------
+    elif user.is_librarian and user.centre:
+        centre = user.centre
+
+        context.update({
+            'centre': centre,
+            'total_books': Book.objects.filter(centre=centre).count(),
+            'total_students': Student.objects.filter(centre=centre).count(),
+            'total_borrows': Borrow.objects.filter(centre=centre).count(),
+            'total_teacher_issues': TeacherBookIssue.objects.filter(
+                teacher__centre=centre
+            ).count(),
+            'total_reservations': Reservation.objects.filter(centre=centre).count(),
+
+            # Borrow-specific
+            'active_borrows': Borrow.objects.filter(centre=centre, status='issued').count(),
+            'overdue_borrows': Borrow.objects.filter(
+                centre=centre, status='issued', due_date__lt=timezone.now()
+            ).count(),
+            'pending_requests': Borrow.objects.filter(centre=centre, status='requested').count(),
+            'available_books': Book.objects.filter(centre=centre, available_copies=True).count(),
+
+            # Action lists
+            'recent_borrows': Borrow.objects.filter(centre=centre)
+                              .select_related('user', 'book').order_by('-request_date')[:5],
+
+            'overdue_list': Borrow.objects.filter(
+                centre=centre, status='issued', due_date__lt=timezone.now()
+            ).select_related('user', 'book').order_by('due_date')[:5],
+
+            'pending_list': Borrow.objects.filter(
+                centre=centre, status='requested'
+            ).select_related('user', 'book').order_by('-request_date')[:5],
+        })
+
+        # Centre charts
+        monthly_data = get_monthly_borrow_trends(centre=centre)
+        context.update({
+            'monthly_labels': json.dumps(monthly_data['labels']),
+            'monthly_data': json.dumps(monthly_data['data']),
+        })
+
+        category_data = get_category_distribution(centre=centre)
+        context.update({
+            'category_labels': json.dumps(category_data['labels']),
+            'category_data': json.dumps(category_data['data']),
+        })
+
+    # ------------------------------------------------------------------
+    # 3. Teacher – own borrows + student issues
+    # ------------------------------------------------------------------
+    elif user.is_teacher:
+        teacher_borrows = Borrow.objects.filter(user=user)
+        student_issues = TeacherBookIssue.objects.filter(teacher=user)
+
+        context.update({
+            'borrowed_books': teacher_borrows.filter(status='issued')
+                             .select_related('book', 'centre').order_by('-issue_date'),
+
+            'issued_to_students': student_issues.filter(status='issued')
+                                  .select_related('book').order_by('-issue_date'),
+
+            'total_borrowed': teacher_borrows.filter(status='issued').count(),
+            'total_issued_to_students': student_issues.filter(status='issued').count(),
+            'overdue_borrows': teacher_borrows.filter(
+                status='issued', due_date__lt=timezone.now()
+            ).count(),
+            'overdue_student_issues': student_issues.filter(
+                status='issued', expected_return_date__lt=timezone.now()
+            ).count(),
+
+            'unread_notifications': Notification.objects.filter(user=user, is_read=False).count(),
+            'active_reservations': Reservation.objects.filter(
+                user=user, status='pending'
+            ).select_related('book'),
+        })
+
+    # ------------------------------------------------------------------
+    # 4. Student – personal borrowing
+    # ------------------------------------------------------------------
+    elif user.is_student:
+        student_borrows = Borrow.objects.filter(user=user)
+
+        context.update({
+            'borrowed_books': student_borrows.filter(status='issued')
+                             .select_related('book', 'centre').order_by('-issue_date'),
+
+            'total_borrowed': student_borrows.filter(status='issued').count(),
+            'can_borrow_more': can_user_borrow(user),
+            'overdue_borrows': student_borrows.filter(
+                status='issued', due_date__lt=timezone.now()
+            ).count(),
+
+            'borrow_history': student_borrows.filter(status='returned')
+                             .select_related('book').order_by('-return_date')[:5],
+
+            'unread_notifications': Notification.objects.filter(user=user, is_read=False).count(),
+            'active_reservations': Reservation.objects.filter(
+                user=user, status='pending'
+            ).select_related('book'),
+        })
+
+    # ------------------------------------------------------------------
+    # 5. Fallback
+    # ------------------------------------------------------------------
+    else:
+        context['message'] = "Please contact an administrator to assign your role."
+
     return render(request, 'auth/dashboard.html', context)
+
+    
+def get_monthly_borrow_trends(centre=None):
+    """
+    Get monthly borrow trends for the last 6 months
+    Returns dict with 'labels' and 'data' arrays
+    """
+    now = timezone.now()
+    six_months_ago = now - timedelta(days=180)
+    
+    # Get borrows from last 6 months
+    borrows_query = Borrow.objects.filter(
+        request_date__gte=six_months_ago
+    )
+    
+    if centre:
+        borrows_query = borrows_query.filter(centre=centre)
+    
+    # Group by month
+    monthly_counts = defaultdict(int)
+    for borrow in borrows_query:
+        month_key = borrow.request_date.strftime('%Y-%m')
+        monthly_counts[month_key] += 1
+    
+    # Generate labels for last 6 months
+    labels = []
+    data = []
+    for i in range(5, -1, -1):
+        date = now - timedelta(days=30 * i)
+        month_key = date.strftime('%Y-%m')
+        month_label = date.strftime('%b %Y')
+        labels.append(month_label)
+        data.append(monthly_counts.get(month_key, 0))
+    
+    return {
+        'labels': labels,
+        'data': data
+    }
+
+
+def get_category_distribution(centre=None):
+    """
+    Get distribution of books by category
+    Returns dict with 'labels' and 'data' arrays
+    """
+    books_query = Book.objects.filter(is_active=True)
+    
+    if centre:
+        books_query = books_query.filter(centre=centre)
+    
+    # Group by category
+    category_counts = books_query.values(
+        'category__name'
+    ).annotate(
+        count=Count('id')
+    ).order_by('-count')[:6]  # Top 6 categories
+    
+    labels = []
+    data = []
+    
+    for item in category_counts:
+        category_name = item['category__name'] or 'Uncategorized'
+        labels.append(category_name)
+        data.append(item['count'])
+    
+    # If no data, provide default
+    if not labels:
+        labels = ['No Categories']
+        data = [0]
+    
+    return {
+        'labels': labels,
+        'data': data
+    }
+
+
+def get_centre_performance():
+    """
+    Get performance metrics for top 5 centres
+    Returns dict with 'labels', 'books', and 'borrows' arrays
+    """
+    centres = Centre.objects.annotate(
+        book_count=Count('books', filter=Q(books__is_active=True)),
+        borrow_count=Count('borrows')
+    ).order_by('-borrow_count')[:5]
+    
+    labels = []
+    books = []
+    borrows = []
+    
+    for centre in centres:
+        labels.append(centre.name[:15])  # Truncate long names
+        books.append(centre.book_count)
+        borrows.append(centre.borrow_count)
+    
+    return {
+        'labels': labels,
+        'books': books,
+        'borrows': borrows
+    }
+
+
+def get_top_borrowed_books(limit=10):
+    """
+    Get top borrowed books across the system
+    Returns queryset of books with borrow_count
+    """
+    books = Book.objects.filter(
+        is_active=True
+    ).annotate(
+        borrow_count=Count('borrows')
+    ).filter(
+        borrow_count__gt=0
+    ).order_by('-borrow_count')[:limit]
+    
+    return books
 
 @login_required
 def profile(request):

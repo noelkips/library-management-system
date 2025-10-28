@@ -104,9 +104,6 @@ class Category(models.Model):
         return self.name
 
 
-from django.db import models
-from django.core.exceptions import ValidationError
-from simple_history.models import HistoricalRecords
 
 class Book(models.Model):
     title = models.CharField(max_length=300)

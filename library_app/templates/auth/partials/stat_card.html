@@ -1,0 +1,25 @@
+{% load humanize %}
+<div class="bg-white p-6 rounded-2xl shadow-lg hover-lift animate-fade-in stat-card" style="--delay: {{ delay|default:0 }};">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm text-neutral mb-1">{{ title }}</p>
+            <p class="text-3xl font-bold text-primary">{{ value|intcomma }}</p>
+            {% if subtitle %}
+            <p class="text-xs text-accent mt-1">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+        <div class="bg-accent/10 p-4 rounded-full">
+            <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {% if icon == "book" %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                {% elif icon == "building" %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4-1h.01"></path>
+                {% elif icon == "users" %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                {% elif icon == "student" %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zM12 14l6.16-3.422A12.083 12.083 0 0112 21.5c-2.12 0-4.14-.92-5.49-2.52M12 14v7"></path>
+                {% endif %}
+            </svg>
+        </div>
+    </div>
+</div>

@@ -1,333 +1,793 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Dashboard - LibraryHub{% endblock %}
+{% block title %}Dashboard - MOHILibrary{% endblock %}
 
 {% block content %}
-<div class="animate-fade-in">
-    {% if messages %}
-        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
-            {% for message in messages %}
-                <div class="{% if message.tags == 'success' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% elif message.tags == 'warning' %}bg-yellow-50 border-l-4 border-yellow-500 text-yellow-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                            {% if message.tags == 'success' %}
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            {% else %}
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                </svg>
-                            {% endif %}
-                        </div>
-                        <div class="ml-3 flex-1">
-                            <p class="text-sm font-medium">{{ message|safe }}</p>
-                        </div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
-    <div class="mb-6">
-        <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center">
-            <svg class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-            </svg>
-            Dashboard
-        </h1>
-        <p class="text-blue-100 mt-2 text-sm md:text-base">Welcome back, {{ user.first_name|default:user.email }}!</p>
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-primary mb-2">Dashboard</h1>
+        <p class="text-neutral">Welcome back, {{ user.email }}</p>
     </div>
 
-    {% if user.is_superuser %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <!-- Updated stat cards to use gradient background with white text -->
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+    {% if is_superuser %}
+    <!-- ============================================ -->
+    <!-- SUPER USER / ADMIN DASHBOARD -->
+    <!-- ============================================ -->
+    <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <a href="{% url 'book_add' %}" class="flex flex-col items-center justify-center p-4 bg-primary bg-opacity-10 rounded-lg hover:bg-primary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-primary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Add Book</span>
+                </a>
+                <a href="{% url 'user_add' %}" class="flex flex-col items-center justify-center p-4 bg-accent bg-opacity-10 rounded-lg hover:bg-accent hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-accent group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Add User</span>
+                </a>
+                <a href="{% url 'manage_users' %}" class="flex flex-col items-center justify-center p-4 bg-secondary bg-opacity-10 rounded-lg hover:bg-secondary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-secondary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Manage Users</span>
+                </a>
+                <a href="{% url 'borrow_requests_list' %}" class="flex flex-col items-center justify-center p-4 bg-yellow-100 rounded-lg hover:bg-yellow-500 hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-yellow-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Requests</span>
+                </a>
+                <a href="{% url 'active_borrows_list' %}" class="flex flex-col items-center justify-center p-4 bg-green-100 rounded-lg hover:bg-green-500 hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-green-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Active Borrows</span>
+                </a>
+                <a href="{% url 'reservations_list' %}" class="flex flex-col items-center justify-center p-4 bg-blue-100 rounded-lg hover:bg-blue-500 hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Reservations</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-primary hover:shadow-xl transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-blue-100 mb-1">Total Books</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_books }}</p>
+                        <p class="text-sm text-neutral mb-1">Total Books</p>
+                        <p class="text-3xl font-bold text-primary">{{ total_books }}</p>
                     </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-lg">
+                        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-accent hover:shadow-xl transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-blue-100 mb-1">Total Centres</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_centres }}</p>
+                        <p class="text-sm text-neutral mb-1">Total Centres</p>
+                        <p class="text-3xl font-bold text-accent">{{ total_centres }}</p>
                     </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a2 2 0 012-2h2a2 2 0 012 2v5m-4-1h.01"></path>
+                    <div class="bg-accent bg-opacity-10 p-3 rounded-lg">
+                        <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-secondary hover:shadow-xl transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-blue-100 mb-1">Total Users</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_users }}</p>
+                        <p class="text-sm text-neutral mb-1">Total Users</p>
+                        <p class="text-3xl font-bold text-secondary">{{ total_users }}</p>
                     </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-2a3 3 0 005.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Total Students</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_students }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-secondary bg-opacity-10 p-3 rounded-lg">
+                        <svg class="w-8 h-8 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
                     </div>
                 </div>
             </div>
 
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-danger hover:shadow-xl transition-shadow">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm text-blue-100 mb-1">Total Issues</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_issues }}</p>
+                        <p class="text-sm text-neutral mb-1">Active Borrows</p>
+                        <p class="text-3xl font-bold text-danger">{{ active_borrows }}</p>
                     </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-lg">
+                        <svg class="w-8 h-8 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Total Borrows</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_borrows }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Reservations</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_reservations }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Notifications</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_notifications }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
                     </div>
                 </div>
             </div>
         </div>
 
-    {% elif user.is_librarian and user.centre %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            <!-- Updated librarian stat cards to use gradient background -->
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Books in Centre</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_books }}</p>
-                        <p class="text-xs text-blue-200 mt-1">{{ user.centre.name }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                        </svg>
-                    </div>
-                </div>
+        <!-- Secondary Stats -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-neutral mb-1">Overdue</p>
+                <p class="text-2xl font-bold text-red-600">{{ overdue_borrows }}</p>
             </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Students</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_students }}</p>
-                        <p class="text-xs text-blue-200 mt-1">{{ user.centre.name }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                        </svg>
-                    </div>
-                </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-neutral mb-1">Pending Requests</p>
+                <p class="text-2xl font-bold text-yellow-600">{{ pending_requests }}</p>
             </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Issues</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_issues }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
-                        </svg>
-                    </div>
-                </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-neutral mb-1">Available Books</p>
+                <p class="text-2xl font-bold text-green-600">{{ available_books }}</p>
             </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Borrows</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_borrows }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Reservations</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_reservations }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="gradient-bg text-white p-4 md:p-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-blue-100 mb-1">Notifications</p>
-                        <p class="text-2xl md:text-3xl font-bold">{{ total_notifications }}</p>
-                    </div>
-                    <div class="bg-white/20 p-3 rounded-full">
-                        <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                        </svg>
-                    </div>
-                </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-neutral mb-1">Reservations</p>
+                <p class="text-2xl font-bold text-blue-600">{{ total_reservations }}</p>
             </div>
         </div>
 
-    {% elif user.is_student or user.is_teacher %}
+        <!-- Charts Row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Updated student/teacher cards to use gradient background -->
-            <div class="gradient-bg text-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Monthly Trends -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">Monthly Borrow Trends</h3>
+                <canvas id="monthlyChart" class="w-full" style="max-height: 300px;"></canvas>
+            </div>
+
+            <!-- Category Distribution -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">Books by Category</h3>
+                <canvas id="categoryChart" class="w-full" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Centre Performance & Top Books -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Centre Performance -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">Top Centres Performance</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-primary font-semibold">Centre</th>
+                                <th class="px-4 py-3 text-right text-primary font-semibold">Books</th>
+                                <th class="px-4 py-3 text-right text-primary font-semibold">Borrows</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for centre in centre_stats %}
+                            <tr class="border-b hover:bg-light transition-colors">
+                                <td class="px-4 py-3">{{ centre.name }}</td>
+                                <td class="px-4 py-3 text-right">{{ centre.book_count }}</td>
+                                <td class="px-4 py-3 text-right font-semibold text-accent">{{ centre.borrow_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Borrowed Books -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">Top Borrowed Books</h3>
+                <div class="space-y-3">
+                    {% for book in top_borrowed_books %}
+                    <div class="flex items-center justify-between p-3 bg-light rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex-1">
+                            <p class="font-semibold text-primary">{{ book.title }}</p>
+                            <p class="text-sm text-neutral">{{ book.author }}</p>
+                        </div>
+                        <span class="bg-accent text-white px-3 py-1 rounded-full text-sm font-semibold">{{ book.borrow_count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Recent Borrow Activity</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">User</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Book</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Centre</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Date</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrow in recent_borrows %}
+                        <tr class="border-b hover:bg-light transition-colors">
+                            <td class="px-4 py-3">{{ borrow.user.email }}</td>
+                            <td class="px-4 py-3">{{ borrow.book.title }}</td>
+                            <td class="px-4 py-3">{{ borrow.centre.name }}</td>
+                            <td class="px-4 py-3">{{ borrow.request_date|date:"M d, Y" }}</td>
+                            <td class="px-4 py-3">
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold
+                                    {% if borrow.status == 'issued' %}bg-green-100 text-green-800
+                                    {% elif borrow.status == 'requested' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ borrow.status|upper }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {% elif is_librarian %}
+    <!-- ============================================ -->
+    <!-- LIBRARIAN DASHBOARD -->
+    <!-- ============================================ -->
+    <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <a href="{% url 'book_add' %}" class="flex flex-col items-center justify-center p-4 bg-primary bg-opacity-10 rounded-lg hover:bg-primary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-primary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Add Book</span>
+                </a>
+                <a href="{% url 'add_student' %}" class="flex flex-col items-center justify-center p-4 bg-accent bg-opacity-10 rounded-lg hover:bg-accent hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-accent group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Add Student</span>
+                </a>
+                <a href="{% url 'manage_students' %}" class="flex flex-col items-center justify-center p-4 bg-secondary bg-opacity-10 rounded-lg hover:bg-secondary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-secondary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Students</span>
+                </a>
+                <a href="{% url 'borrow_requests_list' %}" class="flex flex-col items-center justify-center p-4 bg-yellow-100 rounded-lg hover:bg-yellow-500 hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-yellow-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Requests</span>
+                </a>
+                <a href="{% url 'catalogue_add' %}" class="flex flex-col items-center justify-center p-4 bg-blue-100 rounded-lg hover:bg-blue-500 hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Add Catalogue</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Centre Info Banner -->
+        <div class="bg-gradient-to-r from-primary to-accent text-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-2">{{ centre.name }}</h2>
+            <p class="opacity-90">Managing centre operations and resources</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-primary">
+                <p class="text-sm text-neutral mb-1">Total Books</p>
+                <p class="text-3xl font-bold text-primary">{{ total_books }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-accent">
+                <p class="text-sm text-neutral mb-1">Total Students</p>
+                <p class="text-3xl font-bold text-accent">{{ total_students }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-secondary">
+                <p class="text-sm text-neutral mb-1">Active Borrows</p>
+                <p class="text-3xl font-bold text-secondary">{{ active_borrows }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-danger">
+                <p class="text-sm text-neutral mb-1">Overdue</p>
+                <p class="text-3xl font-bold text-danger">{{ overdue_borrows }}</p>
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="{% url 'pending_list' %}" class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-yellow-700 mb-1">Pending Requests</p>
+                        <p class="text-3xl font-bold text-yellow-600">{{ pending_requests }}</p>
+                    </div>
+                    <svg class="w-10 h-10 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </a>
+
+            <div class="bg-green-50 border-l-4 border-green-500 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-green-700 mb-1">Available Books</p>
+                        <p class="text-3xl font-bold text-green-600">{{ available_books }}</p>
+                    </div>
+                    <svg class="w-10 h-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg shadow p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-blue-700 mb-1">Reservations</p>
+                        <p class="text-3xl font-bold text-blue-600">{{ total_reservations }}</p>
+                    </div>
+                    <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">Monthly Trends</h3>
+                <canvas id="monthlyChart" style="max-height: 300px;"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">Category Distribution</h3>
+                <canvas id="categoryChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Overdue -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-primary mb-4">Recent Borrows</h3>
+                <div class="space-y-3">
+                    {% for borrow in recent_borrows %}
+                    <div class="flex items-center justify-between p-3 bg-light rounded-lg">
+                        <div>
+                            <p class="font-semibold text-primary">{{ borrow.book.title }}</p>
+                            <p class="text-sm text-neutral">{{ borrow.user.email }}</p>
+                        </div>
+                        <span class="text-xs text-neutral">{{ borrow.request_date|date:"M d" }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-bold text-danger mb-4">Overdue Items</h3>
+                <div class="space-y-3">
+                    {% for borrow in overdue_list %}
+                    <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                        <div>
+                            <p class="font-semibold text-red-900">{{ borrow.book.title }}</p>
+                            <p class="text-sm text-red-700">{{ borrow.user.email }}</p>
+                        </div>
+                        <span class="text-xs text-red-600 font-semibold">{{ borrow.due_date|date:"M d" }}</span>
+                    </div>
+                    {% empty %}
+                    <p class="text-center text-neutral py-4">No overdue items</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% elif is_teacher %}
+    <!-- ============================================ -->
+    <!-- TEACHER DASHBOARD -->
+    <!-- ============================================ -->
+    <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <a href="{% url 'book_list' %}" class="flex flex-col items-center justify-center p-4 bg-primary bg-opacity-10 rounded-lg hover:bg-primary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-primary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
                     </svg>
-                    Borrowed Books
-                </h2>
-                <div class="bg-white/20 border border-white/30 rounded-lg p-4">
-                    <p class="text-sm text-blue-100">Borrow functionality not yet implemented.</p>
-                </div>
+                    <span class="text-sm font-semibold text-center">Browse Books</span>
+                </a>
+                <a href="{% url 'my_borrows' %}" class="flex flex-col items-center justify-center p-4 bg-accent bg-opacity-10 rounded-lg hover:bg-accent hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-accent group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">My Borrows</span>
+                </a>
+                <a href="{% url 'teacher_book_list' %}" class="flex flex-col items-center justify-center p-4 bg-secondary bg-opacity-10 rounded-lg hover:bg-secondary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-secondary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Bulk Borrow</span>
+                </a>
+                <a href="{% url 'teacher_my_books' %}" class="flex flex-col items-center justify-center p-4 bg-green-100 rounded-lg hover:bg-green-500 hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-green-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">My Books</span>
+                </a>
+                <a href="{% url 'teacher_all_issues' %}" class="flex flex-col items-center justify-center p-4 bg-blue-100 rounded-lg hover:bg-blue-500 hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Student Issues</span>
+                </a>
             </div>
+        </div>
 
-            <div class="gradient-bg text-white p-6 rounded-lg shadow-lg">
-                <h2 class="text-xl font-semibold text-white mb-4 flex items-center">
-                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-primary">
+                <p class="text-sm text-neutral mb-1">My Borrowed Books</p>
+                <p class="text-3xl font-bold text-primary">{{ total_borrowed }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-accent">
+                <p class="text-sm text-neutral mb-1">Issued to Students</p>
+                <p class="text-3xl font-bold text-accent">{{ total_issued_to_students }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-danger">
+                <p class="text-sm text-neutral mb-1">My Overdue</p>
+                <p class="text-3xl font-bold text-danger">{{ overdue_borrows }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-secondary">
+                <p class="text-sm text-neutral mb-1">Student Overdue</p>
+                <p class="text-3xl font-bold text-secondary">{{ overdue_student_issues }}</p>
+            </div>
+        </div>
+
+        <!-- Notifications & Reservations -->
+        {% if unread_notifications > 0 or active_reservations %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% if unread_notifications > 0 %}
+            <a href="{% url 'notifications' %}" class="bg-blue-50 border-l-4 border-blue-500 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-blue-700 mb-1">Unread Notifications</p>
+                        <p class="text-3xl font-bold text-blue-600">{{ unread_notifications }}</p>
+                    </div>
+                    <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                     </svg>
-                    Notifications
-                </h2>
-                <div class="bg-white/20 border border-white/30 rounded-lg p-4">
-                    <p class="text-sm text-blue-100">Notification functionality not yet implemented.</p>
                 </div>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- My Borrowed Books -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-primary">My Borrowed Books</h3>
+                <a href="{% url 'book_list' %}" class="text-accent hover:underline text-sm font-semibold">Browse Books →</a>
+            </div>
+            {% if borrowed_books %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Book</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Centre</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Issue Date</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrow in borrowed_books %}
+                        <tr class="border-b hover:bg-light transition-colors">
+                            <td class="px-4 py-3">
+                                <p class="font-semibold">{{ borrow.book.title }}</p>
+                                <p class="text-xs text-neutral">{{ borrow.book.author }}</p>
+                            </td>
+                            <td class="px-4 py-3">{{ borrow.centre.name }}</td>
+                            <td class="px-4 py-3">{{ borrow.issue_date|date:"M d, Y" }}</td>
+                            <td class="px-4 py-3">
+                                {% if borrow.due_date < today %}
+                                <span class="text-red-600 font-semibold">{{ borrow.due_date|date:"M d, Y" }}</span>
+                                {% else %}
+                                <span>{{ borrow.due_date|date:"M d, Y" }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <svg class="w-16 h-16 mx-auto text-neutral mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                </svg>
+                <p class="text-neutral">No books currently borrowed</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Books Issued to Students -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-primary">Books Issued to Students</h3>
+                <a href="{% url 'teacher_book_list' %}" class="text-accent hover:underline text-sm font-semibold">Issue Books →</a>
+            </div>
+            {% if issued_to_students %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Book</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Student</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Issue Date</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Expected Return</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for issue in issued_to_students %}
+                        <tr class="border-b hover:bg-light transition-colors">
+                            <td class="px-4 py-3">
+                                <p class="font-semibold">{{ issue.book.title }}</p>
+                            </td>
+                            <td class="px-4 py-3">{{ issue.student.name }}</td>
+                            <td class="px-4 py-3">{{ issue.issue_date|date:"M d, Y" }}</td>
+                            <td class="px-4 py-3">
+                                {% if issue.expected_return_date < today %}
+                                <span class="text-red-600 font-semibold">{{ issue.expected_return_date|date:"M d, Y" }}</span>
+                                {% else %}
+                                <span>{{ issue.expected_return_date|date:"M d, Y" }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-neutral">No books issued to students</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% elif is_student %}
+    <!-- ============================================ -->
+    <!-- STUDENT DASHBOARD -->
+    <!-- ============================================ -->
+    <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <a href="{% url 'book_list' %}" class="flex flex-col items-center justify-center p-4 bg-primary bg-opacity-10 rounded-lg hover:bg-primary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-primary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Browse Books</span>
+                </a>
+                <a href="{% url 'my_borrows' %}" class="flex flex-col items-center justify-center p-4 bg-accent bg-opacity-10 rounded-lg hover:bg-accent hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-accent group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">My Borrows</span>
+                </a>
+                <a href="{% url 'notification_center' %}" class="flex flex-col items-center justify-center p-4 bg-blue-100 rounded-lg hover:bg-blue-500 hover:text-white transition-all group relative">
+                    {% if unread_notifications > 0 %}
+                    <span class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{{ unread_notifications }}</span>
+                    {% endif %}
+                    <svg class="w-8 h-8 mb-2 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Notifications</span>
+                </a>
+                <a href="{% url 'profile' %}" class="flex flex-col items-center justify-center p-4 bg-secondary bg-opacity-10 rounded-lg hover:bg-secondary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-secondary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">My Profile</span>
+                </a>
             </div>
         </div>
 
-    {% else %}
-        <!-- Updated default welcome card to use gradient background -->
-        <div class="gradient-bg text-white p-6 rounded-lg shadow-lg">
-            <h2 class="text-xl font-semibold text-white mb-4">Welcome, {{ user.email }}!</h2>
-            <p class="text-blue-100">{{ message }}</p>
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-primary">
+                <p class="text-sm text-neutral mb-1">Currently Borrowed</p>
+                <p class="text-3xl font-bold text-primary">{{ total_borrowed }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-danger">
+                <p class="text-sm text-neutral mb-1">Overdue Books</p>
+                <p class="text-3xl font-bold text-danger">{{ overdue_borrows }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 {% if can_borrow_more %}border-green-500{% else %}border-red-500{% endif %}">
+                <p class="text-sm text-neutral mb-1">Borrow Status</p>
+                <p class="text-lg font-bold {% if can_borrow_more %}text-green-600{% else %}text-red-600{% endif %}">
+                    {% if can_borrow_more %}Can Borrow{% else %}Limit Reached{% endif %}
+                </p>
+            </div>
         </div>
+
+        <!-- Notifications -->
+        {% if unread_notifications > 0 %}
+        <a href="{% url 'notifications' %}" class="block bg-blue-50 border-l-4 border-blue-500 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-blue-700 mb-1">Unread Notifications</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ unread_notifications }}</p>
+                </div>
+                <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+            </div>
+        </a>
+        {% endif %}
+
+        <!-- Currently Borrowed -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-primary">Currently Borrowed Books</h3>
+                <a href="{% url 'book_list' %}" class="text-accent hover:underline text-sm font-semibold">Browse Books →</a>
+            </div>
+            {% if borrowed_books %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for borrow in borrowed_books %}
+                <div class="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-primary">{{ borrow.book.title }}</h4>
+                            <p class="text-sm text-neutral">{{ borrow.book.author }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 space-y-1 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-neutral">Centre:</span>
+                            <span class="font-semibold">{{ borrow.centre.name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral">Issue Date:</span>
+                            <span>{{ borrow.issue_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral">Due Date:</span>
+                            <span class="{% if borrow.due_date < today %}text-red-600 font-bold{% endif %}">
+                                {{ borrow.due_date|date:"M d, Y" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="w-20 h-20 mx-auto text-neutral mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                </svg>
+                <p class="text-neutral text-lg mb-4">No books currently borrowed</p>
+                <a href="{% url 'book_list' %}" class="inline-block bg-primary text-white px-6 py-2 rounded-lg hover:bg-accent transition-colors">
+                    Browse Available Books
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Borrow History -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Recent Borrow History</h3>
+            {% if borrow_history %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Book</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Borrowed</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Returned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrow in borrow_history %}
+                        <tr class="border-b hover:bg-light transition-colors">
+                            <td class="px-4 py-3">
+                                <p class="font-semibold">{{ borrow.book.title }}</p>
+                                <p class="text-xs text-neutral">{{ borrow.book.author }}</p>
+                            </td>
+                            <td class="px-4 py-3">{{ borrow.issue_date|date:"M d, Y" }}</td>
+                            <td class="px-4 py-3">{{ borrow.return_date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-neutral py-8">No borrow history yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% else %}
+    <!-- ============================================ -->
+    <!-- FALLBACK MESSAGE -->
+    <!-- ============================================ -->
+    <div class="bg-white rounded-lg shadow-lg p-12 text-center">
+        <svg class="w-20 h-20 mx-auto text-neutral mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+        <h2 class="text-2xl font-bold text-primary mb-2">Access Pending</h2>
+        <p class="text-neutral">{{ message }}</p>
+    </div>
     {% endif %}
 </div>
 
-<style>
-    @keyframes fade-in {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    @keyframes slide-in-right {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    .animate-fade-in {
-        animation: fade-in 0.5s ease-out;
-    }
-    
-    .animate-slide-in-right {
-        animation: slide-in-right 0.3s ease-out;
-    }
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    /* Added gradient background class to match landing.html */
-    .gradient-bg {
-        background: linear-gradient(135deg, #143C50 0%, #288CC8 100%);
-    }
-</style>
-
+{% if is_superuser or is_librarian %}
 <script>
-    setTimeout(function() {
-        const messages = document.querySelectorAll('[role="alert"]');
-        messages.forEach(function(message) {
-            message.style.transition = 'opacity 0.5s';
-            message.style.opacity = '0';
-            setTimeout(function() {
-                message.remove();
-            }, 500);
+    // Monthly Trends Chart
+    const monthlyCtx = document.getElementById('monthlyChart');
+    if (monthlyCtx) {
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: {{ monthly_labels|safe }},
+                datasets: [{
+                    label: 'Borrows',
+                    data: {{ monthly_data|safe }},
+                    borderColor: '#288CC8',
+                    backgroundColor: 'rgba(40, 140, 200, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
         });
-    }, 5000);
+    }
+
+    // Category Distribution Chart
+    const categoryCtx = document.getElementById('categoryChart');
+    if (categoryCtx) {
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ category_labels|safe }},
+                datasets: [{
+                    data: {{ category_data|safe }},
+                    backgroundColor: [
+                        '#143C50', '#288CC8', '#C86450', 
+                        '#34f2ac', '#DCDCF0', '#A0A0A0'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
 </script>
+{% endif %}
 {% endblock %}
