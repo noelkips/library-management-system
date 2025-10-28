@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Catalogue Entry{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Catalogue Entry Details</h1>
+                <p class="text-gray-600 mt-2">View complete information about this catalogued book</p>
+            </div>
+            <a 
+                href="{% url 'catalogue_list' %}" 
+                class="bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg hover:bg-gray-400 transition transform hover:scale-105 shadow-lg flex items-center"
+            >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Book Details Card -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="bg-gray-100 border-b border-gray-200 px-6 py-4">
+                    <h2 class="text-xl font-bold text-gray-900">Book Information</h2>
+                </div>
+                <div class="p-6 space-y-6">
+                    <!-- Book Title -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Book Title</label>
+                        <p class="text-lg text-gray-900 font-semibold">{{ catalogue.book.title }}</p>
+                    </div>
+
+                    <!-- Author -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Author</label>
+                        <p class="text-gray-700">{{ catalogue.book.author }}</p>
+                    </div>
+
+                    <!-- Book Code -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Book Code</label>
+                            <p class="text-gray-700">{{ catalogue.book.book_code }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">ISBN</label>
+                            <p class="text-gray-700">{{ catalogue.book.isbn }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Publisher & Year -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Publisher</label>
+                            <p class="text-gray-700">{{ catalogue.book.publisher }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Year of Publication</label>
+                            <p class="text-gray-700">{{ catalogue.book.year_of_publication }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Category -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                        <p class="text-gray-700">{{ catalogue.book.category.name|default:"Not Assigned" }}</p>
+                    </div>
+
+                    <!-- Availability -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Availability</label>
+                        <span class="inline-block {% if catalogue.book.available_copies %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %} px-3 py-1 rounded-full text-sm font-semibold border {% if catalogue.book.available_copies %}border-green-300{% else %}border-red-300{% endif %}">
+                            {% if catalogue.book.available_copies %}Available{% else %}Not Available{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Catalogue Details Card -->
+        <div>
+            <div class="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="bg-gray-100 border-b border-gray-200 px-6 py-4">
+                    <h2 class="text-xl font-bold text-gray-900">Catalogue Information</h2>
+                </div>
+                <div class="p-6 space-y-6">
+                    <!-- Shelf Number -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Shelf Number</label>
+                        <span class="inline-block bg-gray-100 text-gray-800 px-3 py-2 rounded-lg text-lg font-bold border border-gray-200">
+                            {{ catalogue.shelf_number }}
+                        </span>
+                    </div>
+
+                    <!-- Centre -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Centre</label>
+                        <p class="text-gray-700">{{ catalogue.centre.name }}</p>
+                    </div>
+
+                    <!-- Added Date -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Added Date</label>
+                        <p class="text-gray-700">{{ catalogue.added_date|date:"M d, Y H:i" }}</p>
+                    </div>
+
+                    <!-- Last Updated -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Last Updated</label>
+                        <p class="text-gray-700">{{ catalogue.last_updated|date:"M d, Y H:i" }}</p>
+                    </div>
+
+                    <!-- Added By -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Added By</label>
+                        <p class="text-gray-700">{{ catalogue.added_by.get_full_name|default:catalogue.added_by.email }}</p>
+                    </div>
+
+                    <!-- Status -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
+                        <span class="inline-block {% if catalogue.is_active %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %} px-3 py-1 rounded-full text-sm font-semibold border {% if catalogue.is_active %}border-green-300{% else %}border-gray-300{% endif %}">
+                            {% if catalogue.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Section -->
+    {% if catalogue.notes %}
+        <div class="mt-6 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+            <div class="bg-gray-100 border-b border-gray-200 px-6 py-4">
+                <h2 class="text-xl font-bold text-gray-900">Notes</h2>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-700 whitespace-pre-wrap">{{ catalogue.notes }}</p>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+        <a 
+            href="{% url 'catalogue_update' catalogue.pk %}" 
+            class="inline-flex items-center justify-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold px-6 py-3 rounded-lg transition transform hover:scale-105 border border-gray-200 shadow-lg"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></path></svg>
+            Edit Entry
+        </a>
+        <a 
+            href="{% url 'catalogue_delete' catalogue.pk %}" 
+            class="inline-flex items-center justify-center gap-2 bg-red-50 text-red-700 hover:bg-red-100 font-semibold px-6 py-3 rounded-lg transition transform hover:scale-105 border border-red-200 shadow-lg"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></path></svg>
+            Delete Entry
+        </a>
+    </div>
+</div>
+
+<style>
+    @keyframes fade-in {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    .animate-fade-in {
+        animation: fade-in 0.3s ease-out;
+    }
+</style>
+{% endblock %}

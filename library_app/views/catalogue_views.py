@@ -33,7 +33,7 @@ def get_books_by_centre(request):
             is_active=True
         ).exclude(
             id__in=catalogued_books
-        ).order_by('title').values('id', 'title', 'author', 'book_code', 'category', 'total_copies')
+        ).order_by('title').values('id', 'title', 'author', 'book_code', 'category')
         
         return JsonResponse({
             'books': list(books),
@@ -218,3 +218,19 @@ def catalogue_delete(request, pk):
         return redirect('catalogue_list')
 
     return render(request, 'catalogue/catalogue_delete.html', {'catalogue': catalogue})
+
+
+@login_required
+def catalogue_view(request, pk):
+    """View details of a catalogued book."""
+    if not is_authorized(request.user):
+        messages.error(request, "You do not have permission to access this page.")
+        return redirect('book_list')
+
+    catalogue = get_object_or_404(Catalogue, pk=pk)
+
+    if request.user.is_librarian and not request.user.is_superuser and catalogue.centre != request.user.centre:
+        messages.error(request, "You can only view catalogues for your own centre.")
+        return redirect('catalogue_list')
+
+    return render(request, 'catalogue/catalogue_view.html', {'catalogue': catalogue})

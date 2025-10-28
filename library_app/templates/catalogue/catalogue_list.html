@@ -4,24 +4,29 @@
 {% block title %}Book Catalogue{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4 sm:px-6 lg:px-8">
-    <!-- Messages now positioned on the right side with fixed width -->
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
+    <!-- Updated message styling to match book_add.html -->
     {% if messages %}
-        <div class="fixed top-4 right-4 z-50 w-96 max-w-[calc(100vw-2rem)]">
+        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
             <div class="space-y-3">
                 {% for message in messages %}
-                    <div class="p-4 rounded-lg shadow-lg animate-slide-down {% if message.tags == 'success' %}bg-green-50 border border-green-200 text-green-800{% elif message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800{% elif message.tags == 'warning' %}bg-yellow-50 border border-yellow-200 text-yellow-800{% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %}">
-                        <div class="flex items-start gap-3">
-                            {% if message.tags == 'success' %}
-                                <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></path></svg>
-                            {% elif message.tags == 'error' %}
-                                <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></path></svg>
-                            {% elif message.tags == 'warning' %}
-                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></path></svg>
-                            {% else %}
-                                <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/></path></svg>
-                            {% endif %}
-                            <span class="font-medium">{{ message }}</span>
+                    <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0">
+                                {% if message.tags == 'success' or message.tags == 'green' %}
+                                    <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></path></svg>
+                                {% elif message.tags == 'error' %}
+                                    <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></path></svg>
+                                {% else %}
+                                    <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0zm3 0a1 1 0 11-2 0 1 1 0 012 0z" clip-rule="evenodd"/></path></svg>
+                                {% endif %}
+                            </div>
+                            <div class="ml-3 flex-1">
+                                <p class="text-sm font-medium">{{ message|safe }}</p>
+                            </div>
+                            <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></path></svg>
+                            </button>
                         </div>
                     </div>
                 {% endfor %}
@@ -29,154 +34,166 @@
         </div>
     {% endif %}
 
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h1 class="text-4xl font-bold text-slate-900 mb-2">Book Catalogue</h1>
-                <p class="text-slate-600">Manage and view all catalogued books</p>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900">Book Catalogue</h1>
+                <p class="text-gray-600 mt-2">Manage and view all catalogued books</p>
             </div>
+            <!-- Updated button styling to match book_add.html -->
             <a 
                 href="{% url 'catalogue_add' %}" 
-                class="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition transform hover:scale-105"
+                class="bg-secondary text-white font-semibold px-6 py-3 rounded-lg hover:bg-accent transition transform hover:scale-105 shadow-lg flex items-center"
             >
-                + Add Book to Catalogue
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Book to Catalogue
             </a>
         </div>
+    </div>
 
-        <!-- Search Bar -->
-        <div class="mb-6">
-            <form method="GET" class="flex gap-2">
-                <input 
-                    type="text" 
-                    name="search" 
-                    placeholder="Search by book title, author, or shelf number..." 
-                    value="{{ search_query }}"
-                    class="flex-1 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+    <!-- Search Bar -->
+    <div class="mb-6">
+        <form method="GET" class="flex gap-2">
+            <input 
+                type="text" 
+                name="search" 
+                placeholder="Search by book title, author, or shelf number..." 
+                value="{{ search_query }}"
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all"
+            >
+            <button 
+                type="submit" 
+                class="bg-secondary text-white font-semibold px-6 py-3 rounded-lg hover:bg-accent transition"
+            >
+                Search
+            </button>
+            {% if search_query %}
+                <a 
+                    href="{% url 'catalogue_list' %}" 
+                    class="bg-gray-300 text-gray-800 font-semibold px-6 py-3 rounded-lg hover:bg-gray-400 transition"
                 >
-                <button 
-                    type="submit" 
-                    class="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-                >
-                    Search
-                </button>
-                {% if search_query %}
-                    <a 
-                        href="{% url 'catalogue_list' %}" 
-                        class="bg-slate-300 text-slate-800 font-semibold px-6 py-3 rounded-lg hover:bg-slate-400 transition"
-                    >
-                        Clear
-                    </a>
-                {% endif %}
-            </form>
-        </div>
+                    Clear
+                </a>
+            {% endif %}
+        </form>
+    </div>
 
-        <!-- Catalogue Table -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            {% if page_obj %}
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Book Title</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Author</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Shelf Number</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold">Added Date</th>
-                                <th class="px-6 py-4 text-center text-sm font-semibold">Actions</th>
+    <!-- Catalogue Table -->
+    <div class="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
+        {% if page_obj %}
+            <div class="overflow-x-auto">
+                <!-- Updated table header styling from blue gradient to gray -->
+                <table class="w-full">
+                    <thead class="bg-gray-100 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Book Title</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Author</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Shelf Number</th>
+                            <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Added Date</th>
+                            <th class="px-6 py-4 text-center text-sm font-semibold text-gray-900">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for catalogue in page_obj %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4">
+                                    <div class="font-semibold text-gray-900">{{ catalogue.book.title }}</div>
+                                    <div class="text-sm text-gray-500">Code: {{ catalogue.book.book_code }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-700">{{ catalogue.book.author }}</td>
+                                <td class="px-6 py-4">
+                                    <!-- Updated badge color from blue to gray -->
+                                    <span class="inline-block bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm font-semibold border border-gray-200">
+                                        {{ catalogue.shelf_number }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-600 text-sm">
+                                    {{ catalogue.added_date|date:"M d, Y" }}
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center gap-2">
+                                        <!-- Added View button -->
+                                        <a 
+                                            href="{% url 'catalogue_view' catalogue.pk %}" 
+                                            class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold px-4 py-2 rounded-lg transition transform hover:scale-105 border border-blue-200"
+                                            title="View this catalogue entry"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></path></svg>
+                                        </a>
+                                        <!-- Updated action button styling -->
+                                        <a 
+                                            href="{% url 'catalogue_update' catalogue.pk %}" 
+                                            class="inline-flex items-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 font-semibold px-4 py-2 rounded-lg transition transform hover:scale-105 border border-gray-200"
+                                            title="Edit this catalogue entry"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></path></svg>
+                                        </a>
+                                        <a 
+                                            href="{% url 'catalogue_delete' catalogue.pk %}" 
+                                            class="inline-flex items-center gap-2 bg-red-50 text-red-700 hover:bg-red-100 font-semibold px-4 py-2 rounded-lg transition transform hover:scale-105 border border-red-200"
+                                            title="Delete this catalogue entry"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></path></svg>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200">
-                            {% for catalogue in page_obj %}
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="px-6 py-4">
-                                        <div class="font-semibold text-slate-900">{{ catalogue.book.title }}</div>
-                                        <div class="text-sm text-slate-500">Code: {{ catalogue.book.book_code }}</div>
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-700">{{ catalogue.book.author }}</td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                                            {{ catalogue.shelf_number }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-slate-600 text-sm">
-                                        {{ catalogue.added_date|date:"M d, Y" }}
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <div class="flex justify-center gap-2">
-                                            <a 
-                                                href="{% url 'catalogue_update' catalogue.pk %}" 
-                                                class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold px-4 py-2 rounded-lg transition transform hover:scale-105 border border-blue-200"
-                                                title="Edit this catalogue entry"
-                                            >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></path></svg>
-                                                
-                                            </a>
-                                            <a 
-                                                href="{% url 'catalogue_delete' catalogue.pk %}" 
-                                                class="inline-flex items-center gap-2 bg-red-50 text-red-700 hover:bg-red-100 font-semibold px-4 py-2 rounded-lg transition transform hover:scale-105 border border-red-200"
-                                                title="Delete this catalogue entry"
-                                            >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></path></svg>
-                                                
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-                <!-- Pagination -->
-                {% if page_obj.has_other_pages %}
-                    <div class="px-6 py-4 border-t border-slate-200 flex justify-between items-center">
-                        <div class="text-sm text-slate-600">
-                            Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of <strong>{{ page_obj.paginator.count }}</strong> entries
-                        </div>
-                        <div class="flex gap-2">
-                            {% if page_obj.has_previous %}
-                                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">First</a>
-                                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Previous</a>
-                            {% endif %}
-                            
-                            <span class="px-3 py-2 text-slate-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                            
-                            {% if page_obj.has_next %}
-                                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Next</a>
-                                <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Last</a>
-                            {% endif %}
-                        </div>
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div class="px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                    <div class="text-sm text-gray-600">
+                        Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of <strong>{{ page_obj.paginator.count }}</strong> entries
                     </div>
-                {% endif %}
-            {% else %}
-                <div class="p-12 text-center">
-                    <p class="text-slate-600 text-lg mb-4">No catalogued books found.</p>
-                    <a 
-                        href="{% url 'catalogue_add' %}" 
-                        class="inline-block bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-700 transition"
-                    >
-                        Add First Book
-                    </a>
+                    <div class="flex gap-2">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">First</a>
+                            <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Previous</a>
+                        {% endif %}
+                        
+                        <span class="px-3 py-2 text-gray-600">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Next</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Last</a>
+                        {% endif %}
+                    </div>
                 </div>
             {% endif %}
-        </div>
+        {% else %}
+            <div class="p-12 text-center">
+                <p class="text-gray-600 text-lg mb-4">No catalogued books found.</p>
+                <a 
+                    href="{% url 'catalogue_add' %}" 
+                    class="inline-block bg-secondary text-white font-semibold px-6 py-3 rounded-lg hover:bg-accent transition"
+                >
+                    Add First Book
+                </a>
+            </div>
+        {% endif %}
     </div>
 </div>
 
 <style>
-    @keyframes slide-down {
+    @keyframes slide-in-right {
         from {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateX(10px);
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(0);
         }
     }
     
-    .animate-slide-down {
-        animation: slide-down 0.3s ease-out;
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
     }
 </style>
 {% endblock %}
