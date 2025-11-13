@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-ml*$c1n)%ne_)p6dldn#zunldr3)ljpw&8$z^d!94ecrnp*8_i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['Mohilibrary.pythonanywhere.com']
 
 
 # Application definition
@@ -101,10 +101,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'library_app.auth_backends.EmailOrChildIDBackend', 
+    'library_app.auth_backends.EmailOrChildIDBackend',
     'django.contrib.auth.backends.ModelBackend',
-   
-    
+
+
 ]
 
 

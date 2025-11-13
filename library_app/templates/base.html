@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,7 +42,7 @@
         .slide-down { animation: slideDown 0.3s ease-out; }
         .rotate-180 { transform: rotate(180deg); }
         .transition-transform { transition: transform 0.3s ease; }
-        
+
         /* Added gradient background and float animation */
         .gradient-bg { background: linear-gradient(135deg, #143C50 0%, #288CC8 100%); }
         .animate-float { animation: float 3s ease-in-out infinite; }
@@ -119,13 +120,14 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                 </svg>
             </button>
-            <div class="text-lg md:text-xl font-bold flex items-center">
-                <svg class="w-5 h-5 md:w-6 md:h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                <span class="hidden sm:inline">MOHILibrary</span>
-                <span class="sm:hidden">LH</span>
-            </div>
+           <div class="text-lg md:text-xl font-bold flex items-center">
+    <img src="{% static 'images/logo.png' %}"
+         alt="MOHILibrary Logo"
+         class="w-5 h-5 md:w-6 md:h-6 mr-2" />
+    <span class="hidden sm:inline">MOHILibrary</span>
+    <span class="sm:hidden">LH</span>
+</div>
+
         </div>
         <div class="flex items-center gap-2">
             {% include 'components/notification-badge.html' %}
@@ -210,7 +212,7 @@
                                 </svg>
                                 Add Book
                             </a></li>
-                          
+
                             {% endif %}
                         </ul>
                     </li>
@@ -339,7 +341,7 @@
                         </ul>
                     </li>
                     {% endif %}
-                   
+
                     <li class="menu-item">
                         <button class="flex items-center justify-between w-full py-3 px-4 hover:bg-secondary rounded-lg transition-all transform hover:translate-x-1 dropdown-toggle">
                             <span class="flex items-center">
@@ -378,7 +380,7 @@
 
     <!-- Updated footer to use gradient background -->
     <footer class="gradient-bg text-white p-4 text-center text-sm sm:text-base">
-        <p>© {% now "Y" %} LibraryHub. All rights reserved.</p>
+        <p>© {% now "Y" %} MOHILibrary. All rights reserved.</p>
     </footer>
 
     <script>

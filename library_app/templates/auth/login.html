@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MOHI Library - Login</title>
+    <title>MOHILibrary - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -86,7 +86,7 @@
 
             <form method="POST" action="{% url 'login_view' %}" class="space-y-4">
                 {% csrf_token %}
-                
+
                 <div class="form-group">
                     <label class="block text-sm font-semibold text-white mb-2" for="username">
                         <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,12 +96,12 @@
                         Email or Student ID
                     </label>
                     <input
-                        type="text" 
-                        name="username" 
-                        id="username" 
-                        value="{{ request.POST.username|default_if_none:'' }}" 
-                        class="w-full border border-white/40 bg-white/20 text-white placeholder-white/70 p-3 rounded-lg focus:ring-2 focus:ring-white focus:border-transparent transition-all" 
-                        placeholder="Enter your email or student ID" 
+                        type="text"
+                        name="username"
+                        id="username"
+                        value="{{ request.POST.username|default_if_none:'' }}"
+                        class="w-full border border-white/40 bg-white/20 text-white placeholder-white/70 p-3 rounded-lg focus:ring-2 focus:ring-white focus:border-transparent transition-all"
+                        placeholder="Enter your email or student ID"
                         required
                     >
                 </div>
@@ -114,12 +114,12 @@
                         </svg>
                         Password
                     </label>
-                    <input 
-                        type="password" 
-                        name="password" 
-                        id="password" 
-                        class="w-full border border-white/40 bg-white/20 text-white placeholder-white/70 p-3 rounded-lg focus:ring-2 focus:ring-white focus:border-transparent transition-all" 
-                        placeholder="Enter your password" 
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        class="w-full border border-white/40 bg-white/20 text-white placeholder-white/70 p-3 rounded-lg focus:ring-2 focus:ring-white focus:border-transparent transition-all"
+                        placeholder="Enter your password"
                         required
                     >
                 </div>
@@ -131,8 +131,8 @@
                     </label>
                 </div>
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="w-full bg-white text-primary px-4 py-3 rounded-lg hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg font-semibold text-base"
                 >
                     Sign In
@@ -150,7 +150,7 @@
             </form>
 
             <p class="text-center text-white/70 text-xs mt-6">
-                © {% now "Y" %} MOHI Library. All rights reserved.
+                © {% now "Y" %} MOHILibrary. All rights reserved.
             </p>
         </div>
     </div>
