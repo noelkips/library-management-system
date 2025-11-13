@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-ml*$c1n)%ne_)p6dldn#zunldr3)ljpw&8$z^d!94ecrnp*8_i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+<<<<<<< HEAD
 ALLOWED_HOSTS = ['Mohilibrary.pythonanywhere.com']
+=======
+ALLOWED_HOSTS = ["*"]
+>>>>>>> 96f5c55969cd01f45a0061d747ca9aa33e86ba6d
 
 
 # Application definition
@@ -130,10 +134,9 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 
+
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
