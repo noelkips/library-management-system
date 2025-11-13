@@ -612,8 +612,17 @@ def book_list(request):
 
     books = books.order_by('title')
 
-    items_per_page = 10
-    paginator = Paginator(books, items_per_page)
+    # --- PAGINATION LOGIC START ---
+    allowed_page_sizes = ['10', '25', '50', '100', '500']
+    items_per_page_str = request.GET.get('items_per_page', '10')
+
+    if items_per_page_str not in allowed_page_sizes:
+        items_per_page_str = '10'
+    
+    items_per_page = int(items_per_page_str)
+    # --- PAGINATION LOGIC END ---
+
+    paginator = Paginator(books, items_per_page) # Use the dynamic items_per_page
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -631,6 +640,8 @@ def book_list(request):
         'selected_category': category_id,
         'selected_centre': centre_id,
         'available_only': available_only,
+        'items_per_page': items_per_page, # Pass to context
+        'allowed_page_sizes': allowed_page_sizes, # Pass to context
     })
 @login_required
 def book_detail(request, pk):
@@ -753,11 +764,13 @@ def sample_csv_download(request):
     response['Content-Disposition'] = 'attachment; filename="sample_book_upload.csv"'
 
     writer = csv.writer(response)
+    # --- CSV HEADER UPDATED ---
     writer.writerow(['book_title', 'author_name', 'book_code', 'isbn', 'publisher', 'pub_year'])
+    # --- SAMPLE ROW UPDATED ---
     writer.writerow([
         'Sample Book Title',
         'John Doe',
-        'ABC123',
+        '813.4',
         '9783161484100',
         'Sample Publisher',
         '2023',

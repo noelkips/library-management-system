@@ -5,6 +5,17 @@ from .. import views
 auth_urlpatterns = [
     path('', views.landing_page, name='landing_page'),
     path('login/', views.login_view, name='login_view'),
+    path('accounts/password_reset/', 
+         views.password_reset_request, 
+         name='password_reset_request'),
+         
+    path('accounts/password_reset/sent/', 
+         views.password_reset_sent, 
+         name='password_reset_sent'),
+         
+    path('accounts/reset/<str:uidb64>/<str:token>/', 
+         views.password_reset_confirm, 
+         name='password_reset_confirm'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('profile/', views.profile, name='profile'),

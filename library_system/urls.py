@@ -23,6 +23,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('library_app.urls')),
     # path('books', include('library_app.urls.urls')),
-] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+] # + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
 
 

@@ -45,39 +45,51 @@
     </div>
 
     <div class="bg-white p-4 sm:p-6 md:p-8 rounded-xl shadow-xl border border-gray-100">
-        <form method="get" class="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
+        
+        <form method="get" id="filter-form" class="flex flex-col gap-4 mb-4 sm:mb-6">
             <div class="flex-1 relative">
-                <input type="text" name="q" value="{{ query }}" placeholder="Search books..." class="w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                <input type="text" name="q" value="{{ query }}" placeholder="Search books by title, author, ISBN, or code..." class="w-full pl-8 sm:pl-10 pr-4 py-2 sm:py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
                 <svg class="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <select name="category" class="px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                <option value="">All Categories</option>
-                {% for category in categories %}
-                    <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
-                {% endfor %}
-            </select>
-            {% if request.user.is_superuser %}
-            <select name="centre" class="px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                <option value="">All Centres</option>
-                {% for centre in centres %}
-                    <option value="{{ centre.id }}" {% if selected_centre == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.name }}</option>
-                {% endfor %}
-            </select>
-            {% endif %}
-            <label class="flex items-center space-x-2">
-                <input type="checkbox" name="available" {% if available_only %}checked{% endif %} class="form-checkbox text-[#C86450] rounded focus:ring-[#C86450] h-4 w-4 sm:h-5 sm:w-5">
-                <span class="text-gray-600 text-sm sm:text-base">Available only</span>
-            </label>
-            <button type="submit" class="bg-secondary text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium flex items-center text-sm sm:text-base">
-                <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                Filter
-            </button>
+            
+            <div class="flex flex-col sm:flex-row sm:flex-wrap items-center gap-3 sm:gap-4">
+                <select name="category" class="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                
+                {% if request.user.is_superuser %}
+                <select name="centre" class="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                    <option value="">All Centres</option>
+                    {% for centre in centres %}
+                        <option value="{{ centre.id }}" {% if selected_centre == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.name }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
+                
+                <select name="items_per_page" class="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                    {% for size in allowed_page_sizes %}
+                        <option value="{{ size }}" {% if items_per_page|stringformat:"s" == size %}selected{% endif %}>{{ size }} per page</option>
+                    {% endfor %}
+                </select>
+        
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" name="available" {% if available_only %}checked{% endif %} class="form-checkbox text-[#C86450] rounded focus:ring-[#C86450] h-4 w-4 sm:h-5 sm:w-5">
+                    <span class="text-gray-600 text-sm sm:text-base">Available only</span>
+                </label>
+                
+                <button type="submit" class="w-full sm:w-auto sm:ml-auto bg-secondary text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 font-medium flex items-center justify-center text-sm sm:text-base">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Filter
+                </button>
+            </div>
         </form>
-
         {% if request.user.is_superuser or request.user.is_librarian %}
         <a href="{% url 'book_add' %}" class="inline-flex items-center bg-secondary text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg hover:bg-accent transition-all transform hover:scale-105 mb-4 sm:mb-6 font-medium shadow-sm text-sm sm:text-base">
             <svg class="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,10 +180,10 @@
             <span class="text-gray-600 text-sm sm:text-base">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} books</span>
             <div class="flex gap-2">
                 {% if page_obj.has_previous %}
-                    <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_centre %}centre={{ selected_centre }}&{% endif %}{% if available_only %}available=on&{% endif %}page={{ page_obj.previous_page_number }}" class="text-primary hover:text-accent py-1 sm:py-2 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Previous</a>
+                    <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_centre %}centre={{ selected_centre }}&{% endif %}{% if available_only %}available=on&{% endif %}{% if items_per_page %}items_per_page={{ items_per_page }}&{% endif %}page={{ page_obj.previous_page_number }}" class="text-primary hover:text-accent py-1 sm:py-2 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Previous</a>
                 {% endif %}
                 {% if page_obj.has_next %}
-                    <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_centre %}centre={{ selected_centre }}&{% endif %}{% if available_only %}available=on&{% endif %}page={{ page_obj.next_page_number }}" class="text-primary hover:text-accent py-1 sm:py-2 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Next</a>
+                    <a href="?{% if query %}q={{ query }}&{% endif %}{% if selected_category %}category={{ selected_category }}&{% endif %}{% if selected_centre %}centre={{ selected_centre }}&{% endif %}{% if available_only %}available=on&{% endif %}{% if items_per_page %}items_per_page={{ items_per_page }}&{% endif %}page={{ page_obj.next_page_number }}" class="text-primary hover:text-accent py-1 sm:py-2 px-3 sm:px-4 rounded-lg text-sm sm:text-base">Next</a>
                 {% endif %}
             </div>
         </div>
@@ -189,6 +201,36 @@
                 setTimeout(function() { message.remove(); }, 500);
             });
         }, 5000);
+
+        const filterForm = document.getElementById('filter-form');
+        if (filterForm) {
+            let debounceTimer;
+
+            function submitForm() {
+                filterForm.submit();
+            }
+
+            const searchInput = filterForm.querySelector('input[name="q"]');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(function() {
+                        submitForm();
+                    }, 500); 
+                });
+            }
+
+            const autoSubmitElements = filterForm.querySelectorAll(
+                'select[name="category"], ' +
+                'select[name="centre"], ' +
+                'input[name="available"], ' +
+                'select[name="items_per_page"]'
+            );
+
+            autoSubmitElements.forEach(function(element) {
+                element.addEventListener('change', submitForm);
+            });
+        }
     });
 </script>
 {% endblock %}

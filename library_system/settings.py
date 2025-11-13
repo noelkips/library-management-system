@@ -23,13 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-ml*$c1n)%ne_)p6dldn#zunldr3)ljpw&8$z^d!94ecrnp*8_i'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-<<<<<<< HEAD
-ALLOWED_HOSTS = ['Mohilibrary.pythonanywhere.com']
-=======
 ALLOWED_HOSTS = ["*"]
->>>>>>> 96f5c55969cd01f45a0061d747ca9aa33e86ba6d
 
 
 # Application definition
@@ -46,6 +42,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -77,12 +74,33 @@ WSGI_APPLICATION = 'library_system.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+import pymysql
+pymysql.install_as_MySQLdb()
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'ufdxwals_library_db',
+        'USER': 'ufdxwals_mohilibrary',
+        'PASSWORD': 'Norex@999!', 
+        'HOST': 'localhost',  
+        'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES';",
+        },
     }
 }
+
+
+
 # settings.py
 AUTH_USER_MODEL = 'library_app.CustomUser'  # Replace 'your_app_name' with the name of the app containing CustomUser
 
@@ -118,7 +136,7 @@ AUTHENTICATION_BACKENDS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
@@ -126,19 +144,73 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = 'static'
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
-
-STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-LOGIN_URL = '/login/'
+LOGIN_URL = 'login_view'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login_view'
+
+
+import os
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mail.mohiit.org') # Replace with your domain
+EMAIL_PORT = 587  # Or 465 if you use SSL
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('nonreply@mohiit.org') # e.g., noreply@yourdomain.com
+EMAIL_HOST_PASSWORD = os.environ.get('Norex@999!') # Your email password
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MOHI Library <nonreply@mohiit.org>')
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,  
+    
+    # Define the format of the log message
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
+    
+    # Define where the logs will go (e.g., a file)
+    'handlers': {
+        'error_file': {
+            'level': 'ERROR',  # Log only ERROR and CRITICAL messages
+            'class': 'logging.FileHandler',
+            # This is the crucial part:
+            'filename': os.path.join(BASE_DIR, 'logs/errors.log'),
+            'formatter': 'verbose', # Use the 'verbose' formatter defined above
+        },
+        'debug_file': {
+            'level': 'DEBUG', # Log EVERYTHING from DEBUG level up
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs/debug.log'),
+            'formatter': 'simple',
+        },
+    },
+    
+    # Define which loggers to use
+    'loggers': {
+        'django': {
+            'handlers': ['error_file'], # Send 'django' logger messages to 'error_file'
+            'level': 'ERROR',          # Only process ERROR messages
+            'propagate': True,
+        },
+       
+    },
+}

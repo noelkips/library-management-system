@@ -1,0 +1,1545 @@
+[
+{
+    "model": "library_app.centre",
+    "pk": 1,
+    "fields": {
+        "name": "Pangani",
+        "centre_code": "CENTRE_1"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 2,
+    "fields": {
+        "name": "Area 2",
+        "centre_code": "CENTRE_2"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 3,
+    "fields": {
+        "name": "Bondeni",
+        "centre_code": "CENTRE_3"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 4,
+    "fields": {
+        "name": "Kosovo",
+        "centre_code": "CENTRE_4"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 5,
+    "fields": {
+        "name": "Gitathuru",
+        "centre_code": "CENTRE_5"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 6,
+    "fields": {
+        "name": "Mathare North",
+        "centre_code": "CENTRE_6"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 7,
+    "fields": {
+        "name": "Mabatini",
+        "centre_code": "CENTRE_7"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 8,
+    "fields": {
+        "name": "Madoya",
+        "centre_code": "CENTRE_8"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 9,
+    "fields": {
+        "name": "Kiamaiko Ngei",
+        "centre_code": "CENTRE_9"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 10,
+    "fields": {
+        "name": "Kariobangi",
+        "centre_code": "CENTRE_10"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 11,
+    "fields": {
+        "name": "Baba Dogo",
+        "centre_code": "CENTRE_11"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 12,
+    "fields": {
+        "name": "Korogocho Grogan",
+        "centre_code": "CENTRE_12"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 13,
+    "fields": {
+        "name": "Korogocho B",
+        "centre_code": "CENTRE_13"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 14,
+    "fields": {
+        "name": "Korogocho Nyayo",
+        "centre_code": "CENTRE_14"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 15,
+    "fields": {
+        "name": "Pangani HQ",
+        "centre_code": "CENTRE_15"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 16,
+    "fields": {
+        "name": "Ndovoini",
+        "centre_code": "CENTRE_16"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 17,
+    "fields": {
+        "name": "Joska",
+        "centre_code": "CENTRE_17"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 18,
+    "fields": {
+        "name": "Sabaki",
+        "centre_code": "CENTRE_18"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 19,
+    "fields": {
+        "name": "Napuu",
+        "centre_code": "CENTRE_19"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 20,
+    "fields": {
+        "name": "Napusimoru",
+        "centre_code": "CENTRE_20"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 21,
+    "fields": {
+        "name": "Kangegetei",
+        "centre_code": "CENTRE_21"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 22,
+    "fields": {
+        "name": "Turkana High School",
+        "centre_code": "CENTRE_22"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 23,
+    "fields": {
+        "name": "Lochoredome",
+        "centre_code": "CENTRE_23"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 24,
+    "fields": {
+        "name": "Nanam",
+        "centre_code": "CENTRE_24"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 25,
+    "fields": {
+        "name": "Ethiopia",
+        "centre_code": "CENTRE_25"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 26,
+    "fields": {
+        "name": "Kargi",
+        "centre_code": "CENTRE_26"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 27,
+    "fields": {
+        "name": "Olturot",
+        "centre_code": "CENTRE_27"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 28,
+    "fields": {
+        "name": "Namarei",
+        "centre_code": "CENTRE_28"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 29,
+    "fields": {
+        "name": "Angaza Discovery Camp",
+        "centre_code": "CENTRE_29"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 30,
+    "fields": {
+        "name": "Molo Milimani",
+        "centre_code": "CENTRE_30"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 31,
+    "fields": {
+        "name": "Coram Deo - Molo",
+        "centre_code": "CENTRE_31"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 32,
+    "fields": {
+        "name": "Molo Turi High School",
+        "centre_code": "CENTRE_32"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 33,
+    "fields": {
+        "name": "MTTI",
+        "centre_code": "CENTRE_33"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 34,
+    "fields": {
+        "name": "Kibarani",
+        "centre_code": "CENTRE_34"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 35,
+    "fields": {
+        "name": "Kiwandani",
+        "centre_code": "CENTRE_35"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 36,
+    "fields": {
+        "name": "Mitangoni",
+        "centre_code": "CENTRE_36"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 37,
+    "fields": {
+        "name": "Chumani",
+        "centre_code": "CENTRE_37"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 38,
+    "fields": {
+        "name": "MCL",
+        "centre_code": "CENTRE_38"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 39,
+    "fields": {
+        "name": "Nyeri",
+        "centre_code": "CENTRE_39"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 40,
+    "fields": {
+        "name": "Elpida",
+        "centre_code": "CENTRE_40"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 41,
+    "fields": {
+        "name": "Nyakach",
+        "centre_code": "CENTRE_41"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 42,
+    "fields": {
+        "name": "Morokani",
+        "centre_code": "CENTRE_42"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 43,
+    "fields": {
+        "name": "Shambini",
+        "centre_code": "CENTRE_43"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 44,
+    "fields": {
+        "name": "Kiamaiko Main",
+        "centre_code": "CENTRE_44"
+    }
+},
+{
+    "model": "library_app.centre",
+    "pk": 45,
+    "fields": {
+        "name": "Kang’agetei",
+        "centre_code": "CENTRE_45"
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 1,
+    "fields": {
+        "name": "Area 2 School",
+        "school_code": "SCHOOL_1",
+        "centre": 2
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 2,
+    "fields": {
+        "name": "Babadogo School",
+        "school_code": "SCHOOL_2",
+        "centre": 11
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 3,
+    "fields": {
+        "name": "Bondeni School",
+        "school_code": "SCHOOL_3",
+        "centre": 3
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 4,
+    "fields": {
+        "name": "Chumani School",
+        "school_code": "SCHOOL_4",
+        "centre": 37
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 5,
+    "fields": {
+        "name": "Coram Deo School",
+        "school_code": "SCHOOL_5",
+        "centre": 31
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 6,
+    "fields": {
+        "name": "Gitathuru School",
+        "school_code": "SCHOOL_6",
+        "centre": 5
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 7,
+    "fields": {
+        "name": "Grogan School",
+        "school_code": "SCHOOL_7",
+        "centre": 12
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 8,
+    "fields": {
+        "name": "Joska School",
+        "school_code": "SCHOOL_8",
+        "centre": 17
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 9,
+    "fields": {
+        "name": "Mohi Girls High School",
+        "school_code": "SCHOOL_9",
+        "centre": 17
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 10,
+    "fields": {
+        "name": "Kang’agetei School",
+        "school_code": "SCHOOL_10",
+        "centre": 45
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 11,
+    "fields": {
+        "name": "Kargi School",
+        "school_code": "SCHOOL_11",
+        "centre": 26
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 12,
+    "fields": {
+        "name": "Kariobangi School",
+        "school_code": "SCHOOL_12",
+        "centre": 10
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 13,
+    "fields": {
+        "name": "Kiamaiko School",
+        "school_code": "SCHOOL_13",
+        "centre": 44
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 14,
+    "fields": {
+        "name": "Kiamaiko Ngei School",
+        "school_code": "SCHOOL_14",
+        "centre": 44
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 15,
+    "fields": {
+        "name": "Kibarani School",
+        "school_code": "SCHOOL_15",
+        "centre": 34
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 16,
+    "fields": {
+        "name": "Kiwandani School",
+        "school_code": "SCHOOL_16",
+        "centre": 35
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 17,
+    "fields": {
+        "name": "Korogocho B School",
+        "school_code": "SCHOOL_17",
+        "centre": 13
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 18,
+    "fields": {
+        "name": "Kosovo School",
+        "school_code": "SCHOOL_18",
+        "centre": 4
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 19,
+    "fields": {
+        "name": "Lochoredome School",
+        "school_code": "SCHOOL_19",
+        "centre": 23
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 20,
+    "fields": {
+        "name": "Mabatini School",
+        "school_code": "SCHOOL_20",
+        "centre": 7
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 21,
+    "fields": {
+        "name": "Madoya School",
+        "school_code": "SCHOOL_21",
+        "centre": 8
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 22,
+    "fields": {
+        "name": "Mathare North School",
+        "school_code": "SCHOOL_22",
+        "centre": 6
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 23,
+    "fields": {
+        "name": "Molo Milimani School",
+        "school_code": "SCHOOL_23",
+        "centre": 30
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 24,
+    "fields": {
+        "name": "Mitangoni School",
+        "school_code": "SCHOOL_24",
+        "centre": 36
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 25,
+    "fields": {
+        "name": "Morokani School",
+        "school_code": "SCHOOL_25",
+        "centre": 42
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 26,
+    "fields": {
+        "name": "Namarei School",
+        "school_code": "SCHOOL_26",
+        "centre": 28
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 27,
+    "fields": {
+        "name": "Nanaam School",
+        "school_code": "SCHOOL_27",
+        "centre": 24
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 28,
+    "fields": {
+        "name": "Napusimoru School",
+        "school_code": "SCHOOL_28",
+        "centre": 20
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 29,
+    "fields": {
+        "name": "Napuu School",
+        "school_code": "SCHOOL_29",
+        "centre": 19
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 30,
+    "fields": {
+        "name": "Ndovoini High School",
+        "school_code": "SCHOOL_30",
+        "centre": 16
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 31,
+    "fields": {
+        "name": "Ndovoini Primary School",
+        "school_code": "SCHOOL_31",
+        "centre": 16
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 32,
+    "fields": {
+        "name": "Nyakach School",
+        "school_code": "SCHOOL_32",
+        "centre": 41
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 33,
+    "fields": {
+        "name": "Nyayo School",
+        "school_code": "SCHOOL_33",
+        "centre": 14
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 34,
+    "fields": {
+        "name": "Nyeri School",
+        "school_code": "SCHOOL_34",
+        "centre": 39
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 35,
+    "fields": {
+        "name": "Olturot School",
+        "school_code": "SCHOOL_35",
+        "centre": 27
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 36,
+    "fields": {
+        "name": "Pangani School",
+        "school_code": "SCHOOL_36",
+        "centre": 1
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 37,
+    "fields": {
+        "name": "Shambini School",
+        "school_code": "SCHOOL_37",
+        "centre": 43
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 38,
+    "fields": {
+        "name": "Turi High School",
+        "school_code": "SCHOOL_38",
+        "centre": 32
+    }
+},
+{
+    "model": "library_app.school",
+    "pk": 39,
+    "fields": {
+        "name": "Turkana High School",
+        "school_code": "SCHOOL_39",
+        "centre": 22
+    }
+},
+{
+    "model": "library_app.customuser",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$HjXF4o2ZoVZo3gpgrsTaxp$M0Qk9y60QPfAExeVA5qxqwaB2Nf9CiFvGsw9dICG64E=",
+        "last_login": "2025-11-06T05:28:37.945Z",
+        "is_superuser": true,
+        "first_name": "",
+        "last_name": "",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2025-10-23T06:32:23Z",
+        "email": "library@mohiafrica.org",
+        "is_librarian": false,
+        "is_student": false,
+        "is_site_admin": true,
+        "is_teacher": false,
+        "is_other": false,
+        "centre": null,
+        "force_password_change": false,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "library_app.customuser",
+    "pk": 2,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$4lVrxmFftUxb7W1uN9VOqe$i7CY/D0CcBrV2hjKj2QMMCnJbBbTfeImXllUxw+Py1Q=",
+        "last_login": null,
+        "is_superuser": false,
+        "first_name": "ephrem",
+        "last_name": "Langat",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-10-23T06:59:19.219Z",
+        "email": "GITA@2345654.libraryhub.com",
+        "is_librarian": false,
+        "is_student": true,
+        "is_site_admin": false,
+        "is_teacher": false,
+        "is_other": false,
+        "centre": 5,
+        "force_password_change": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "library_app.customuser",
+    "pk": 3,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$TNzRLKJJwlE7iZcdDAVduG$/K5Tc/qtUkGFyLSBPGn7zfY70VYPGSfQI5SxnXN4o7Y=",
+        "last_login": null,
+        "is_superuser": false,
+        "first_name": "Noel",
+        "last_name": "test",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-10-23T07:30:18.997Z",
+        "email": "MABA@876543.libraryhub.com",
+        "is_librarian": false,
+        "is_student": true,
+        "is_site_admin": false,
+        "is_teacher": false,
+        "is_other": false,
+        "centre": 7,
+        "force_password_change": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "library_app.customuser",
+    "pk": 4,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$dKHYKbm7bUWt6IiNZYL1KS$TZvCJovAUO74a+vPQ7B9gcAhdWxAMLbvNPYIFTMSFCQ=",
+        "last_login": "2025-10-24T11:32:31.438Z",
+        "is_superuser": false,
+        "first_name": "John",
+        "last_name": "Doe",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-10-23T07:31:29.617Z",
+        "email": "MABA@1001.libraryhub.com",
+        "is_librarian": false,
+        "is_student": true,
+        "is_site_admin": false,
+        "is_teacher": false,
+        "is_other": false,
+        "centre": 7,
+        "force_password_change": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "library_app.customuser",
+    "pk": 5,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$ORmHY5SqG7P770iXfcczrN$oQC508V9ctnHq5RBQc5CjsHlYqZdCgjZrPmLWqp78zA=",
+        "last_login": null,
+        "is_superuser": false,
+        "first_name": "Jane",
+        "last_name": "Smith",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-10-23T07:31:30.325Z",
+        "email": "MABA@1002.libraryhub.com",
+        "is_librarian": false,
+        "is_student": true,
+        "is_site_admin": false,
+        "is_teacher": false,
+        "is_other": false,
+        "centre": 7,
+        "force_password_change": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "library_app.customuser",
+    "pk": 6,
+    "fields": {
+        "password": "pbkdf2_sha256$1000000$0iv6wCtVRqvMrj8o6mGPYl$sKIj1NmX8yDD0tjzLnUGcPxUWFuvqOOhnA3m3ETyPyQ=",
+        "last_login": null,
+        "is_superuser": false,
+        "first_name": "Bob",
+        "last_name": "Johnson",
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2025-10-23T07:31:31.027Z",
+        "email": "MABA@1003.libraryhub.com",
+        "is_librarian": false,
+        "is_student": true,
+        "is_site_admin": false,
+        "is_teacher": false,
+        "is_other": false,
+        "centre": 7,
+        "force_password_change": true,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "library_app.category",
+    "pk": 1,
+    "fields": {
+        "name": "fiction",
+        "description": ""
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 1,
+    "fields": {
+        "id": 1,
+        "title": "test1",
+        "author": "test",
+        "book_code": "19365f",
+        "isbn": "1113625261",
+        "publisher": "test",
+        "year_of_publication": 2020,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 12,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:08:02.196Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 2,
+    "fields": {
+        "id": 2,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC123",
+        "isbn": "97831614841DDD00",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2023,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 7,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:03.271Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 3,
+    "fields": {
+        "id": 3,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC124",
+        "isbn": "97831614841DDD01",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2024,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 7,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:03.289Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 4,
+    "fields": {
+        "id": 4,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC125",
+        "isbn": "97831614841DDD02",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2025,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 7,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:03.309Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 5,
+    "fields": {
+        "id": 5,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC126",
+        "isbn": "97831614841DDD03",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2014,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:58.485Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 6,
+    "fields": {
+        "id": 6,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC127",
+        "isbn": "97831614841DDD04",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2015,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:58.504Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 7,
+    "fields": {
+        "id": 7,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC128",
+        "isbn": "97831614841DDD05",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2016,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:58.520Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 8,
+    "fields": {
+        "id": 8,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC129",
+        "isbn": "97831614841DDD06",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2017,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:58.536Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 9,
+    "fields": {
+        "id": 9,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC130",
+        "isbn": "97831614841DDD07",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2018,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:58.558Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 10,
+    "fields": {
+        "id": 10,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC131",
+        "isbn": "97831614841DDD08",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2019,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:58.584Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 11,
+    "fields": {
+        "id": 11,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC132",
+        "isbn": "97831614841DDD09",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2020,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:13:58.600Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 12,
+    "fields": {
+        "id": 2,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC123",
+        "isbn": "9783114841DDD00",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2023,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 7,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:31:07.856Z",
+        "history_change_reason": null,
+        "history_type": "~",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 13,
+    "fields": {
+        "id": 8,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC129",
+        "isbn": "97831614841DDD06",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2017,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:31:21.326Z",
+        "history_change_reason": null,
+        "history_type": "-",
+        "history_user": null
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 14,
+    "fields": {
+        "id": 2,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC123",
+        "isbn": "9783114841DDD00",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2023,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 7,
+        "added_by": 1,
+        "history_date": "2025-10-24T11:56:39.602Z",
+        "history_change_reason": null,
+        "history_type": "~",
+        "history_user": null
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 15,
+    "fields": {
+        "id": 7,
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "book_code": "ABC128",
+        "isbn": "97831614841DDD05",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2016,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 11,
+        "added_by": 1,
+        "history_date": "2025-10-28T07:18:48.419Z",
+        "history_change_reason": null,
+        "history_type": "-",
+        "history_user": null
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 16,
+    "fields": {
+        "id": 12,
+        "title": "test",
+        "author": "test",
+        "book_code": "234",
+        "isbn": "hujdni8u8du8ei",
+        "publisher": "tesdh",
+        "year_of_publication": 2025,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 1,
+        "added_by": 1,
+        "history_date": "2025-10-28T08:25:48.491Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalbook",
+    "pk": 17,
+    "fields": {
+        "id": 12,
+        "title": "test",
+        "author": "test",
+        "book_code": "234",
+        "isbn": "hujdni8u8du8ei",
+        "publisher": "tesdh",
+        "year_of_publication": 2025,
+        "available_copies": true,
+        "is_active": true,
+        "category": 1,
+        "centre": 1,
+        "added_by": 1,
+        "history_date": "2025-10-28T08:26:10.023Z",
+        "history_change_reason": null,
+        "history_type": "-",
+        "history_user": null
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 1,
+    "fields": {
+        "title": "test1",
+        "author": "test",
+        "category": 1,
+        "book_code": "19365f",
+        "isbn": "1113625261",
+        "publisher": "test",
+        "year_of_publication": 2020,
+        "available_copies": true,
+        "centre": 12,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 2,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC123",
+        "isbn": "9783114841DDD00",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2023,
+        "available_copies": true,
+        "centre": 7,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 3,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC124",
+        "isbn": "97831614841DDD01",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2024,
+        "available_copies": true,
+        "centre": 7,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 4,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC125",
+        "isbn": "97831614841DDD02",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2025,
+        "available_copies": true,
+        "centre": 7,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 5,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC126",
+        "isbn": "97831614841DDD03",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2014,
+        "available_copies": true,
+        "centre": 11,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 6,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC127",
+        "isbn": "97831614841DDD04",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2015,
+        "available_copies": true,
+        "centre": 11,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 9,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC130",
+        "isbn": "97831614841DDD07",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2018,
+        "available_copies": true,
+        "centre": 11,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 10,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC131",
+        "isbn": "97831614841DDD08",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2019,
+        "available_copies": true,
+        "centre": 11,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.book",
+    "pk": 11,
+    "fields": {
+        "title": "Sample Book Title",
+        "author": "John Doe",
+        "category": 1,
+        "book_code": "ABC132",
+        "isbn": "97831614841DDD09",
+        "publisher": "Sample Publisher",
+        "year_of_publication": 2020,
+        "available_copies": true,
+        "centre": 11,
+        "added_by": 1,
+        "is_active": true
+    }
+},
+{
+    "model": "library_app.student",
+    "pk": 1,
+    "fields": {
+        "child_ID": 2345654,
+        "name": "ephrem Langat",
+        "centre": 5,
+        "school": 6,
+        "user": 2,
+        "grade": "8"
+    }
+},
+{
+    "model": "library_app.student",
+    "pk": 2,
+    "fields": {
+        "child_ID": 876543,
+        "name": "Noel test",
+        "centre": 7,
+        "school": 20,
+        "user": 3,
+        "grade": "8"
+    }
+},
+{
+    "model": "library_app.student",
+    "pk": 3,
+    "fields": {
+        "child_ID": 1001,
+        "name": "John Doe",
+        "centre": 7,
+        "school": 20,
+        "user": 4,
+        "grade": "1"
+    }
+},
+{
+    "model": "library_app.student",
+    "pk": 4,
+    "fields": {
+        "child_ID": 1002,
+        "name": "Jane Smith",
+        "centre": 7,
+        "school": 20,
+        "user": 5,
+        "grade": "3"
+    }
+},
+{
+    "model": "library_app.student",
+    "pk": 5,
+    "fields": {
+        "child_ID": 1003,
+        "name": "Bob Johnson",
+        "centre": 7,
+        "school": 20,
+        "user": 6,
+        "grade": "4"
+    }
+},
+{
+    "model": "library_app.historicalborrow",
+    "pk": 1,
+    "fields": {
+        "id": 1,
+        "status": "requested",
+        "request_date": "2025-10-24T11:56:39.548Z",
+        "issue_date": null,
+        "due_date": null,
+        "return_date": null,
+        "renewals": 0,
+        "notes": "",
+        "book": 2,
+        "user": 4,
+        "centre": 7,
+        "issued_by": null,
+        "returned_to": null,
+        "history_date": "2025-10-24T11:56:39.566Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": null
+    }
+},
+{
+    "model": "library_app.borrow",
+    "pk": 1,
+    "fields": {
+        "book": 2,
+        "user": 4,
+        "centre": 7,
+        "status": "requested",
+        "request_date": "2025-10-24T11:56:39.548Z",
+        "issue_date": null,
+        "due_date": null,
+        "return_date": null,
+        "renewals": 0,
+        "issued_by": null,
+        "returned_to": null,
+        "notes": ""
+    }
+},
+{
+    "model": "library_app.historicalcatalogue",
+    "pk": 1,
+    "fields": {
+        "id": 1,
+        "shelf_number": "B2-4",
+        "added_date": "2025-10-28T08:57:18.927Z",
+        "last_updated": "2025-10-28T08:57:18.927Z",
+        "notes": "",
+        "is_active": true,
+        "book": 2,
+        "centre": 7,
+        "added_by": 1,
+        "history_date": "2025-10-28T08:57:18.939Z",
+        "history_change_reason": null,
+        "history_type": "+",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.historicalcatalogue",
+    "pk": 2,
+    "fields": {
+        "id": 1,
+        "shelf_number": "B2-6",
+        "added_date": "2025-10-28T08:57:18.927Z",
+        "last_updated": "2025-10-28T09:04:23.222Z",
+        "notes": "",
+        "is_active": true,
+        "book": 2,
+        "centre": 7,
+        "added_by": 1,
+        "history_date": "2025-10-28T09:04:23.239Z",
+        "history_change_reason": null,
+        "history_type": "~",
+        "history_user": 1
+    }
+},
+{
+    "model": "library_app.catalogue",
+    "pk": 1,
+    "fields": {
+        "book": 2,
+        "shelf_number": "B2-6",
+        "centre": 7,
+        "added_by": 1,
+        "added_date": "2025-10-28T08:57:18.927Z",
+        "last_updated": "2025-10-28T09:04:23.222Z",
+        "notes": "",
+        "is_active": true
+    }
+}
+]

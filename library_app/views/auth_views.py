@@ -1,26 +1,44 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import logout, update_session_auth_hash, authenticate, login
 from django.contrib import messages
-from django.db import transaction, IntegrityError
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
-from django.utils import timezone
-import csv
-import openpyxl
-from io import TextIOWrapper
-from ..models import Book, Centre, CustomUser, School, Student, Borrow, Reservation, Notification, TeacherBookIssue
-from django.contrib.auth import update_session_auth_hash
-from django.db import transaction
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth import logout, authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import Group, Permission
+from django.db import transaction, IntegrityError
+from django.db.models import Q, Count
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.safestring import mark_safe
-import random
-from django.db.models import Count, Q
-from collections import defaultdict
-import json
-from django.utils import timezone
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
+from django.contrib.auth.tokens import default_token_generator
+
+from io import TextIOWrapper
 from datetime import timedelta
+from collections import defaultdict
+import csv
+import openpyxl
+import random
+import json
+
+from ..models import (
+    Book,
+    Centre,
+    CustomUser,
+    School,
+    Student,
+    Borrow,
+    Reservation,
+    Notification,
+    TeacherBookIssue,
+)
+
+from ..utils import send_custom_email  
+
+
 
 
 def is_site_admin(user):
@@ -752,3 +770,99 @@ def user_reset_password(request, pk):
         messages.success(request, mark_safe(f"Password reset successfully. New password: <span class=\"font-bold text-danger\">{new_password}</span>. The user will be forced to change it on next login."))
         return redirect('manage_users')
     return redirect('manage_users')
+
+
+
+
+def password_reset_request(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        if not email:
+            messages.error(request, "Please enter an email address.")
+            return render(request, 'accounts/password_reset_request.html')
+
+        # Find all active, NON-STUDENT users with this email.
+        associated_users = CustomUser.objects.filter(
+            Q(email=email) & 
+            Q(is_active=True) &
+            Q(is_student=False)  # <-- This is your custom requirement
+        )
+
+        if not associated_users.exists():
+            # Use a generic message for security
+            messages.success(request, "If an account exists with that email, we've sent instructions to reset your password.")
+            return redirect('password_reset_sent')
+        
+        # Send a reset link to all matching (non-student) users
+        for user in associated_users:
+            # Generate token and user ID
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Build the reset link
+            current_site = request.get_host()
+            relative_link = f'/accounts/reset/{uid}/{token}/'
+            reset_url = f'http://{current_site}{relative_link}' # Use https in production
+
+            # Create email content
+            subject = 'Password Reset Request for MOHILibrary'
+            
+            # Use a template for the email body
+            email_body = render_to_string('accounts/password_reset_email.txt', {
+                'user': user,
+                'reset_url': reset_url,
+            })
+            
+            # Use your utility function to send the email
+            send_custom_email(subject, email_body, [user.email])
+
+        messages.success(request, "If an account exists with that email, we've sent instructions to reset your password.")
+        return redirect('password_reset_sent')
+
+    return render(request, 'accounts/password_reset_request.html')
+
+
+def password_reset_sent(request):
+    """
+    A simple confirmation page.
+    """
+    return render(request, 'accounts/password_reset_sent.html')
+
+
+def password_reset_confirm(request, uidb64=None, token=None):
+    try:
+        # Decode the user ID
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = CustomUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+        user = None
+
+    # Check if the user exists and the token is valid
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            new_password1 = request.POST.get('new_password1')
+            new_password2 = request.POST.get('new_password2')
+            errors = []
+
+            if not new_password1 or not new_password2:
+                errors.append("Both password fields are required.")
+            if new_password1 != new_password2:
+                errors.append("New passwords do not match.")
+            if len(new_password1) < 8:
+                errors.append("New password must be at least 8 characters long.")
+            
+            if errors:
+                for error in errors:
+                    messages.error(request, error)
+            else:
+                user.set_password(new_password1)
+                user.save()
+                messages.success(request, "Password has been reset successfully. You can now log in.")
+                return redirect('login_view') # Redirect to your login page name
+
+        # GET request: show the password reset form
+        return render(request, 'accounts/password_reset_new.html')
+    else:
+        # Invalid link
+        messages.error(request, "The password reset link is invalid or has expired.")
+        return render(request, 'accounts/password_reset_invalid.html')
