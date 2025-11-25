@@ -33,7 +33,7 @@ def teacher_my_books(request):
     context = {
         'active_borrows': active_borrows,
     }
-    return render(request, 'teacher_issues/teacher_my_books.html', context)
+    return render(request, 'teacher/teacher_my_books.html', context)
 
 
 @login_required
@@ -86,7 +86,7 @@ def teacher_issue_to_student(request, borrow_id):
     context = {
         'parent_borrow': parent_borrow,
     }
-    return render(request, 'teacher_issues/teacher_issue_to_student.html', context)
+    return render(request, 'teacher/teacher_issue_to_student.html', context)
 
 
 @login_required
@@ -118,7 +118,7 @@ def teacher_manage_book(request, borrow_id):
         'active_issues': active_issues,
         'returned_issues': returned_issues,
     }
-    return render(request, 'teacher_issues/teacher_manage_book.html', context)
+    return render(request, 'teacher/teacher_manage_book.html', context)
 
 
 @login_required
@@ -147,7 +147,7 @@ def teacher_receive_return(request, issue_id):
         return redirect('teacher_manage_book', borrow_id=issue.parent_borrow.id)
     
     context = {'issue': issue}
-    return render(request, 'teacher_issues/teacher_receive_return.html', context)
+    return render(request, 'teacher/teacher_receive_return.html', context)
 
 
 @login_required
@@ -186,7 +186,7 @@ def teacher_all_issues(request):
         'search': search,
         'status_filter': status,
     }
-    return render(request, 'teacher_issues/teacher_all_issues.html', context)
+    return render(request, 'teacher/teacher_all_issues.html', context)
 
 
 @login_required
@@ -221,4 +221,4 @@ def teacher_issue_update(request, issue_id):
         return redirect('teacher_manage_book', borrow_id=issue.parent_borrow.id)
     
     context = {'issue': issue}
-    return render(request, 'teacher_issues/teacher_issue_update.html', context)
+    return render(request, 'teacher/teacher_issue_update.html', context)

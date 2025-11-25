@@ -30,4 +30,7 @@ borrow_urlpatterns = [
     path("user/<int:user_id>/active-borrows/", views.user_active_borrows, name="user_active_borrows"),
     path("user/<int:user_id>/history-borrows/", views.user_history_borrows, name="user_history_borrows"),
     path("user/<int:user_id>/reservations/", views.user_reservations, name="user_reservations"),
+
+    # New Librarian Direct Issue URL
+    path("librarian-issue/", views.librarian_issue_book, name="librarian_issue_book"),
 ]

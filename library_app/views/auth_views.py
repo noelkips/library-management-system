@@ -57,6 +57,21 @@ def can_reset_password(user, target_user):
         return target_user.is_student or target_user.is_other or target_user.is_teacher
     return False
 
+def can_user_borrow(user):
+    """
+    Determine whether a student user can borrow more books.
+    Uses settings.MAX_BORROWS_PER_STUDENT (default 3) and counts currently issued borrows.
+    Returns False for non-authenticated or non-student users.
+    """
+    if not getattr(user, 'is_authenticated', False):
+        return False
+    if not getattr(user, 'is_student', False):
+        return False
+
+    max_borrows = getattr(settings, 'MAX_BORROWS_PER_STUDENT', 1)
+    active_issued = Borrow.objects.filter(user=user, status='issued').count()
+    return active_issued < max_borrows
+
 def landing_page(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -614,7 +629,7 @@ def user_add(request):
                     )
                     child_ID_str = str(child_ID)
                     user.set_password(child_ID_str)  # initial password = child_ID
-                    user.force_password_change = True
+                    user.force_password_change = False
                     user._child_ID = child_ID  # temporary attributes for signal
                     user._school_id = school_id
                     user.save()
@@ -644,7 +659,7 @@ def user_add(request):
                         is_site_admin=is_site_admin_flag,
                         is_other=is_other,
                     )
-                    user.force_password_change = True
+                    user.force_password_change = False
                     user.save()
 
                     messages.success(

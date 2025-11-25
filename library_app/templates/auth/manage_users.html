@@ -835,16 +835,26 @@
             }
         });
 
-        setTimeout(function() {
-            const messages = document.querySelectorAll('[role="alert"]');
-            messages.forEach(function(message) {
+        // Handle message timeouts individually
+        const messages = document.querySelectorAll('[role="alert"]');
+        messages.forEach(function(message) {
+            let duration = 5000; // Default 5 seconds
+            
+            // Check if it's a password reset success message
+            const messageText = message.textContent || message.innerText;
+            if (message.classList.contains('bg-green-50') && messageText.toLowerCase().includes('password')) {
+                duration = 30000; // 30 seconds
+            }
+
+            // Set an individual timeout for this message
+            setTimeout(function() {
                 message.style.transition = 'opacity 0.5s';
                 message.style.opacity = '0';
                 setTimeout(function() {
                     message.remove();
-                }, 500);
-            });
-        }, 5000);
+                }, 500); // 0.5s fade-out time
+            }, duration);
+        });
     });
 </script>
 

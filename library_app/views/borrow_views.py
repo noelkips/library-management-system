@@ -1449,3 +1449,159 @@ def user_reservations(request, user_id):
         f"{borrow_user.email}: {reservations.count()} reservations"
     )
     return render(request, "reservations/user_reservations.html", context)
+
+
+
+# ==================== NEW LIBRARIAN DIRECT ISSUE VIEW ====================
+@login_required
+@transaction.atomic
+def librarian_issue_book(request):
+    """
+    Librarian/Admin selects a student and an available book, and issues it.
+    This atomically creates the 'requested' and 'issued' borrow steps.
+    Notifies both the student and the issuing admin.
+    """
+    if not (request.user.is_librarian or request.user.is_site_admin):
+        messages.error(request, "You don't have permission to perform this action.")
+        print(f"Unauthorized access to librarian_issue_book by {request.user.email}")
+        return redirect("book_list")
+
+    if request.method == "POST":
+        student_id = request.POST.get("student")
+        book_id = request.POST.get("book")
+        days_str = request.POST.get("days", "3")
+
+        try:
+            student = Student.objects.select_related('user', 'centre').get(id=student_id)
+            book = Book.objects.get(id=book_id)
+            
+            if not student.user:
+                 messages.error(request, f"Student {student.name} does not have an associated user account.")
+                 print(f"Librarian issue failed: Student ID {student.id} has no user account.")
+                 return redirect("librarian_issue_book")
+                 
+            user = student.user
+
+            # Check permissions
+            if request.user.is_librarian and not request.user.is_site_admin:
+                if book.centre != request.user.centre or student.centre != request.user.centre:
+                    messages.error(request, "You can only issue books to students in your own centre.")
+                    print(f"Librarian issue failed: {request.user.email} (Centre {request.user.centre.id}) "
+                          f"tried to issue to student {student.id} (Centre {student.centre.id}) "
+                          f"or book {book.id} (Centre {book.centre.id})")
+                    return redirect("librarian_issue_book")
+            
+            # Validate days
+            try:
+                days = int(days_str)
+                if days <= 0 or days > 30:
+                    raise ValueError("Days must be between 1 and 30.")
+                due_date = timezone.now() + timedelta(days=days)
+                if due_date.year > 2025:
+                    raise ValueError("Due date cannot be set beyond 2025.")
+            except (ValueError, TypeError):
+                messages.error(request, "Invalid borrow duration. Must be a number between 1 and 30, and not exceed 2025.")
+                print(f"Librarian issue failed: Invalid days '{days_str}' by {request.user.email}")
+                return redirect("librarian_issue_book")
+
+            # Check borrow limit
+            if not can_user_borrow(user):
+                limit = get_user_borrow_limit(user)
+                messages.error(request, f"Student {student.name} has reached their borrow limit of {limit} book(s).")
+                print(f"Librarian issue failed: Borrow limit reached for {user.email}")
+                return redirect("librarian_issue_book")
+
+            # Check book availability
+            if not book.is_available():
+                messages.error(request, f"Book '{book.title}' is no longer available.")
+                print(f"Librarian issue failed: Book {book.id} not available")
+                return redirect("librarian_issue_book")
+
+            # Check if user already has active borrow/request for this book
+            existing_borrow = Borrow.objects.filter(
+                book=book,
+                user=user,
+                status__in=["requested", "issued"],
+            ).first()
+            
+            if existing_borrow:
+                messages.warning(request, f"Student {student.name} already has an active request or borrow for this book.")
+                print(f"Librarian issue failed: Duplicate borrow for {user.email}, book {book.id}")
+                return redirect("librarian_issue_book")
+
+            # --- Atomic Request + Issue ---
+            request_time = timezone.now()
+            
+            # 1. Create the 'requested' record
+            borrow = Borrow.objects.create(
+                book=book,
+                user=user,
+                centre=book.centre,
+                status="requested",
+                request_date=request_time,
+                notes=f"Issued directly by librarian {request.user.email}",
+            )
+            
+            # 2. Immediately update to 'issued'
+            borrow.status = "issued"
+            borrow.issue_date = request_time # Use same timestamp
+            borrow.due_date = due_date
+            borrow.issued_by = request.user
+            borrow.save(user=request.user) # Pass user for history tracking
+            
+            # 3. Update book availability
+            book.update_available_copies()
+
+            # 4. Notify the student
+            Notification.objects.create(
+                user=user,
+                message=(
+                    f"A book, '{book.title}', has been issued to you by a librarian. "
+                    f"Due date: {borrow.due_date.strftime('%Y-%m-%d')}"
+                ),
+                book=book,
+                borrow=borrow,
+                notification_type="borrow_approved", # Using this type for consistency
+            )
+            
+            # --- NEW NOTIFICATION FOR ADMIN ---
+            # 5. Notify the issuing librarian/admin
+            Notification.objects.create(
+                user=request.user, # This is the admin/librarian
+                message=(
+                    f"You successfully issued '{book.title}' to {student.name}. "
+                    f"Due date: {borrow.due_date.strftime('%Y-%m-%d')}"
+                ),
+                book=book,
+                borrow=borrow,
+                notification_type="info", # Using 'info' as it's a confirmation
+            )
+            # --- END OF NEW CODE ---
+            
+            messages.success(request, f"Book '{book.title}' issued successfully to {student.name}!", extra_tags="green")
+            print(f"Librarian issue success: {request.user.email} issued book {book.id} to {user.email}")
+            return redirect("active_borrows_list")
+
+        except Student.DoesNotExist:
+            messages.error(request, "Invalid student selected.")
+            print(f"Librarian issue failed: Student ID {student_id} not found.")
+        except Book.DoesNotExist:
+            messages.error(request, "Invalid book selected.")
+            print(f"Librarian issue failed: Book ID {book_id} not found.")
+        except Exception as e:
+            messages.error(request, f"An unexpected error occurred: {e}")
+            print(f"Librarian issue failed: Unexpected error: {e}")
+
+    # GET request: Prepare the form
+    students = Student.objects.select_related('user', 'centre').filter(user__isnull=False).order_by('name')
+    books = Book.objects.filter(available_copies=True).order_by('title')
+
+    if request.user.is_librarian and not request.user.is_site_admin:
+        students = students.filter(centre=request.user.centre)
+        books = books.filter(centre=request.user.centre)
+        
+    context = {
+        "students": students,
+        "books": books,
+    }
+    return render(request, "borrows/librarian_issue_book.html", context)

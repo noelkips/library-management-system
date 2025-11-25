@@ -10,6 +10,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 import re
+from datetime import datetime
 
 
 
@@ -103,6 +104,27 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
+class Grade(models.Model):
+ 
+    name = models.CharField(max_length=200, unique=True)
+   
+    class Meta:
+        verbose_name_plural = "Grades"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+    
+class Subject(models.Model):
+ 
+    name = models.CharField(max_length=200, unique=True)
+   
+    class Meta:
+        verbose_name_plural = "Subjects"
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
 
 
 class Book(models.Model):
@@ -114,11 +136,24 @@ class Book(models.Model):
         null=True,
         related_name='books'
     )
+    grade = models.ForeignKey(
+        'Grade',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='grades'
+    )
+    subject = models.ForeignKey(
+        'Subject',
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='subjects'
+    )
     book_code = models.CharField(max_length=50, blank=True, null=True)
-    isbn = models.CharField(max_length=50, unique=True)
+    isbn = models.CharField(max_length=50)
+    book_id = models.CharField(max_length=100, unique=True, blank=True)
     publisher = models.CharField(max_length=200)
     year_of_publication = models.PositiveIntegerField()
-    available_copies = models.BooleanField(default=True, help_text="Indicates if the book is available (Yes/No).")
+    available_copies = models.BooleanField(default=True)
     centre = models.ForeignKey(
         'Centre', on_delete=models.SET_NULL, null=True, related_name='books')
     added_by = models.ForeignKey(
@@ -126,10 +161,42 @@ class Book(models.Model):
     is_active = models.BooleanField(default=True)
     history = HistoricalRecords()
 
-    def save(self, *args, **kwargs):
-        if 'user' in kwargs:
-            setattr(self, '_history_user', kwargs.pop('user'))
-        super().save(*args, **kwargs)
+    class Meta:
+        unique_together = ('book_code', 'centre')
+
+    from datetime import datetime
+
+def save(self, *args, **kwargs):
+    # For simple-history user tracking
+    if 'user' in kwargs:
+        setattr(self, '_history_user', kwargs.pop('user'))
+
+    # Generate book_id only on creation
+    if not self.book_id and self.centre and self.category:
+        centre_part = self.centre.name[:4].lower()
+        category_part = self.category.name[:4].lower()
+        current_year = str(datetime.now().year)
+
+        # Find last running number for this centre+category
+        last_book = Book.objects.filter(
+            centre=self.centre,
+            category=self.category
+        ).order_by('id').last()
+
+        if last_book and last_book.book_id:
+            try:
+                # Extract running number
+                last_number = int(last_book.book_id.split('/')[2])
+                next_number = f"{last_number + 1:04d}"
+            except:
+                next_number = "0001"
+        else:
+            next_number = "0001"
+
+        self.book_id = f"{centre_part}/{category_part}/{next_number}/{current_year}"
+
+    super().save(*args, **kwargs)
+
 
     def update_available_copies(self):
         """Update available_copies based on issued borrows."""
@@ -141,7 +208,6 @@ class Book(models.Model):
         super().save()
 
     def is_available(self):
-        """Check if book is available."""
         return self.available_copies
 
     def clean(self):
@@ -156,8 +222,6 @@ class Book(models.Model):
         centre_name = self.centre.name if self.centre and self.centre.name else "No Centre"
         return f"{self.title} ({self.book_code}) - {centre_name}"
 
-    class Meta:
-        unique_together = ('book_code', 'centre')
 
 
 

@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Centre, CustomUser, Book, Student, Catalogue, Category
+from .models import Centre, CustomUser, Book, Student, Catalogue, Category, School
 
 admin.site.register(Centre)
 admin.site.register(CustomUser)
 admin.site.register(Student)
 admin.site.register(Category)
-
+admin.site.register(School)
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
