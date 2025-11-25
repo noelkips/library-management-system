@@ -16,7 +16,8 @@
                         'neutral': '#A0A0A0',
                         'light': '#DCDCF0',
                         'accent': '#288CC8',
-                        'danger': '#34f2ac',
+                        'danger': '#dc2626', // Changed from #34f2ac (neon green) to a standard red
+                        'highlight': '#34f2ac', // New color for the bright accent/highlight
                     }
                 }
             }
@@ -112,7 +113,6 @@
     </style>
 </head>
 <body class="bg-light min-h-screen font-sans">
-    <!-- Updated header to use gradient background -->
     <header class="gradient-bg text-white p-4 flex justify-between items-center sticky top-0 z-50 shadow-lg">
         <div class="flex items-center">
             <button id="mobile-menu-button" class="lg:hidden mr-4 p-2 hover:bg-secondary rounded-lg transition-all transform hover:scale-105">
@@ -165,7 +165,6 @@
     <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
 
     <div class="flex flex-col lg:flex-row min-h-screen">
-        <!-- Updated sidebar to use gradient background -->
         <aside id="sidebar" class="gradient-bg text-white w-full lg:w-64 fixed lg:sticky top-0 lg:top-[64px] h-screen lg:h-[calc(100vh-64px)] overflow-y-auto z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl">
             <div class="p-4">
                 <div class="flex justify-between items-center mb-6 lg:hidden pb-4 border-b border-accent">
@@ -384,7 +383,6 @@
         </main>
     </div>
 
-    <!-- Updated footer to use gradient background -->
     <footer class="gradient-bg text-white p-4 text-center text-sm sm:text-base">
         <p>© {% now "Y" %} MOHILibrary. All rights reserved.</p>
     </footer>

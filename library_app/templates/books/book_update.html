@@ -50,9 +50,6 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div class="sm:col-span-2 lg:col-span-3">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                        </svg>
                         Title *
                     </label>
                     <input type="text" name="title" id="title" value="{{ form_data.title|default_if_none:book.title }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
@@ -60,9 +57,6 @@
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
                         Author *
                     </label>
                     <input type="text" name="author" id="author" value="{{ form_data.author|default_if_none:book.author }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
@@ -70,9 +64,6 @@
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                        </svg>
                         Book Code
                     </label>
                     <input type="text" name="book_code" id="book_code" value="{{ form_data.book_code|default_if_none:book.book_code|default:'' }}" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
@@ -80,46 +71,56 @@
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-3m0 0a1 1 0 001-1"></path>
-                        </svg>
                         ISBN *
                     </label>
                     <input type="text" name="isbn" id="isbn" value="{{ form_data.isbn|default_if_none:book.isbn }}" required minlength="8" maxlength="18" pattern=".{8,18}" title="ISBN must be between 8 and 18 characters" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                    <p class="text-gray-500 text-xs mt-1">Enter an ISBN between 8 and 18 characters</p>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                        </svg>
                         Category *
                     </label>
                     <select name="category" id="category" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
                         <option value="">Select Category</option>
                         {% for category in categories %}
-                            <option value="{{ category.id }}" {% if form_data.category == category.id|stringformat:"s" or book.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                            <option value="{{ category.id }}" data-name="{{ category.name|lower }}" {% if form_data.category == category.id|stringformat:"s" or book.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="grade_container" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Grade *
+                    </label>
+                    <select name="grade" id="grade" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        <option value="">Select Grade</option>
+                        {% for grade in grades %}
+                            <option value="{{ grade.id }}" {% if form_data.grade == grade.id|stringformat:"s" or book.grade_id == grade.id %}selected{% endif %}>{{ grade.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="subject_container" class="hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Subject *
+                    </label>
+                    <select name="subject" id="subject" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
+                        <option value="">Select Subject</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}" {% if form_data.subject == subject.id|stringformat:"s" or book.subject_id == subject.id %}selected{% endif %}>{{ subject.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
                         Publication Year *
                     </label>
                     <input type="number" name="year_of_publication" id="year_of_publication" value="{{ form_data.year_of_publication|default_if_none:book.year_of_publication }}" required max="2025" min="1500" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                    <p class="text-gray-500 text-xs mt-1">Year must be between 1500 and 2025</p>
                 </div>
 
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
-                        </svg>
                         Publisher *
                     </label>
                     <input type="text" name="publisher" id="publisher" value="{{ form_data.publisher|default_if_none:book.publisher }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
@@ -128,9 +129,6 @@
                 {% if user.is_superuser %}
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path>
-                        </svg>
                         Centre *
                     </label>
                     <select name="centre" id="centre" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
@@ -148,9 +146,6 @@
                     Cancel
                 </a>
                 <button type="submit" class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
                     Update Book
                 </button>
             </div>
@@ -161,14 +156,44 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const isbnInput = document.getElementById('isbn');
-        isbnInput.addEventListener('input', function() {
-            const value = this.value;
-            if (value.length < 8 || value.length > 18) {
-                this.setCustomValidity('ISBN must be between 8 and 18 characters.');
+        if(isbnInput) {
+            isbnInput.addEventListener('input', function() {
+                const value = this.value;
+                if (value.length < 8 || value.length > 18) {
+                    this.setCustomValidity('ISBN must be between 8 and 18 characters.');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+        }
+
+        const catSelect = document.getElementById('category');
+        const gradeDiv = document.getElementById('grade_container');
+        const subjectDiv = document.getElementById('subject_container');
+        const gradeSelect = document.getElementById('grade');
+        const subjectSelect = document.getElementById('subject');
+
+        function checkCategory() {
+            const selectedOption = catSelect.options[catSelect.selectedIndex];
+            const catName = selectedOption.getAttribute('data-name');
+            
+            if (catName === 'textbook') {
+                gradeDiv.classList.remove('hidden');
+                subjectDiv.classList.remove('hidden');
+                gradeSelect.required = true;
+                subjectSelect.required = true;
             } else {
-                this.setCustomValidity('');
+                gradeDiv.classList.add('hidden');
+                subjectDiv.classList.add('hidden');
+                gradeSelect.required = false;
+                subjectSelect.required = false;
             }
-        });
+        }
+
+        if(catSelect) {
+            catSelect.addEventListener('change', checkCategory);
+            checkCategory(); // Run on load
+        }
     });
 </script>
 {% endblock %}

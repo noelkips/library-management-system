@@ -13,7 +13,6 @@ import re
 from datetime import datetime
 
 
-
 class Centre(models.Model):
     name = models.CharField(max_length=300)
     centre_code = models.CharField(max_length=30, unique=True)
@@ -105,7 +104,6 @@ class Category(models.Model):
         return self.name
 
 class Grade(models.Model):
- 
     name = models.CharField(max_length=200, unique=True)
    
     class Meta:
@@ -116,7 +114,6 @@ class Grade(models.Model):
         return self.name
     
 class Subject(models.Model):
- 
     name = models.CharField(max_length=200, unique=True)
    
     class Meta:
@@ -136,18 +133,22 @@ class Book(models.Model):
         null=True,
         related_name='books'
     )
+    # New Fields
     grade = models.ForeignKey(
         'Grade',
         on_delete=models.SET_NULL,
         null=True,
-        related_name='grades'
+        blank=True,
+        related_name='books'
     )
     subject = models.ForeignKey(
         'Subject',
         on_delete=models.SET_NULL,
         null=True,
-        related_name='subjects'
+        blank=True,
+        related_name='books'
     )
+    # End New Fields
     book_code = models.CharField(max_length=50, blank=True, null=True)
     isbn = models.CharField(max_length=50)
     book_id = models.CharField(max_length=100, unique=True, blank=True)
@@ -164,39 +165,54 @@ class Book(models.Model):
     class Meta:
         unique_together = ('book_code', 'centre')
 
-    from datetime import datetime
+    def clean(self):
+        # Mandatory validation for Textbook Category
+        if self.category and self.category.name.lower() == 'textbook':
+            if not self.grade:
+                raise ValidationError({'grade': 'Grade is mandatory for books in the Textbook category.'})
+            if not self.subject:
+                raise ValidationError({'subject': 'Subject is mandatory for books in the Textbook category.'})
 
-def save(self, *args, **kwargs):
-    # For simple-history user tracking
-    if 'user' in kwargs:
-        setattr(self, '_history_user', kwargs.pop('user'))
+        if self.year_of_publication and (self.year_of_publication < 1500 or self.year_of_publication > 2025):
+            raise ValidationError({'year_of_publication': 'Year must be between 1500 and 2025.'})
+        if not self.isbn:
+            raise ValidationError({'isbn': 'ISBN is required.'})
+        if len(self.isbn) < 8 or len(self.isbn) > 18:
+            raise ValidationError({'isbn': 'ISBN must be between 8 and 18 characters.'})
 
-    # Generate book_id only on creation
-    if not self.book_id and self.centre and self.category:
-        centre_part = self.centre.name[:4].lower()
-        category_part = self.category.name[:4].lower()
-        current_year = str(datetime.now().year)
+    def save(self, *args, **kwargs):
+        # Call clean to ensure validation runs on save
+        self.clean()
+        
+        # For simple-history user tracking
+        if 'user' in kwargs:
+            setattr(self, '_history_user', kwargs.pop('user'))
 
-        # Find last running number for this centre+category
-        last_book = Book.objects.filter(
-            centre=self.centre,
-            category=self.category
-        ).order_by('id').last()
+        # Generate book_id only on creation
+        if not self.book_id and self.centre and self.category:
+            centre_part = self.centre.name[:4].lower()
+            category_part = self.category.name[:4].lower()
+            current_year = str(datetime.now().year)
 
-        if last_book and last_book.book_id:
-            try:
-                # Extract running number
-                last_number = int(last_book.book_id.split('/')[2])
-                next_number = f"{last_number + 1:04d}"
-            except:
+            # Find last running number for this centre+category
+            last_book = Book.objects.filter(
+                centre=self.centre,
+                category=self.category
+            ).order_by('id').last()
+
+            if last_book and last_book.book_id:
+                try:
+                    # Extract running number
+                    last_number = int(last_book.book_id.split('/')[2])
+                    next_number = f"{last_number + 1:04d}"
+                except:
+                    next_number = "0001"
+            else:
                 next_number = "0001"
-        else:
-            next_number = "0001"
 
-        self.book_id = f"{centre_part}/{category_part}/{next_number}/{current_year}"
+            self.book_id = f"{centre_part}/{category_part}/{next_number}/{current_year}"
 
-    super().save(*args, **kwargs)
-
+        super().save(*args, **kwargs)
 
     def update_available_copies(self):
         """Update available_copies based on issued borrows."""
@@ -210,20 +226,9 @@ def save(self, *args, **kwargs):
     def is_available(self):
         return self.available_copies
 
-    def clean(self):
-        if self.year_of_publication and (self.year_of_publication < 1500 or self.year_of_publication > 2025):
-            raise ValidationError({'year_of_publication': 'Year must be between 1500 and 2025.'})
-        if not self.isbn:
-            raise ValidationError({'isbn': 'ISBN is required.'})
-        if len(self.isbn) < 8 or len(self.isbn) > 18:
-            raise ValidationError({'isbn': 'ISBN must be between 8 and 18 characters.'})
-
     def __str__(self):
         centre_name = self.centre.name if self.centre and self.centre.name else "No Centre"
         return f"{self.title} ({self.book_code}) - {centre_name}"
-
-
-
 
         
 class Student(models.Model):

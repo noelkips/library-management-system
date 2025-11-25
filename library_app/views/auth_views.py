@@ -24,6 +24,7 @@ import openpyxl
 import random
 import json
 
+# UPDATED IMPORTS to include Grade and Subject
 from ..models import (
     Book,
     Centre,
@@ -34,11 +35,11 @@ from ..models import (
     Reservation,
     Notification,
     TeacherBookIssue,
+    Grade,
+    Subject
 )
 
 from ..utils import send_custom_email  
-
-
 
 
 def is_site_admin(user):
@@ -96,17 +97,11 @@ def login_view(request):
     return render(request, "auth/login.html")
 
 
-
 @login_required
 def logout_view(request):
     logout(request)
     messages.success(request, "You have been logged out successfully.")
     return redirect('login_view')
-from django.db.models import Count, Q
-from collections import defaultdict
-import json
-from django.utils import timezone
-from datetime import timedelta
 
 
 @login_required
@@ -144,6 +139,9 @@ def dashboard(request):
             'total_borrows': Borrow.objects.count(),
             'total_teacher_issues': TeacherBookIssue.objects.count(),
             'total_reservations': Reservation.objects.count(),
+            # NEW STATS for Grade/Subject
+            'total_grades': Grade.objects.count(),
+            'total_subjects': Subject.objects.count(),
 
             # Borrow stats (only from Borrow)
             'active_borrows': Borrow.objects.filter(status='issued').count(),
@@ -785,8 +783,6 @@ def user_reset_password(request, pk):
         messages.success(request, mark_safe(f"Password reset successfully. New password: <span class=\"font-bold text-danger\">{new_password}</span>. The user will be forced to change it on next login."))
         return redirect('manage_users')
     return redirect('manage_users')
-
-
 
 
 def password_reset_request(request):

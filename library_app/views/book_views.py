@@ -2,21 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db import transaction, IntegrityError
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.utils import timezone
 import csv
 import openpyxl
 from io import TextIOWrapper
-from ..models import Book, Centre, CustomUser, Category, Borrow, Reservation, Notification, can_user_borrow
+from ..models import Book, Centre, CustomUser, Category, Borrow, Reservation, Notification, Grade, Subject, can_user_borrow
 from datetime import timedelta
 from django.core.exceptions import ValidationError
 
 def is_authorized(user):
     return user.is_superuser or user.is_librarian
 
-def handle_uploaded_file(request, file, user, centre_id, category_id):
+def handle_uploaded_file(request, file, user, centre_id, category_id, grade_id, subject_id):
     header_mapping = {
         'book_title': 'title',
         'author_name': 'author',
@@ -49,6 +49,30 @@ def handle_uploaded_file(request, file, user, centre_id, category_id):
         except Category.DoesNotExist:
             messages.error(request, f"Selected category with ID {category_id} not found.")
             return
+
+        # Fetch Grade and Subject if provided
+        grade = None
+        if grade_id:
+            try:
+                grade = Grade.objects.get(id=grade_id)
+            except Grade.DoesNotExist:
+                pass
+        
+        subject = None
+        if subject_id:
+            try:
+                subject = Subject.objects.get(id=subject_id)
+            except Subject.DoesNotExist:
+                pass
+
+        # Validate mandatory fields for Textbook category
+        if category.name.lower() == 'textbook':
+            if not grade:
+                messages.error(request, "Grade is mandatory for Textbook category.")
+                return
+            if not subject:
+                messages.error(request, "Subject is mandatory for Textbook category.")
+                return
 
         book_instances = []
         if file.name.lower().endswith('.csv'):
@@ -135,6 +159,8 @@ def handle_uploaded_file(request, file, user, centre_id, category_id):
                         title=data.get('title'),
                         author=data.get('author'),
                         category=category,
+                        grade=grade, # Added Grade
+                        subject=subject, # Added Subject
                         book_code=data.get('book_code'),
                         isbn=str(data.get('isbn')),
                         publisher=data.get('publisher'),
@@ -173,28 +199,37 @@ def book_add(request):
 
     centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
     categories = Category.objects.all()
+    grades = Grade.objects.all()
+    subjects = Subject.objects.all()
 
     if request.method == 'POST':
         # Handle bulk upload
         if 'file' in request.FILES and request.FILES['file']:
             centre_id = request.POST.get('bulk_centre')
             category_id = request.POST.get('bulk_category')
+            grade_id = request.POST.get('bulk_grade')
+            subject_id = request.POST.get('bulk_subject')
+
             if not centre_id or not category_id:
                 messages.error(request, "Please select both a centre and a category for bulk upload.")
                 return render(request, 'books/book_add.html', {
                     'centres': centres,
                     'categories': categories,
+                    'grades': grades,
+                    'subjects': subjects,
                     'form_data': request.POST
                 })
             
             try:
-                handle_uploaded_file(request, request.FILES['file'], request.user, centre_id, category_id)
+                handle_uploaded_file(request, request.FILES['file'], request.user, centre_id, category_id, grade_id, subject_id)
                 return redirect('book_list')
             except Exception as e:
                 messages.error(request, f"Error uploading books: {str(e)}")
                 return render(request, 'books/book_add.html', {
                     'centres': centres,
                     'categories': categories,
+                    'grades': grades,
+                    'subjects': subjects,
                     'form_data': request.POST
                 })
 
@@ -204,63 +239,19 @@ def book_add(request):
                 title = request.POST.get('title', '').strip()
                 author = request.POST.get('author', '').strip()
                 category_id = request.POST.get('category')
+                grade_id = request.POST.get('grade')
+                subject_id = request.POST.get('subject')
                 book_code = request.POST.get('book_code', '').strip() or None
                 isbn = request.POST.get('isbn', '').strip()
                 publisher = request.POST.get('publisher', '').strip()
                 year_of_publication = request.POST.get('year_of_publication', '').strip()
                 centre_id = request.POST.get('centre')
 
-                # Validate required fields
-                if not title:
-                    messages.error(request, "Title is required.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not author:
-                    messages.error(request, "Author is required.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not publisher:
-                    messages.error(request, "Publisher is required.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not year_of_publication:
-                    messages.error(request, "Publication year is required.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not isbn:
-                    messages.error(request, "ISBN is required.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not category_id:
-                    messages.error(request, "Category is required.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-
-                # Validate ISBN length
-                if len(isbn) < 8 or len(isbn) > 18:
-                    messages.error(request, "ISBN must be between 8 and 18 characters.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
+                # Basic validations (Detailed validations are in model.clean)
+                if not title or not author or not publisher or not year_of_publication or not isbn or not category_id:
+                     messages.error(request, "All required fields must be filled.")
+                     return render(request, 'books/book_add.html', {
+                        'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                     })
 
                 # Validate centre
@@ -271,70 +262,52 @@ def book_add(request):
                         if centre_id and int(centre_id) != centre.id:
                             messages.error(request, "You can only add books for your own centre.")
                             return render(request, 'books/book_add.html', {
-                                'centres': centres,
-                                'categories': categories,
-                                'form_data': request.POST
+                                'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                             })
                     if not centre:
                         messages.error(request, "Centre is required.")
                         return render(request, 'books/book_add.html', {
-                            'centres': centres,
-                            'categories': categories,
-                            'form_data': request.POST
+                            'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                         })
                 except Centre.DoesNotExist:
                     messages.error(request, "Invalid centre selected.")
                     return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
+                        'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                     })
 
-                # Validate category
+                # Get Objects
                 try:
                     category = Category.objects.get(id=category_id)
                 except Category.DoesNotExist:
                     messages.error(request, "Invalid category selected.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
+                    return render(request, 'books/book_add.html', { 'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST })
 
-                # Validate year_of_publication
-                try:
-                    year = int(year_of_publication)
-                    if year < 1500 or year > 2025:
-                        messages.error(request, "Year must be between 1500 and 2025.")
-                        return render(request, 'books/book_add.html', {
-                            'centres': centres,
-                            'categories': categories,
-                            'form_data': request.POST
-                        })
-                except ValueError:
-                    messages.error(request, "Invalid year format.")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
+                grade = None
+                if grade_id:
+                    grade = Grade.objects.get(id=grade_id)
+                
+                subject = None
+                if subject_id:
+                    subject = Subject.objects.get(id=subject_id)
 
                 # Create book instance
                 book = Book(
                     title=title,
                     author=author,
                     category=category,
+                    grade=grade,
+                    subject=subject,
                     book_code=book_code,
                     isbn=isbn,
                     publisher=publisher,
-                    year_of_publication=year,
+                    year_of_publication=int(year_of_publication),
                     centre=centre,
                     added_by=request.user,
                     is_active=True,
                     available_copies=True
                 )
 
-                # Validate and save
+                # Validate and save (clean method checks for textbook requirements)
                 try:
                     book.full_clean()
                     book.save(user=request.user)
@@ -344,36 +317,25 @@ def book_add(request):
                     for field, errors in e.message_dict.items():
                         messages.error(request, f"{field.capitalize()}: {', '.join(errors)}")
                     return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
+                        'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                     })
                 except IntegrityError:
                     messages.error(request, "Book with this ISBN or book_code already exists.")
                     return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                except Exception as e:
-                    messages.error(request, f"Error adding book: {str(e)}")
-                    return render(request, 'books/book_add.html', {
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
+                        'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                     })
 
         except Exception as e:
             messages.error(request, f"Unexpected error: {str(e)}")
             return render(request, 'books/book_add.html', {
-                'centres': centres,
-                'categories': categories,
-                'form_data': request.POST
+                'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
             })
 
     return render(request, 'books/book_add.html', {
         'centres': centres,
         'categories': categories,
+        'grades': grades,
+        'subjects': subjects,
         'form_data': {}
     })
 
@@ -390,6 +352,8 @@ def book_update(request, pk):
 
     centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else []
     categories = Category.objects.all()
+    grades = Grade.objects.all()
+    subjects = Subject.objects.all()
 
     if request.method == 'POST':
         try:
@@ -397,132 +361,40 @@ def book_update(request, pk):
                 title = request.POST.get('title', book.title).strip()
                 author = request.POST.get('author', book.author).strip()
                 category_id = request.POST.get('category', str(book.category_id))
+                grade_id = request.POST.get('grade')
+                subject_id = request.POST.get('subject')
                 book_code = request.POST.get('book_code', book.book_code).strip() or None
                 isbn = request.POST.get('isbn', book.isbn).strip()
                 publisher = request.POST.get('publisher', book.publisher).strip()
                 year_of_publication = request.POST.get('year_of_publication', str(book.year_of_publication)).strip()
                 centre_id = request.POST.get('centre', str(book.centre_id))
 
-                # Validate required fields
-                if not title:
-                    messages.error(request, "Title is required.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not author:
-                    messages.error(request, "Author is required.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not publisher:
-                    messages.error(request, "Publisher is required.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not year_of_publication:
-                    messages.error(request, "Publication year is required.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not isbn:
-                    messages.error(request, "ISBN is required.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                if not category_id:
-                    messages.error(request, "Category is required.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-
-                # Validate ISBN length
-                if len(isbn) < 8 or len(isbn) > 18:
-                    messages.error(request, "ISBN must be between 8 and 18 characters.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-
-                # Validate centre
+                # Retrieve Objects
                 try:
                     centre = Centre.objects.get(id=centre_id) if centre_id else book.centre
-                    if request.user.is_librarian and not request.user.is_superuser and centre != request.user.centre:
-                        messages.error(request, "You can only update books for your own centre.")
-                        return render(request, 'books/book_update.html', {
-                            'book': book,
-                            'centres': centres,
-                            'categories': categories,
-                            'form_data': request.POST
-                        })
-                except Centre.DoesNotExist:
-                    messages.error(request, "Invalid centre selected.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-
-                # Validate category
-                try:
                     category = Category.objects.get(id=category_id)
-                except Category.DoesNotExist:
-                    messages.error(request, "Invalid category selected.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
+                except (Centre.DoesNotExist, Category.DoesNotExist):
+                     messages.error(request, "Invalid centre or category.")
+                     return render(request, 'books/book_update.html', {'book': book, 'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST})
 
-                # Validate year_of_publication
-                try:
-                    year = int(year_of_publication)
-                    if year < 1500 or year > 2025:
-                        messages.error(request, "Year must be between 1500 and 2025.")
-                        return render(request, 'books/book_update.html', {
-                            'book': book,
-                            'centres': centres,
-                            'categories': categories,
-                            'form_data': request.POST
-                        })
-                except ValueError:
-                    messages.error(request, "Invalid year format.")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
+                grade = None
+                if grade_id:
+                    grade = Grade.objects.get(id=grade_id)
+                
+                subject = None
+                if subject_id:
+                    subject = Subject.objects.get(id=subject_id)
 
                 # Update book instance
                 book.title = title
                 book.author = author
                 book.category = category
+                book.grade = grade
+                book.subject = subject
                 book.book_code = book_code
                 book.isbn = isbn
                 book.publisher = publisher
-                book.year_of_publication = year
+                book.year_of_publication = int(year_of_publication)
                 book.centre = centre
 
                 # Validate and save
@@ -535,41 +407,26 @@ def book_update(request, pk):
                     for field, errors in e.message_dict.items():
                         messages.error(request, f"{field.capitalize()}: {', '.join(errors)}")
                     return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
+                        'book': book, 'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                     })
                 except IntegrityError:
                     messages.error(request, "Book with this ISBN or book_code already exists.")
                     return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
-                    })
-                except Exception as e:
-                    messages.error(request, f"Error updating book: {str(e)}")
-                    return render(request, 'books/book_update.html', {
-                        'book': book,
-                        'centres': centres,
-                        'categories': categories,
-                        'form_data': request.POST
+                        'book': book, 'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
                     })
 
         except Exception as e:
             messages.error(request, f"Unexpected error: {str(e)}")
             return render(request, 'books/book_update.html', {
-                'book': book,
-                'centres': centres,
-                'categories': categories,
-                'form_data': request.POST
+                'book': book, 'centres': centres, 'categories': categories, 'grades': grades, 'subjects': subjects, 'form_data': request.POST
             })
 
     return render(request, 'books/book_update.html', {
         'book': book,
         'centres': centres,
         'categories': categories,
+        'grades': grades,
+        'subjects': subjects,
         'form_data': {
             'title': book.title,
             'author': book.author,
@@ -578,24 +435,117 @@ def book_update(request, pk):
             'publisher': book.publisher,
             'year_of_publication': book.year_of_publication,
             'category': book.category_id,
-            'centre': book.centre_id
+            'centre': book.centre_id,
+            'grade': book.grade_id,
+            'subject': book.subject_id
         }
     })
 
+# ---------------------------------------------------
+# NEW WORKFLOW: Step 1 - Category List (Replaces old book_list entry)
+# ---------------------------------------------------
 @login_required
 def book_list(request):
+    """
+    Step 1: Displays cards for each Category with book counts.
+    """
     if request.user.is_superuser:
-        books = Book.objects.all()
-    elif (request.user.is_librarian or request.user.is_student or request.user.is_teacher) and request.user.centre:
-        books = Book.objects.filter(centre=request.user.centre)
+        centres = Centre.objects.all()
+        # Counts for superuser might need to be centre-specific in a real filter, 
+        # but here we show total system counts or filtered by a centre GET param
     else:
-        books = Book.objects.none()
+        centres = [request.user.centre] if request.user.centre else []
 
+    # Base query for counting
+    books_query = Book.objects.all()
+    
+    # Filter by centre if librarian
+    if request.user.is_librarian and request.user.centre:
+        books_query = books_query.filter(centre=request.user.centre)
+    
+    # Filter by centre if passed in GET (admin)
+    selected_centre_id = request.GET.get('centre')
+    if selected_centre_id and request.user.is_superuser:
+        books_query = books_query.filter(centre_id=selected_centre_id)
+
+    # Annotate categories with book counts
+    categories = Category.objects.annotate(
+        num_books=Count('books', filter=Q(books__in=books_query))
+    )
+
+    return render(request, 'books/category_list.html', {
+        'categories': categories,
+        'centres': centres,
+        'selected_centre': selected_centre_id
+    })
+
+# ---------------------------------------------------
+# NEW WORKFLOW: Step 2 - Grade/Subject Selector
+# ---------------------------------------------------
+@login_required
+def grade_subject_view(request, category_id):
+    """
+    Step 2: If category is Textbook, show Grade/Subject selection.
+    Otherwise, redirect to list.
+    """
+    category = get_object_or_404(Category, pk=category_id)
+    
+    # Check if this is a "Textbook" category (case-insensitive)
+    if category.name.lower() != 'textbook':
+        # Skip this step for non-textbooks
+        return redirect('final_book_list', category_id=category_id)
+
+    # Base Query for stats
+    books_query = Book.objects.filter(category=category)
+    if request.user.is_librarian and request.user.centre:
+        books_query = books_query.filter(centre=request.user.centre)
+    
+    # Annotate Grades and Subjects with counts
+    grades = Grade.objects.annotate(
+        num_books=Count('books', filter=Q(books__in=books_query))
+    ).order_by('name')
+    
+    subjects = Subject.objects.annotate(
+        num_books=Count('books', filter=Q(books__in=books_query))
+    ).order_by('name')
+
+    total_books = books_query.count()
+
+    return render(request, 'books/grade_subject_selector.html', {
+        'category': category,
+        'grades': grades,
+        'subjects': subjects,
+        'total_books': total_books
+    })
+
+# ---------------------------------------------------
+# NEW WORKFLOW: Step 3 - Final Book List
+# ---------------------------------------------------
+@login_required
+def final_book_list(request, category_id):
+    """
+    Step 3: The actual table list of books, filtered by Category, Grade, Subject.
+    """
+    category = get_object_or_404(Category, pk=category_id)
+    
+    # Initial Filter
+    books = Book.objects.filter(category=category)
+    
+    # Permission Filter
+    if request.user.is_librarian and request.user.centre:
+        books = books.filter(centre=request.user.centre)
+
+    # Grade/Subject Filters (from GET params or logic)
+    grade_id = request.GET.get('grade')
+    subject_id = request.GET.get('subject')
+
+    if grade_id and grade_id != 'all':
+        books = books.filter(grade_id=grade_id)
+    if subject_id and subject_id != 'all':
+        books = books.filter(subject_id=subject_id)
+
+    # Search Filter
     query = request.GET.get('q', '')
-    category_id = request.GET.get('category', '')
-    centre_id = request.GET.get('centre', '')
-    available_only = 'available' in request.GET
-
     if query:
         books = books.filter(
             Q(title__icontains=query) |
@@ -603,26 +553,16 @@ def book_list(request):
             Q(book_code__icontains=query) |
             Q(isbn__icontains=query)
         )
-    if category_id:
-        books = books.filter(category_id=category_id)
-    if centre_id and request.user.is_superuser:
-        books = books.filter(centre_id=centre_id)
+    
+    available_only = 'available' in request.GET
     if available_only:
         books = books.filter(available_copies=True)
 
     books = books.order_by('title')
 
-    # --- PAGINATION LOGIC START ---
-    allowed_page_sizes = ['10', '25', '50', '100', '500']
-    items_per_page_str = request.GET.get('items_per_page', '10')
-
-    if items_per_page_str not in allowed_page_sizes:
-        items_per_page_str = '10'
-    
-    items_per_page = int(items_per_page_str)
-    # --- PAGINATION LOGIC END ---
-
-    paginator = Paginator(books, items_per_page) # Use the dynamic items_per_page
+    # Pagination
+    items_per_page = request.GET.get('items_per_page', '10')
+    paginator = Paginator(books, int(items_per_page))
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.page(page_number)
@@ -631,18 +571,22 @@ def book_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
+    # Stats for the current view
+    total_count = books.count()
+
     return render(request, 'books/book_list.html', {
         'page_obj': page_obj,
         'books': page_obj.object_list,
-        'centres': Centre.objects.all() if request.user.is_superuser else [request.user.centre] if request.user.centre else [],
-        'categories': Category.objects.all(),
+        'category': category,
+        'selected_grade': grade_id,
+        'selected_subject': subject_id,
         'query': query,
-        'selected_category': category_id,
-        'selected_centre': centre_id,
-        'available_only': available_only,
-        'items_per_page': items_per_page, # Pass to context
-        'allowed_page_sizes': allowed_page_sizes, # Pass to context
+        'items_per_page': int(items_per_page),
+        'grades': Grade.objects.all(),
+        'subjects': Subject.objects.all(),
+        'total_count': total_count
     })
+
 @login_required
 def book_detail(request, pk):
     book = get_object_or_404(Book, pk=pk)
@@ -764,9 +708,7 @@ def sample_csv_download(request):
     response['Content-Disposition'] = 'attachment; filename="sample_book_upload.csv"'
 
     writer = csv.writer(response)
-    # --- CSV HEADER UPDATED ---
     writer.writerow(['book_title', 'author_name', 'book_code', 'isbn', 'publisher', 'pub_year'])
-    # --- SAMPLE ROW UPDATED ---
     writer.writerow([
         'Sample Book Title',
         'John Doe',
