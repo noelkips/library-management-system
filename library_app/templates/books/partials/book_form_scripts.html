@@ -1,0 +1,128 @@
+<script>
+    // ======================== REUSABLE CHAINED DROPDOWNS (2025 Edition) ========================
+    
+    // Config object – change only here if your IDs change
+    const CHAIN_CONFIG = {
+        // Single book form IDs
+        single: {
+            centre: 'id_centre',
+            school: 'id_school',
+            category: 'id_category',
+            grade: 'id_grade',
+            subject: 'id_subject',
+            gradeRequiredSpan: 'grade-required',
+            subjectRequiredSpan: 'subject-required'
+        },
+        // Bulk upload form IDs
+        bulk: {
+            centre: 'id_bulk_centre',
+            school: 'id_bulk_school',
+            category: 'id_bulk_category',
+            grade: 'id_bulk_grade',
+            subject: 'id_bulk_subject',
+            gradeRequiredSpan: 'bulk-grade-required',
+            subjectRequiredSpan: 'bulk-subject-required'
+        }
+    };
+    
+    function populateSelect(selectEl, items, valueKey = 'id', textKey = 'name', placeholder = '-- Select --') {
+        selectEl.innerHTML = `<option value="">${placeholder}</option>`;
+        items.forEach(item => {
+            const opt = new Option(item[textKey], item[valueKey]);
+            selectEl.add(opt);
+        });
+    }
+    
+    function clearSelects(...selectEls) {
+        selectEls.forEach(el => {
+            if (el) el.innerHTML = '<option value="">-- Select --</option>';
+        });
+    }
+    
+    // Main chaining function – works for both single & bulk
+    function initChainedDropdowns(mode = 'single') {
+        const c = CHAIN_CONFIG[mode];
+    
+        const centreEl     = document.getElementById(c.centre);
+        const schoolEl     = document.getElementById(c.school);
+        const categoryEl   = document.getElementById(c.category);
+        const gradeEl      = document.getElementById(c.grade);
+        const subjectEl    = document.getElementById(c.subject);
+    
+        // Centre → School
+        centreEl?.addEventListener('change', () => {
+            const centreId = centreEl.value;
+            if (!centreId) {
+                clearSelects(schoolEl, categoryEl, gradeEl, subjectEl);
+                return;
+            }
+            fetch(`/ajax/load-schools/?centre_id=${centreId}`)
+                .then(r => r.json())
+                .then(data => {
+                    populateSelect(schoolEl, data.schools, 'id', 'name', mode === 'bulk' ? '-- Any School --' : '-- Select School --');
+                    clearSelects(categoryEl, gradeEl, subjectEl);
+                });
+        });
+    
+        // School → Category
+        schoolEl?.addEventListener('change', () => {
+            const schoolId = schoolEl.value;
+            if (!schoolId) {
+                clearSelects(categoryEl, gradeEl, subjectEl);
+                return;
+            }
+            fetch(`/ajax/load-categories/?school_id=${schoolId}`)
+                .then(r => r.json())
+                .then(data => {
+                    populateSelect(categoryEl, data.categories, 'id', 'name', '-- Select Category --');
+                    clearSelects(gradeEl, subjectEl);
+                });
+        });
+    
+        // Category → Grade + Textbook validation
+        categoryEl?.addEventListener('change', () => {
+            const categoryId = categoryEl.value;
+            if (!categoryId) {
+                clearSelects(gradeEl, subjectEl);
+                return;
+            }
+    
+            fetch(`/ajax/load-grades/?category_id=${categoryId}`)
+                .then(r => r.json())
+                .then(data => {
+                    populateSelect(gradeEl, data.grades, 'id', 'name', mode === 'bulk' ? '-- Any Grade --' : '-- Select Grade --');
+                    subjectEl.innerHTML = '<option value="">-- Select Subject --</option>';
+                });
+    
+            // Textbook required fields logic
+            const isTextbook = categoryEl.selectedOptions[0]?.text.toLowerCase() === 'textbook';
+            const gradeReq = document.getElementById(c.gradeRequiredSpan);
+            const subjectReq = document.getElementById(c.subjectRequiredSpan);
+    
+            if (gradeReq) gradeReq.classList.toggle('hidden', !isTextbook);
+            if (subjectReq) subjectReq.classList.toggle('hidden', !isTextbook);
+            if (gradeEl) gradeEl.required = isTextbook;
+            if (subjectEl) subjectEl.required = isTextbook;
+        });
+    
+        // Grade → Subject
+        gradeEl?.addEventListener('change', () => {
+            const gradeId = gradeEl.value;
+            if (!gradeId) {
+                subjectEl.innerHTML = '<option value="">-- Select Subject --</option>';
+                return;
+            }
+            fetch(`/ajax/load-subjects/?grade_id=${gradeId}`)
+                .then(r => r.json())
+                .then(data => {
+                    populateSelect(subjectEl, data.subjects, 'id', 'name', mode === 'bulk' ? '-- Any Subject --' : '-- Select Subject --');
+                });
+        });
+    }
+    
+    // Initialise both forms automatically when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        initChainedDropdowns('single');   // for normal add/update form
+        initChainedDropdowns('bulk');     // for bulk upload tab
+    });
+    </script>

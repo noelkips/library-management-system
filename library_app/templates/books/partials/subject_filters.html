@@ -1,0 +1,6 @@
+<select name="subject" class="form-select">
+    <option value="all">All Subjects</option>
+    {% for sub in subjects %}
+    <option value="{{ sub.id }}" {% if selected_subject == sub.id %}selected{% endif %}>{{ sub.name }}</option>
+    {% endfor %}
+</select>

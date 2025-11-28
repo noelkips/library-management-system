@@ -103,7 +103,6 @@ def logout_view(request):
     messages.success(request, "You have been logged out successfully.")
     return redirect('login_view')
 
-
 @login_required
 def dashboard(request):
     user = request.user
@@ -293,73 +292,39 @@ def dashboard(request):
 
     return render(request, 'auth/dashboard.html', context)
 
-    
-def get_monthly_borrow_trends(centre=None):
-    """
-    Get monthly borrow trends for the last 6 months
-    Returns dict with 'labels' and 'data' arrays
-    """
-    now = timezone.now()
-    six_months_ago = now - timedelta(days=180)
-    
-    # Get borrows from last 6 months
-    borrows_query = Borrow.objects.filter(
-        request_date__gte=six_months_ago
-    )
-    
-    if centre:
-        borrows_query = borrows_query.filter(centre=centre)
-    
-    # Group by month
-    monthly_counts = defaultdict(int)
-    for borrow in borrows_query:
-        month_key = borrow.request_date.strftime('%Y-%m')
-        monthly_counts[month_key] += 1
-    
-    # Generate labels for last 6 months
-    labels = []
-    data = []
-    for i in range(5, -1, -1):
-        date = now - timedelta(days=30 * i)
-        month_key = date.strftime('%Y-%m')
-        month_label = date.strftime('%b %Y')
-        labels.append(month_label)
-        data.append(monthly_counts.get(month_key, 0))
-    
-    return {
-        'labels': labels,
-        'data': data
-    }
 
+# ─────────────────────────────────────────────────────────────────────
+# FIXED: Dashboard helper functions (works with Book → subject__category)
+# ─────────────────────────────────────────────────────────────────────
 
 def get_category_distribution(centre=None):
     """
-    Get distribution of books by category
+    Get distribution of books by category via subject__category
     Returns dict with 'labels' and 'data' arrays
     """
-    books_query = Book.objects.filter(is_active=True)
+    books_query = Book.objects.filter(is_active=True).select_related('subject__category')
     
     if centre:
         books_query = books_query.filter(centre=centre)
     
-    # Group by category
+    # Correct join: Book → Subject → Category
     category_counts = books_query.values(
-        'category__name'
+        'subject__category__name'
     ).annotate(
         count=Count('id')
     ).order_by('-count')[:6]  # Top 6 categories
-    
+
     labels = []
     data = []
     
     for item in category_counts:
-        category_name = item['category__name'] or 'Uncategorized'
+        category_name = item['subject__category__name'] or 'Uncategorized'
         labels.append(category_name)
         data.append(item['count'])
     
-    # If no data, provide default
+    # Fallback if no books
     if not labels:
-        labels = ['No Categories']
+        labels = ['No Books Yet']
         data = [0]
     
     return {
@@ -370,44 +335,57 @@ def get_category_distribution(centre=None):
 
 def get_centre_performance():
     """
-    Get performance metrics for top 5 centres
-    Returns dict with 'labels', 'books', and 'borrows' arrays
+    Top centres by number of borrows
     """
     centres = Centre.objects.annotate(
-        book_count=Count('books', filter=Q(books__is_active=True)),
         borrow_count=Count('borrows')
-    ).order_by('-borrow_count')[:5]
-    
-    labels = []
-    books = []
-    borrows = []
-    
-    for centre in centres:
-        labels.append(centre.name[:15])  # Truncate long names
-        books.append(centre.book_count)
-        borrows.append(centre.borrow_count)
-    
+    ).order_by('-borrow_count')[:10]
+
     return {
-        'labels': labels,
-        'books': books,
-        'borrows': borrows
+        'labels': [c.name for c in centres],
+        'borrows': [c.borrow_count for c in centres],
     }
 
 
 def get_top_borrowed_books(limit=10):
     """
-    Get top borrowed books across the system
-    Returns queryset of books with borrow_count
+    Top borrowed books (with title, author, subject info)
     """
-    books = Book.objects.filter(
-        is_active=True
-    ).annotate(
-        borrow_count=Count('borrows')
-    ).filter(
-        borrow_count__gt=0
-    ).order_by('-borrow_count')[:limit]
+    return Book.objects.filter(is_active=True)\
+        .annotate(borrow_count=Count('borrows'))\
+        .filter(borrow_count__gt=0)\
+        .select_related('subject', 'subject__category', 'subject__grade')\
+        .order_by('-borrow_count')[:limit]
+
+
+def get_monthly_borrow_trends(centre=None):
+    """
+    Monthly borrow trends for last 6 months
+    """
+    from collections import defaultdict
+    now = timezone.now()
+    six_months_ago = now - timedelta(days=180)
     
-    return books
+    borrows = Borrow.objects.filter(request_date__gte=six_months_ago)
+    if centre:
+        borrows = borrows.filter(centre=centre)
+    
+    monthly_counts = defaultdict(int)
+    for b in borrows:
+        key = b.request_date.strftime('%Y-%m')
+        monthly_counts[key] += 1
+    
+    labels = []
+    data = []
+    current = now.replace(day=1)
+    for i in range(5, -1, -1):
+        month_date = (current - timedelta(days=30 * i))
+        key = month_date.strftime('%Y-%m')
+        label = month_date.strftime('%b %Y')
+        labels.append(label)
+        data.append(monthly_counts.get(key, 0))
+    
+    return {'labels': labels, 'data': data}
 
 @login_required
 def profile(request):

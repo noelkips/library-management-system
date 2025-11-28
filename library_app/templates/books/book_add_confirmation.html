@@ -1,0 +1,65 @@
+<!-- templates/books/book_add_confirmation.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Success Header -->
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+                <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Books Added Successfully!</h1>
+            <p class="text-xl text-gray-600">Total: <strong>{{ total_added }}</strong> book(s) added</p>
+        </div>
+
+        <!-- Breadcrumb Title -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8 border-l-8 border-green-600">
+            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                <span class="text-green-600">Added to:</span>
+                <span class="ml-4 text-gray-700">{{ page_title }}</span>
+            </h2>
+        </div>
+
+        <!-- Books Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for book in books %}
+            <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition p-6 border border-gray-200">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-lg font-bold text-gray-800 flex-1">{{ book.title }}</h3>
+                    <span class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">New</span>
+                </div>
+                <p class="text-gray-600 text-sm">by {{ book.author }}</p>
+                <div class="mt-4 pt-4 border-t border-gray-200 space-y-2 text-sm">
+                    <p><strong>Code:</strong> <span class="font-mono text-blue-600">{{ book.book_id }}</span></p>
+                    <p><strong>ISBN:</strong> {{ book.isbn|default:"—" }}</p>
+                    <p><strong>Subject:</strong> {{ book.subject_name }}</p>
+                    <p><strong>Grade:</strong> {{ book.grade_name }}</p>
+                </div>
+                <div class="mt-4">
+                    <a href="{% url 'book_detail' book.pk %}" class="text-blue-600 hover:underline text-sm font-semibold">
+                        View Details →
+                    </a>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-center text-gray-500 col-span-3">No books were added in this session.</p>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-12">
+            <a href="{% url 'book_add' %}" class="inline-block px-8 py-4 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold shadow-lg transition mr-4">
+                Add More Books
+            </a>
+            <a href="{% url 'book_list' %}" class="inline-block px-8 py-4 bg-gray-600 text-white rounded-xl hover:bg-gray-700 font-bold transition">
+                Go to Full Library
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

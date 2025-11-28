@@ -1,7 +1,8 @@
 from simple_history.models import HistoricalRecords
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, Group, Permission
 from django.contrib.auth.base_user import BaseUserManager
-from django.db import models
+from django.db import models, transaction
+from django.db.models import F
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
@@ -12,22 +13,91 @@ from django.core.exceptions import ValidationError
 import re
 from datetime import datetime
 
+from django.db import models
+from django.core.exceptions import ValidationError
+from simple_history.models import HistoricalRecords
+import re
+from datetime import datetime
+from django.db import transaction
+from django.db import models
+from django.core.exceptions import ValidationError
 
+# 1. Centre (Top Level)
 class Centre(models.Model):
     name = models.CharField(max_length=300)
     centre_code = models.CharField(max_length=30, unique=True)
 
     def __str__(self):
-        return f"{self.name} ({self.centre_code})"
+        return self.name
 
+# 2. Grade (Global)
+# Define grades ONCE (e.g., "Grade 1", "Grade 2")
+class Grade(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    
+    # Ordering helps display them correctly (1, 2, 3...)
+    order = models.PositiveIntegerField(default=0) 
 
-class School(models.Model):
-    name = models.CharField(max_length=300)
-    school_code = models.CharField(max_length=30, unique=True)
-    centre = models.ForeignKey(Centre, on_delete=models.CASCADE)
+    class Meta:
+        ordering = ['order', 'name']
 
     def __str__(self):
-        return f"{self.name} ({self.school_code})"
+        return self.name
+
+# 3. School (Location)
+class School(models.Model):
+    name = models.CharField(max_length=300)
+    centre = models.ForeignKey(Centre, on_delete=models.CASCADE, related_name='schools')
+    
+    # CONFIGURATION: Admin selects which Global Grades this school offers.
+    # This creates the logical link: School > Grade
+    active_grades = models.ManyToManyField(Grade, related_name='schools', blank=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.centre.name})"
+
+# 4. Category (Global)
+# Define categories ONCE (e.g., "Textbook", "Fiction", "Revision")
+class Category(models.Model):
+    name = models.CharField(max_length=200, unique=True)
+    
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
+# 5. Subject (Global)
+# This implements: Category > Subject AND Grade > Subject
+class Subject(models.Model):
+    name = models.CharField(max_length=200) # e.g., "Mathematics"
+    
+    # Hierarchy: Subject belongs to a specific Category and Grade
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subjects')
+    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='subjects')
+
+    class Meta:
+        # Ensures "Grade 1 - Textbook - Math" is unique
+        unique_together = ('name', 'grade', 'category') 
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.grade.name} {self.category.name})"
+
+
+
+
+# Book ID Sequence
+class BookIDSequence(models.Model):
+    centre = models.ForeignKey(Centre, on_delete=models.CASCADE)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE, null=True, blank=True)
+    last_number = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('centre', 'subject')
+
+    def __str__(self):
+        return f"{self.centre} - {self.subject or 'General'} (#{self.last_number})"
 
 
 class CustomUserManager(BaseUserManager):
@@ -89,148 +159,128 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email or "Unnamed User"
-
-
-class Category(models.Model):
-    """Book categories for better organization"""
-    name = models.CharField(max_length=200, unique=True)
-    description = models.TextField(blank=True, null=True)
-
-    class Meta:
-        verbose_name_plural = "Categories"
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-class Grade(models.Model):
-    name = models.CharField(max_length=200, unique=True)
-   
-    class Meta:
-        verbose_name_plural = "Grades"
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-    
-class Subject(models.Model):
-    name = models.CharField(max_length=200, unique=True)
-   
-    class Meta:
-        verbose_name_plural = "Subjects"
-        ordering = ['name']
-
-    def __str__(self):
-        return self.name
-
-
+# 6. Book (Physical Item)
+# book > subject
 class Book(models.Model):
     title = models.CharField(max_length=300)
     author = models.CharField(max_length=200)
-    category = models.ForeignKey(
-        'Category',
-        on_delete=models.SET_NULL,
-        null=True,
-        related_name='books'
+    
+    # CONTENT: Defined by the Global Subject (CORRECT)
+    subject = models.ForeignKey(Subject, on_delete=models.PROTECT, related_name='books')
+    
+    # LOCATION: Where is this physical copy? (CORRECT)
+    school = models.ForeignKey(School, on_delete=models.CASCADE, related_name='books')
+    
+    # The redundant 'centre' definition is removed here: 
+    # The next two 'centre' fields were duplicated and need to be fixed.
+    # Keep one 'centre' field and use it correctly.
+    centre = models.ForeignKey(
+        Centre, on_delete=models.SET_NULL, null=True, blank=True, related_name='books'
     )
-    # New Fields
-    grade = models.ForeignKey(
-        'Grade',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='books'
-    )
-    subject = models.ForeignKey(
-        'Subject',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='books'
-    )
-    # End New Fields
-    book_code = models.CharField(max_length=50, blank=True, null=True)
+
     isbn = models.CharField(max_length=50)
+    book_code = models.CharField(max_length=50, blank=True, null=True)
     book_id = models.CharField(max_length=100, unique=True, blank=True)
     publisher = models.CharField(max_length=200)
     year_of_publication = models.PositiveIntegerField()
-    available_copies = models.BooleanField(default=True)
-    centre = models.ForeignKey(
-        'Centre', on_delete=models.SET_NULL, null=True, related_name='books')
-    added_by = models.ForeignKey(
-        'CustomUser', on_delete=models.SET_NULL, null=True, related_name='books_added')
+    # The redundant centre field is removed: centre = models.ForeignKey(Centre, ...)
+    added_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True)
     is_active = models.BooleanField(default=True)
+    available_copies = models.BooleanField(default=True)
     history = HistoricalRecords()
 
     class Meta:
-        unique_together = ('book_code', 'centre')
+        ordering = ['title']
+        indexes = [
+            models.Index(fields=['subject']),
+            models.Index(fields=['centre']),
+        ]
 
     def clean(self):
-        # Mandatory validation for Textbook Category
-        if self.category and self.category.name.lower() == 'textbook':
-            if not self.grade:
-                raise ValidationError({'grade': 'Grade is mandatory for books in the Textbook category.'})
+        # 1. Centre assignment must come from School, not Subject (Subject is Global)
+        if self.school:
+            self.centre = self.school.centre
+        # Remove the incorrect logic: if self.subject: self.centre = self.subject.centre 
+        
+        # 2. Textbook validation (CORRECT)
+        if self.subject and self.subject.category.name.lower() == "textbook":
             if not self.subject:
-                raise ValidationError({'subject': 'Subject is mandatory for books in the Textbook category.'})
+                # This line is redundant since the outer if ensures self.subject exists, 
+                # but it causes no harm.
+                raise ValidationError("Textbook must have a Subject")
 
-        if self.year_of_publication and (self.year_of_publication < 1500 or self.year_of_publication > 2025):
-            raise ValidationError({'year_of_publication': 'Year must be between 1500 and 2025.'})
-        if not self.isbn:
-            raise ValidationError({'isbn': 'ISBN is required.'})
-        if len(self.isbn) < 8 or len(self.isbn) > 18:
-            raise ValidationError({'isbn': 'ISBN must be between 8 and 18 characters.'})
+        # 3. ISBN validation (FINE)
+        if len(self.isbn) < 4 or len(self.isbn) > 18:
+            raise ValidationError("ISBN must be 4–18 characters")
+        
+        # 4. School/Grade Configuration Validation (PERFECT)
+        if self.school and self.subject:
+            if self.subject.grade not in self.school.active_grades.all():
+                raise ValidationError(
+                    f"The school '{self.school.name}' is not configured for {self.subject.grade.name}."
+                )
+
 
     def save(self, *args, **kwargs):
-        # Call clean to ensure validation runs on save
         self.clean()
         
-        # For simple-history user tracking
-        if 'user' in kwargs:
-            setattr(self, '_history_user', kwargs.pop('user'))
+        # The logic to set centre from school is now handled in clean(), 
+        # but repeating it here is a safe redundancy.
+        if self.school:
+             self.centre = self.school.centre
+        # Remove the incorrect logic: if self.subject and not self.centre: self.centre = self.subject.centre
 
-        # Generate book_id only on creation
-        if not self.book_id and self.centre and self.category:
-            centre_part = self.centre.name[:4].lower()
-            category_part = self.category.name[:4].lower()
-            current_year = str(datetime.now().year)
+        # Auto-generate book_id (Requires `self.centre` to be set, which it is from `self.school`)
+        if not self.pk and not self.book_id and self.centre:
+            with transaction.atomic():
+                seq, _ = BookIDSequence.objects.get_or_create(
+                    centre=self.centre,
+                    subject=self.subject,
+                    defaults={'last_number': 0}
+                )
+                seq.last_number += 1
+                seq.save()
 
-            # Find last running number for this centre+category
-            last_book = Book.objects.filter(
-                centre=self.centre,
-                category=self.category
-            ).order_by('id').last()
+                centre_prefix = re.sub(r'[^A-Z0-9]', '', self.centre.name.upper())[:4].ljust(4, 'X')
+                subject_prefix = re.sub(r'[^A-Z0-9]', '', (self.subject.name or "MISC").upper())[:4].ljust(4, 'X')
 
-            if last_book and last_book.book_id:
-                try:
-                    # Extract running number
-                    last_number = int(last_book.book_id.split('/')[2])
-                    next_number = f"{last_number + 1:04d}"
-                except:
-                    next_number = "0001"
-            else:
-                next_number = "0001"
-
-            self.book_id = f"{centre_part}/{category_part}/{next_number}/{current_year}"
+                self.book_id = f"{centre_prefix}/{subject_prefix}/{seq.last_number:04d}/{datetime.now().year}"
 
         super().save(*args, **kwargs)
 
-    def update_available_copies(self):
-        """Update available_copies based on issued borrows."""
-        issued_copies = Borrow.objects.filter(
-            book=self,
-            status='issued'
-        ).exists()
-        self.available_copies = not issued_copies
-        super().save()
+    # Properties for easy access (CLEANED UP)
+    @property
+    def category(self): 
+        # Correctly follows Book -> Subject -> Category
+        return self.subject.category if self.subject else None
+    
+    @property
+    def grade(self): 
+        # Correctly follows Book -> Subject -> Grade
+        return self.subject.grade if self.subject else None
+    
+    @property
+    def school_accessor(self): 
+        # Use a new name as the old @property was incorrect and conflicted with the field.
+        return self.school if self.school else None
 
-    def is_available(self):
-        return self.available_copies
+    @property
+    def category_name(self): 
+        return self.category.name if self.category else "—"
+    @property
+    def grade_name(self):
+        return self.grade.name if self.grade else "—"
+    @property
+    def school_name(self):
+        return self.school.name if self.school else "—"
+    @property
+    def subject_name(self):
+        return self.subject.name if self.subject else "No Subject"
 
     def __str__(self):
-        centre_name = self.centre.name if self.centre and self.centre.name else "No Centre"
-        return f"{self.title} ({self.book_code}) - {centre_name}"
+        return f"{self.title} | {self.subject_name} | {self.grade_name} | {self.school_name}"
 
-        
+#   
 class Student(models.Model):
     GRADE_CHOICES = [
         ('K', 'Kindergarten'),

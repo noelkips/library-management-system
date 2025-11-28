@@ -1,199 +1,121 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Update Book - LibraryHub{% endblock %}
+{% block title %}Update Book{% endblock %}
 
 {% block content %}
-<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 animate-fade-in">
-    {% if messages %}
-        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
-            {% for message in messages %}
-                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-lg animate-slide-in-right" role="alert">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                            {% if message.tags == 'success' or message.tags == 'green' %}
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            {% else %}
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                                </svg>
-                            {% endif %}
-                        </div>
-                        <div class="ml-3 flex-1">
-                            <p class="text-sm font-medium">{{ message|safe }}</p>
-                        </div>
-                        <button onclick="this.parentElement.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-70 hover:opacity-100">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+<div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">Update Book</h1>
 
-    <div class="mb-8">
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
-            <svg class="w-8 h-8 sm:w-10 sm:h-10 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-            </svg>
-            Update Book
-        </h1>
-        <p class="text-gray-600 mt-2 text-base sm:text-lg">Edit details for "{{ book.title }}"</p>
-    </div>
-
-    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-100">
+    <div class="bg-white shadow-lg rounded-lg p-8">
         <form method="post" class="space-y-6">
             {% csrf_token %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div class="sm:col-span-2 lg:col-span-3">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Title *
-                    </label>
-                    <input type="text" name="title" id="title" value="{{ form_data.title|default_if_none:book.title }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Author *
-                    </label>
-                    <input type="text" name="author" id="author" value="{{ form_data.author|default_if_none:book.author }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                </div>
+            <!-- Centre (Superuser only, otherwise hidden) -->
+            {% if user.is_superuser %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Centre <span class="text-red-500">*</span></label>
+                <select name="centre" id="id_centre" class="form-select w-full border-gray-300 rounded-md" required>
+                    {% for centre in centres %}
+                    <option value="{{ centre.id }}" {% if centre.id == book.centre.id %}selected{% endif %}>
+                        {{ centre.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-600 mb-4">Centre: <strong>{{ book.centre.name }}</strong></p>
+            <input type="hidden" name="centre" value="{{ book.centre.id }}">
+            {% endif %}
 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Book Code
-                    </label>
-                    <input type="text" name="book_code" id="book_code" value="{{ form_data.book_code|default_if_none:book.book_code|default:'' }}" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        ISBN *
-                    </label>
-                    <input type="text" name="isbn" id="isbn" value="{{ form_data.isbn|default_if_none:book.isbn }}" required minlength="8" maxlength="18" pattern=".{8,18}" title="ISBN must be between 8 and 18 characters" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Category *
-                    </label>
-                    <select name="category" id="category" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                        <option value="">Select Category</option>
-                        {% for category in categories %}
-                            <option value="{{ category.id }}" data-name="{{ category.name|lower }}" {% if form_data.category == category.id|stringformat:"s" or book.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">School</label>
+                    <select name="school" id="id_school" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="">-- Select School --</option>
+                        {% for school in schools %}
+                        <option value="{{ school.id }}" {% if book.school and school.id == book.school.id %}selected{% endif %}>
+                            {{ school.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div id="grade_container" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Grade *
-                    </label>
-                    <select name="grade" id="grade" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                        <option value="">Select Grade</option>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+                    <select name="category" id="id_category" class="form-select w-full border-gray-300 rounded-md" required>
+                        <option value="">-- Select Category --</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}" {% if book.category and cat.id == book.category.id %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Grade <span id="grade-required" class="text-red-500 hidden">* Required</span></label>
+                    <select name="grade" id="id_grade" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="">-- Select Grade --</option>
                         {% for grade in grades %}
-                            <option value="{{ grade.id }}" {% if form_data.grade == grade.id|stringformat:"s" or book.grade_id == grade.id %}selected{% endif %}>{{ grade.name }}</option>
+                        <option value="{{ grade.id }}" {% if book.grade and grade.id == book.grade.id %}selected{% endif %}>
+                            {{ grade.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div id="subject_container" class="hidden">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Subject *
-                    </label>
-                    <select name="subject" id="subject" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                        <option value="">Select Subject</option>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject <span id="subject-required" class="text-red-500 hidden">* Required</span></label>
+                    <select name="subject" id="id_subject" class="form-select w-full border-gray-300 rounded-md">
+                        <option value="">-- Select Subject --</option>
                         {% for subject in subjects %}
-                            <option value="{{ subject.id }}" {% if form_data.subject == subject.id|stringformat:"s" or book.subject_id == subject.id %}selected{% endif %}>{{ subject.name }}</option>
+                        <option value="{{ subject.id }}" {% if book.subject and subject.id == book.subject.id %}selected{% endif %}>
+                            {{ subject.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Publication Year *
-                    </label>
-                    <input type="number" name="year_of_publication" id="year_of_publication" value="{{ form_data.year_of_publication|default_if_none:book.year_of_publication }}" required max="2025" min="1500" class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Publisher *
-                    </label>
-                    <input type="text" name="publisher" id="publisher" value="{{ form_data.publisher|default_if_none:book.publisher }}" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                </div>
-
-                {% if user.is_superuser %}
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                        Centre *
-                    </label>
-                    <select name="centre" id="centre" required class="w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C86450] hover:border-gray-400 transition-all">
-                        <option value="">Select Centre</option>
-                        {% for centre in centres %}
-                            <option value="{{ centre.id }}" {% if form_data.centre == centre.id|stringformat:"s" or book.centre_id == centre.id %}selected{% endif %}>{{ centre.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                {% endif %}
             </div>
 
-            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
-                <a href="{% url 'book_list' %}" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 text-center transition-all transform hover:scale-105 font-medium shadow-sm">
-                    Cancel
-                </a>
-                <button type="submit" class="flex-1 bg-secondary text-white py-3 rounded-lg hover:bg-accent transition-all transform hover:scale-105 shadow-lg font-medium flex items-center justify-center">
-                    Update Book
-                </button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Title <span class="text-red-500">*</span></label>
+                    <input type="text" name="title" value="{{ book.title }}" class="form-input w-full border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Author <span class="text-red-500">*</span></label>
+                    <input type="text" name="author" value="{{ book.author }}" class="form-input w-full border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">ISBN <span class="text-red-500">*</span></label>
+                    <input type="text" name="isbn" value="{{ book.isbn }}" class="form-input w-full border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Publisher <span class="text-red-500">*</span></label>
+                    <input type="text" name="publisher" value="{{ book.publisher }}" class="form-input w-full border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Publication Year <span class="text-red-500">*</span></label>
+                    <input type="number" name="year_of_publication" value="{{ book.year_of_publication }}" min="1500" max="2030" class="form-input w-full border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Book Code</label>
+                    <input type="text" name="book_code" value="{{ book.book_code|default:'' }}" class="form-input w-full border-gray-300 rounded-md">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-4 pt-6">
+                <a href="{% url 'final_book_list' book.category.id %}" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Update Book</button>
             </div>
         </form>
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const isbnInput = document.getElementById('isbn');
-        if(isbnInput) {
-            isbnInput.addEventListener('input', function() {
-                const value = this.value;
-                if (value.length < 8 || value.length > 18) {
-                    this.setCustomValidity('ISBN must be between 8 and 18 characters.');
-                } else {
-                    this.setCustomValidity('');
-                }
-            });
-        }
+{% include 'books/partials/book_form_scripts.html' %}
 
-        const catSelect = document.getElementById('category');
-        const gradeDiv = document.getElementById('grade_container');
-        const subjectDiv = document.getElementById('subject_container');
-        const gradeSelect = document.getElementById('grade');
-        const subjectSelect = document.getElementById('subject');
 
-        function checkCategory() {
-            const selectedOption = catSelect.options[catSelect.selectedIndex];
-            const catName = selectedOption.getAttribute('data-name');
-            
-            if (catName === 'textbook') {
-                gradeDiv.classList.remove('hidden');
-                subjectDiv.classList.remove('hidden');
-                gradeSelect.required = true;
-                subjectSelect.required = true;
-            } else {
-                gradeDiv.classList.add('hidden');
-                subjectDiv.classList.add('hidden');
-                gradeSelect.required = false;
-                subjectSelect.required = false;
-            }
-        }
 
-        if(catSelect) {
-            catSelect.addEventListener('change', checkCategory);
-            checkCategory(); // Run on load
-        }
-    });
-</script>
+
 {% endblock %}

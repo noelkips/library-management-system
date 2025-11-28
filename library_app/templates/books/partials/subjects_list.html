@@ -1,0 +1,12 @@
+{% if subjects %}
+<div class="space-y-2">
+    {% for subject in subjects %}
+    <a href="{% url 'final_book_list' category.id %}?grade={{ grade_id|default:'' }}&subject={{ subject.id }}"
+       class="block p-3 rounded hover:bg-green-50 transition">
+        {{ subject.name }} <span class="text-gray-500 float-right">({{ subject.num_books }})</span>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<p class="text-gray-500 italic">Select a grade to see subjects</p>
+{% endif %}

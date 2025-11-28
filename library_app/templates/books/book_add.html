@@ -1,228 +1,221 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Add Book - LibraryHub{% endblock %}
+{% block title %}Add Books{% endblock %}
 
 {% block content %}
-<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
-    {# --- Messages Section --- #}
-    {% if messages %}
-        <div class="fixed top-4 right-4 z-50 space-y-2 max-w-md">
-            {% for message in messages %}
-                <div class="{% if message.tags == 'success' or message.tags == 'green' %}bg-green-50 border-l-4 border-green-500 text-green-800{% elif message.tags == 'error' %}bg-red-50 border-l-4 border-red-500 text-red-800{% else %}bg-blue-50 border-l-4 border-blue-500 text-blue-800{% endif %} p-4 rounded-lg shadow-md animate-slide-in-right flex items-start" role="alert">
-                    <div class="flex-shrink-0">
-                        {% if message.tags == 'success' or message.tags == 'green' %}
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                        {% else %}
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-                        {% endif %}
-                    </div>
-                    <div class="ml-3 flex-1 pt-0.5">
-                        <p class="text-sm font-medium">{{ message|safe }}</p>
-                    </div>
-                    <button onclick="this.parentElement.remove()" class="ml-auto flex-shrink-0 text-current opacity-60 hover:opacity-100 transition-opacity">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                    </button>
-                </div>
-            {% endfor %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4">
+    <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Add New Books</h1>
+            <p class="text-lg text-gray-600">Single book or bulk upload — fast, smart, and beautiful</p>
         </div>
-    {% endif %}
 
-    {# --- Page Header --- #}
-    <div class="mb-10 md:flex md:items-center md:justify-between">
-        <div class="flex-1 min-w-0">
-            <h1 class="text-3xl sm:text-4xl font-extrabold text-primary flex items-center">
-                <svg class="w-10 h-10 mr-3 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
-                </svg>
-                Add New Book
-            </h1>
-            <p class="text-gray-600 mt-2 text-lg max-w-3xl">Expand the library collection by adding a single title or uploading a bulk dataset.</p>
-        </div>
-    </div>
-
-    <div class="bg-white p-6 sm:p-8 lg:p-10 rounded-2xl shadow-xl border border-gray-100/80">
-        
-        {# --- Section 1: Single Book Entry --- #}
-        <div class="mb-12">
-            <div class="border-b border-gray-200 pb-4 mb-6">
-                 <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    Single Book Entry
-                </h2>
+        <!-- Tabs -->
+        <div class="flex justify-center mb-10">
+            <div class="bg-white rounded-xl shadow-lg p-1 inline-flex">
+                <button onclick="switchTab('single')" id="tab-single" class="tab-btn active px-8 py-3 rounded-lg font-semibold transition bg-blue-600 text-white">Single Book</button>
+                <button onclick="switchTab('bulk')" id="tab-bulk" class="tab-btn px-8 py-3 rounded-lg font-semibold transition">Bulk Upload</button>
             </div>
-           
-            <form method="post" class="space-y-8">
+        </div>
+
+        <!-- SINGLE BOOK FORM -->
+        <div id="single-tab" class="tab-content">
+            <form method="post" class="bg-white rounded-3xl shadow-2xl p-10 space-y-8">
                 {% csrf_token %}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                    <div class="sm:col-span-2 lg:col-span-3">
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="title">Title *</label>
-                        <input type="text" name="title" id="title" value="{{ form_data.title|default_if_none:'' }}" required class="form-input w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm" placeholder="e.g., The Great Gatsby">
-                    </div>
 
-                    <div class="sm:col-span-2 lg:col-span-1">
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="author">Author *</label>
-                        <input type="text" name="author" id="author" value="{{ form_data.author|default_if_none:'' }}" required class="form-input w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm" placeholder="e.g., F. Scott Fitzgerald">
-                    </div>
-
+                <!-- Centre (Superuser only) -->
+                {% if user.is_superuser %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="isbn">ISBN *</label>
-                        <input type="text" name="isbn" id="isbn" value="{{ form_data.isbn|default_if_none:'' }}" required minlength="8" maxlength="18" pattern=".{8,18}" class="form-input w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm" placeholder="8-18 characters">
-                    </div>
-                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="book_code">Book Code</label>
-                        <input type="text" name="book_code" id="book_code" value="{{ form_data.book_code|default_if_none:'' }}" class="form-input w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm" placeholder="Optional internal code">
-                    </div>
-
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="category">Category *</label>
-                        <select name="category" id="category" required class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm">
-                            <option value="">Select Category</option>
-                            {% for category in categories %}
-                                <option value="{{ category.id }}" data-name="{{ category.name|lower }}" {% if form_data.category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Centre <span class="text-red-500">*</span></label>
+                        <select name="centre" id="id_centre" onchange="loadSchools()" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Centre --</option>
+                            {% for c in centres %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">School <span class="text-red-500">*</span></label>
+                        <select name="school" id="id_school" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select School --</option>
+                        </select>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg">
+                    <p class="text-lg font-bold">Centre: {{ user.centre.name }}</p>
+                    <p class="text-sm opacity-90">School: <span id="librarian-school-name">Select below</span></p>
+                    <input type="hidden" name="centre" value="{{ user.centre.id }}">
+                </div>
+                <div class="mt-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">School <span class="text-red-500">*</span></label>
+                    <select name="school" id="id_school" required onchange="document.getElementById('librarian-school-name').textContent = this.options[this.selectedIndex].text" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                        <option value="">-- Select School --</option>
+                        {% for s in user.centre.schools.all %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
 
-                    <div id="grade_container" class="hidden transition-all duration-300">
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="grade">Grade *</label>
-                        <select name="grade" id="grade" class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm">
-                            <option value="">Select Grade</option>
-                            {% for grade in grades %}
-                                <option value="{{ grade.id }}" {% if form_data.grade == grade.id|stringformat:"s" %}selected{% endif %}>{{ grade.name }}</option>
+                <!-- Category → Grade → Subject (Smart Chained) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+                        <select name="category" id="id_category" onchange="toggleGradeSubject()" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Category --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-
-                    <div id="subject_container" class="hidden transition-all duration-300">
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="subject">Subject *</label>
-                        <select name="subject" id="subject" class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm">
-                            <option value="">Select Subject</option>
-                            {% for subject in subjects %}
-                                <option value="{{ subject.id }}" {% if form_data.subject == subject.id|stringformat:"s" %}selected{% endif %}>{{ subject.name }}</option>
+                    <div id="grade-row" class="hidden">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Grade <span class="text-red-500">*</span></label>
+                        <select name="grade" id="id_grade" onchange="loadSubjects()" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Grade --</option>
+                            {% for g in grades %}
+                            <option value="{{ g.id }}">{{ g.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="year_of_publication">Publication Year *</label>
-                        <input type="number" name="year_of_publication" id="year_of_publication" value="{{ form_data.year_of_publication|default_if_none:'' }}" required max="2025" min="1500" class="form-input w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm" placeholder="YYYY">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="publisher">Publisher *</label>
-                        <input type="text" name="publisher" id="publisher" value="{{ form_data.publisher|default_if_none:'' }}" required class="form-input w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm">
-                    </div>
-
-                    {% if user.is_superuser %}
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="centre">Centre *</label>
-                        <select name="centre" id="centre" required class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm">
-                            <option value="">Select Centre</option>
-                            {% for centre in centres %}
-                                <option value="{{ centre.id }}" {% if form_data.centre == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.name }}</option>
-                            {% endfor %}
+                    <div id="subject-row" class="hidden">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Subject <span class="text-red-500">*</span></label>
+                        <select name="subject" id="id_subject" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Subject --</option>
                         </select>
                     </div>
-                    {% endif %}
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-4 pt-8">
-                    <a href="{% url 'book_list' %}" class="flex-1 sm:flex-none sm:w-48 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 text-center transition-all duration-200 font-bold shadow-sm border border-gray-200">
-                        Cancel
-                    </a>
-                    <button type="submit" class="flex-1 sm:flex-none sm:w-64 bg-secondary text-white py-3 rounded-lg hover:bg-[#B55440] transition-all duration-200 shadow-md hover:shadow-lg font-bold flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        Add Single Book
+                <!-- Book Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Title <span class="text-red-500">*</span></label>
+                        <input type="text" name="title" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Author <span class="text-red-500">*</span></label>
+                        <input type="text" name="author" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">ISBN</label>
+                        <input type="text" name="isbn" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Publisher</label>
+                        <input type="text" name="publisher" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Year</label>
+                        <input type="number" name="year_of_publication" min="1900" max="2030" value="2025" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Book ID (Auto)</label>
+                        <input type="text" id="auto-code" disabled class="w-full px-5 py-4 bg-gray-100 border-2 border-gray-300 rounded-xl" value="Generated on save...">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 pt-8">
+                    <a href="{% url 'book_list' %}" class="px-8 py-4 bg-gray-500 text-white rounded-xl hover:bg-gray-600 font-bold transition">Cancel</a>
+                    <button type="submit" class="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl hover:from-green-700 hover:to-emerald-800 font-bold shadow-lg transform hover:scale-105 transition">
+                        Add Book Now
                     </button>
                 </div>
             </form>
         </div>
 
-        {# --- Section 2: Bulk Upload (Redesigned) --- #}
-        <div class="bg-gray-50 rounded-xl p-6 sm:p-8 border border-gray-200/80 shadow-inner">
-            <div class="border-b border-gray-200 pb-4 mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                        <svg class="w-6 h-6 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
-                        Bulk Upload
-                    </h2>
-                    <p class="text-gray-600 mt-1">Upload multiple books via CSV or Excel.</p>
-                </div>
-                
-                {# --- NEW CSV DOWNLOAD BUTTON --- #}
-                <a href="{% url 'sample_csv_download' %}" class="inline-flex items-center justify-center px-5 py-2.5 border-2 border-blue-500 text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 bg-white shadow-sm whitespace-nowrap">
-                    <svg class="w-5 h-5 mr-2 -ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Download CSV Sample
-                </a>
-            </div>
-
-            <form method="post" enctype="multipart/form-data" class="space-y-8">
+        <!-- BULK UPLOAD FORM -->
+        <div id="bulk-tab" class="tab-content hidden">
+            <form method="post" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-2xl p-10 space-y-8">
                 {% csrf_token %}
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
-                    <div class="sm:col-span-2 bg-blue-50 p-4 rounded-lg border border-blue-100 text-blue-800 text-sm flex items-start">
-                         <svg class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
-                        <p><strong>Important Note:</strong> When uploading Textbooks, you MUST select the correct Grade and Subject below before choosing your file.</p>
-                    </div>
+                <input type="hidden" name="bulk_upload" value="1">
 
+                <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-6">
+                    <h3 class="text-xl font-bold text-blue-800 mb-4">Bulk Upload Instructions</h3>
+                    <ul class="text-sm text-blue-700 space-y-2">
+                        <li>1. <a href="{% url 'sample_csv_download' %}" class="underline font-semibold hover:text-blue-900">Download sample CSV</a></li>
+                        <li>2. Fill: title, author, isbn, publisher, year_of_publication</li>
+                        <li>3. All books will use the selected School, Category, Grade, Subject</li>
+                        <li>4. Book IDs auto-generated by system</li>
+                    </ul>
+                </div>
+
+                <!-- Centre (Superuser only) -->
+                {% if user.is_superuser %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="bulk_category">Category *</label>
-                        <select name="bulk_category" id="bulk_category" required class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm bg-white">
-                            <option value="">Select Category</option>
-                            {% for category in categories %}
-                                <option value="{{ category.id }}" data-name="{{ category.name|lower }}" {% if form_data.bulk_category == category.id|stringformat:"s" %}selected{% endif %}>{{ category.name }}</option>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Centre <span class="text-red-500">*</span></label>
+                        <select name="centre" id="id_bulk_centre" onchange="loadBulkSchools()" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Centre --</option>
+                            {% for c in centres %}
+                            <option value="{{ c.id }}">{{ c.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-
-                    <div id="bulk_grade_container" class="hidden transition-all duration-300">
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="bulk_grade">Grade * (Textbooks)</label>
-                        <select name="bulk_grade" id="bulk_grade" class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm bg-white">
-                            <option value="">Select Grade</option>
-                            {% for grade in grades %}
-                                <option value="{{ grade.id }}" {% if form_data.bulk_grade == grade.id|stringformat:"s" %}selected{% endif %}>{{ grade.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div id="bulk_subject_container" class="hidden transition-all duration-300">
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="bulk_subject">Subject * (Textbooks)</label>
-                        <select name="bulk_subject" id="bulk_subject" class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm bg-white">
-                            <option value="">Select Subject</option>
-                            {% for subject in subjects %}
-                                <option value="{{ subject.id }}" {% if form_data.bulk_subject == subject.id|stringformat:"s" %}selected{% endif %}>{{ subject.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    {% if user.is_superuser %}
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="bulk_centre">Centre *</label>
-                        <select name="bulk_centre" id="bulk_centre" required class="form-select w-full border-gray-300 rounded-lg focus:ring-secondary focus:border-secondary hover:border-gray-400 transition-colors p-3 shadow-sm bg-white">
-                            <option value="">Select Centre</option>
-                            {% for centre in centres %}
-                                <option value="{{ centre.id }}" {% if form_data.bulk_centre == centre.id|stringformat:"s" %}selected{% endif %}>{{ centre.name }}</option>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">School <span class="text-red-500">*</span></label>
+                        <select name="school" id="id_bulk_school" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select School --</option>
+                        </select>
+                    </div>
+                </div>
+                {% else %}
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg">
+                    <p class="text-lg font-bold">Centre: {{ user.centre.name }}</p>
+                    <p class="text-sm opacity-90">School: <span id="librarian-bulk-school-name">Select below</span></p>
+                    <input type="hidden" name="centre" value="{{ user.centre.id }}">
+                </div>
+                <div class="mt-6">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">School <span class="text-red-500">*</span></label>
+                    <select name="school" id="id_bulk_school" required onchange="document.getElementById('librarian-bulk-school-name').textContent = this.options[this.selectedIndex].text" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                        <option value="">-- Select School --</option>
+                        {% for s in user.centre.schools.all %}
+                        <option value="{{ s.id }}">{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Category → Grade → Subject -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+                        <select name="category" id="id_bulk_category" onchange="toggleBulkGradeSubject()" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Category --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    {% endif %}
-
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-bold text-gray-700 mb-2" for="file">Upload File *</label>
-                        <input type="file" name="file" id="file" accept=".csv,.xlsx" required class="file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-secondary/10 file:text-secondary hover:file:bg-secondary/20 w-full border border-gray-300 bg-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary cursor-pointer shadow-sm">
-                        <p class="text-gray-500 text-xs mt-2 ml-1">Accepted formats: .csv, .xlsx</p>
+                    <div id="bulk-grade-row" class="hidden">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Grade <span class="text-red-500">*</span></label>
+                        <select name="grade" id="id_bulk_grade" onchange="loadBulkSubjects()" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Grade --</option>
+                            {% for g in grades %}
+                            <option value="{{ g.id }}">{{ g.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div id="bulk-subject-row" class="hidden">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Subject <span class="text-red-500">*</span></label>
+                        <select name="subject" id="id_bulk_subject" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
+                            <option value="">-- Select Subject --</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="flex flex-col sm:flex-row gap-4 pt-8">
-                    <a href="{% url 'book_list' %}" class="flex-1 sm:flex-none sm:w-48 bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 text-center transition-all duration-200 font-bold shadow-sm border border-gray-200">
-                        Cancel
-                    </a>
-                    <button type="submit" class="flex-1 sm:flex-none sm:w-64 bg-secondary text-white py-3 rounded-lg hover:bg-[#B55440] transition-all duration-200 shadow-md hover:shadow-lg font-bold flex items-center justify-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                        Upload Books
+                <!-- File Upload -->
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Upload CSV <span class="text-red-500">*</span></label>
+                    <input type="file" name="file" accept=".csv" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl file:bg-blue-600 file:text-white file:rounded-lg file:border-0 file:px-6 file:py-3 hover:file:bg-blue-700 transition">
+                    <p class="text-sm text-gray-500 mt-2">Only CSV files (max 10MB)</p>
+                </div>
+
+                <div class="flex justify-end gap-4 pt-8">
+                    <a href="{% url 'book_list' %}" class="px-8 py-4 bg-gray-500 text-white rounded-xl hover:bg-gray-600 font-bold transition">Cancel</a>
+                    <button type="submit" class="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl hover:from-green-700 hover:to-emerald-800 font-bold shadow-lg transform hover:scale-105 transition">
+                        Upload & Import
                     </button>
                 </div>
             </form>
@@ -231,69 +224,146 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const isbnInput = document.getElementById('isbn');
-        
-        if(isbnInput) {
-            isbnInput.addEventListener('input', function() {
-                const value = this.value;
-                // Basic length check, the HTML pattern attribute handles the regex
-                if (value.length > 0 && (value.length < 8 || value.length > 18)) {
-                    this.setCustomValidity('ISBN must be between 8 and 18 characters.');
-                } else {
-                    this.setCustomValidity('');
-                }
+function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+    document.getElementById(tab + '-tab').classList.remove('hidden');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'bg-blue-600', 'text-white'));
+    document.getElementById('tab-' + tab).classList.add('active', 'bg-blue-600', 'text-white');
+}
+
+function loadSchools() {
+    const centreId = document.getElementById('id_centre')?.value;
+    if (!centreId) return;
+    fetch(`/books/ajax/load-schools/?centre_id=${centreId}`)
+        .then(r => r.json())
+        .then(data => {
+            const schoolSelect = document.getElementById('id_school');
+            schoolSelect.innerHTML = '<option value="">-- Select School --</option>';
+            data.schools.forEach(s => {
+                schoolSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
             });
-        }
+        });
+}
 
-        // Logic to show/hide Grade & Subject based on Category
-        function setupDependency(catSelectId, gradeDivId, subjectDivId, gradeSelectId, subjectSelectId) {
-            const catSelect = document.getElementById(catSelectId);
-            const gradeDiv = document.getElementById(gradeDivId);
-            const subjectDiv = document.getElementById(subjectDivId);
-            const gradeSelect = document.getElementById(gradeSelectId);
-            const subjectSelect = document.getElementById(subjectSelectId);
+function loadBulkSchools() {
+    const centreId = document.getElementById('id_bulk_centre')?.value;
+    if (!centreId) return;
+    fetch(`/books/ajax/load-schools/?centre_id=${centreId}`)
+        .then(r => r.json())
+        .then(data => {
+            const schoolSelect = document.getElementById('id_bulk_school');
+            schoolSelect.innerHTML = '<option value="">-- Select School --</option>';
+            data.schools.forEach(s => {
+                schoolSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+            });
+        });
+}
 
-            function checkCategory() {
-                if (!catSelect) return;
-                const selectedOption = catSelect.options[catSelect.selectedIndex];
-                // Ensure an option is actually selected and has the attribute
-                if (!selectedOption || !selectedOption.hasAttribute('data-name')) {
-                     gradeDiv.classList.add('hidden');
-                     subjectDiv.classList.add('hidden');
-                     return;
-                }
-                
-                const catName = selectedOption.getAttribute('data-name');
-                
-                if (catName === 'textbook') {
-                    gradeDiv.classList.remove('hidden');
-                    subjectDiv.classList.remove('hidden');
-                    gradeSelect.required = true;
-                    subjectSelect.required = true;
-                } else {
-                    gradeDiv.classList.add('hidden');
-                    subjectDiv.classList.add('hidden');
-                    gradeSelect.required = false;
-                    subjectSelect.required = false;
-                    // Optional: clear values when hiding. 
-                    // Commented out as it might annoy users if they accidentally switch categories.
-                    // gradeSelect.value = "";
-                    // subjectSelect.value = "";
-                }
-            }
+function toggleGradeSubject() {
+    const categorySelect = document.getElementById('id_category');
+    const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text || '';
+    const isTextbook = selectedText.toLowerCase() === 'textbook';
 
-            if(catSelect) {
-                catSelect.addEventListener('change', checkCategory);
-                // Run on load to handle form re-rendering with data
-                checkCategory(); 
-            }
-        }
+    const gradeRow = document.getElementById('grade-row');
+    const subjectRow = document.getElementById('subject-row');
+    const gradeSelect = document.getElementById('id_grade');
+    const subjectSelect = document.getElementById('id_subject');
 
-        // Single Entry Form
-        setupDependency('category', 'grade_container', 'subject_container', 'grade', 'subject');
-        // Bulk Entry Form
-        setupDependency('bulk_category', 'bulk_grade_container', 'bulk_subject_container', 'bulk_grade', 'bulk_subject');
-    });
+    if (isTextbook) {
+        gradeRow.classList.remove('hidden');
+        subjectRow.classList.remove('hidden');
+        gradeSelect.required = true;
+        subjectSelect.required = true;
+        loadSubjects();
+    } else {
+        gradeRow.classList.add('hidden');
+        subjectRow.classList.add('hidden');
+        gradeSelect.required = false;
+        subjectSelect.required = false;
+        subjectSelect.innerHTML = '<option value="">-- Not needed --</option>';
+    }
+}
+
+function toggleBulkGradeSubject() {
+    const categorySelect = document.getElementById('id_bulk_category');
+    const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text || '';
+    const isTextbook = selectedText.toLowerCase() === 'textbook';
+
+    const gradeRow = document.getElementById('bulk-grade-row');
+    const subjectRow = document.getElementById('bulk-subject-row');
+    const gradeSelect = document.getElementById('id_bulk_grade');
+    const subjectSelect = document.getElementById('id_bulk_subject');
+
+    if (isTextbook) {
+        gradeRow.classList.remove('hidden');
+        subjectRow.classList.remove('hidden');
+        gradeSelect.required = true;
+        subjectSelect.required = true;
+        loadBulkSubjects();
+    } else {
+        gradeRow.classList.add('hidden');
+        subjectRow.classList.add('hidden');
+        gradeSelect.required = false;
+        subjectSelect.required = false;
+        subjectSelect.innerHTML = '<option value="">-- Not needed --</option>';
+    }
+}
+
+function loadSubjects() {
+    const categoryId = document.getElementById('id_category').value;
+    const gradeId = document.getElementById('id_grade').value;
+    const subjectSelect = document.getElementById('id_subject');
+
+    if (!categoryId || !gradeId) {
+        subjectSelect.innerHTML = '<option value="">-- Select Category & Grade --</option>';
+        return;
+    }
+
+    fetch(`/books/ajax/load-subjects/?category_id=${categoryId}&grade_id=${gradeId}`)
+        .then(r => r.json())
+        .then(data => {
+            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+            data.subjects.forEach(s => {
+                subjectSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+            });
+        });
+}
+
+function loadBulkSubjects() {
+    const categoryId = document.getElementById('id_bulk_category').value;
+    const gradeId = document.getElementById('id_bulk_grade').value;
+    const subjectSelect = document.getElementById('id_bulk_subject');
+
+    if (!categoryId || !gradeId) {
+        subjectSelect.innerHTML = '<option value="">-- Select Category & Grade --</option>';
+        return;
+    }
+
+    fetch(`/books/ajax/load-subjects/?category_id=${categoryId}&grade_id=${gradeId}`)
+        .then(r => r.json())
+        .then(data => {
+            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+            data.subjects.forEach(s => {
+                subjectSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+            });
+        });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const categorySelect = document.getElementById('id_category');
+    const bulkCategorySelect = document.getElementById('id_bulk_category');
+    if (categorySelect) categorySelect.addEventListener('change', toggleGradeSubject);
+    if (bulkCategorySelect) bulkCategorySelect.addEventListener('change', toggleBulkGradeSubject);
+    toggleGradeSubject();
+    toggleBulkGradeSubject();
+    loadSchools();
+    loadBulkSchools();
+});
 </script>
+
+<style>
+.tab-btn { @apply text-gray-600 bg-gray-100; }
+.tab-btn.active { @apply bg-blue-600 text-white shadow-md transform scale-105; }
+</style>
 {% endblock %}

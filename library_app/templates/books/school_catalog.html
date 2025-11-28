@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ school.name }} Catalog{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto p-6">
+    <a href="{% url 'book_list' %}" class="text-blue-600 hover:underline mb-6 inline-block">← Back to Centres</a>
+
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">{{ school.name }} Library Catalog</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Left Sidebar: Categories -->
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-xl font-bold mb-4">Categories</h2>
+            <div class="space-y-2">
+                {% for cat in categories %}
+                <a href="?category={{ cat.id }}" 
+                   class="block p-3 rounded hover:bg-blue-50 {% if selected_category.id == cat.id %}bg-blue-100 font-bold{% endif %}">
+                    {{ cat.name }} <span class="float-right text-gray-500">({{ cat.book_count }})</span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right: Grade Cards -->
+        <div class="lg:col-span-3">
+            <h2 class="text-xl font-bold mb-4">Grades {% if selected_category %}- {{ selected_category.name }}{% endif %}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for grade in grades %}
+                <a href="{% url 'grade_book_list' school.id grade.id %}?category={{ selected_category.id|default:'' }}" 
+                   class="block bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition">
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">{{ grade.name }}</h3>
+                    <p class="text-gray-600">Total Books: {{ grade.total_books }}</p>
+                    <p class="text-blue-600 font-bold">In Category: {{ grade.filtered_books }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
