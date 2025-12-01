@@ -12,9 +12,12 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods
 from django.template.loader import render_to_string
 from django.core.paginator import Paginator
+from django.core.exceptions import ValidationError
 import csv
 import openpyxl
+import re
 from io import TextIOWrapper
+from datetime import timedelta, datetime
 from datetime import timedelta, datetime
 
 from ..models import (
@@ -25,7 +28,6 @@ from ..models import (
 # Permission helper
 def is_staff_user(user):
     return user.is_superuser or user.is_librarian or user.is_site_admin
-
 
 # =============================================================================
 # 1. MAIN ENTRY: book_list — Your Exact Flow Starts Here
@@ -39,10 +41,17 @@ def book_list(request):
         centres = Centre.objects.annotate(
             school_count=Count('schools'),
             book_count=Count('schools__books', distinct=True)
-        ).order_by('name')
+        ).order_by('-book_count', 'name')  # Most popular first!
+
+        # Calculate totals for the beautiful stats cards
+        total_schools = sum(c.school_count for c in centres)
+        total_books = sum(c.book_count for c in centres)
+
         return render(request, 'books/centre_list.html', {
             'centres': centres,
-            'title': 'Select Library Centre'
+            'title': 'Select Library Centre',
+            'total_schools': total_schools,
+            'total_books': total_books,
         })
 
     # Librarian → Their Centre
@@ -213,228 +222,303 @@ def grade_book_list(request, school_id, grade_id):
 # =============================================================================
 # 5. BOOK ADD (Single + Bulk) — Full Chain: Centre → School → Subject
 # =============================================================================
-# library_app/views/book_views.py
-
-import csv
-from io import TextIOWrapper
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.db.models import Q
-from django.http import JsonResponse, HttpResponse
-from library_app.models import Centre, School, Category, Grade, Subject, Book, BookIDSequence
-import re
-from datetime import datetime
-from django.db import transaction
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-
 
 
 @login_required
 def book_add(request):
+    if not is_staff_user(request.user):
+        messages.error(request, "You don't have permission to add books.")
+        return redirect('book_list')
+
+    centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre]
+    categories = Category.objects.all().order_by('name')
+    grades = Grade.objects.all().order_by('order', 'name')
+
     if request.method == "POST":
-        # Common data extraction
-        centre_id = request.POST.get('centre') or (request.user.centre.id if request.user.is_librarian else None)
-        school_id = request.POST.get('school')
-        category_id = request.POST.get('category')
-        grade_id = request.POST.get('grade')
-        subject_id = request.POST.get('subject')
+        try:
+            with transaction.atomic():
+                # === Centre ===
+                centre = request.user.centre
+                if request.user.is_superuser:
+                    centre_id = request.POST.get('centre')
+                    if not centre_id:
+                        messages.error(request, "Centre is required.")
+                        return redirect('book_add')
+                    centre = get_object_or_404(Centre, id=centre_id)
 
-        school = get_object_or_404(School, id=school_id)
-        category = get_object_or_404(Category, id=category_id)
-
-        # Handle subject (required only for Textbook)
-        subject = None
-        if category.name.lower() == 'textbook':
-            if not grade_id or not subject_id:
-                messages.error(request, "Grade and Subject are required for Textbook category.")
-                return redirect('book_add')
-            subject = get_object_or_404(Subject, id=subject_id)
-
-        books_added = []
-
-        if request.POST.get('bulk_upload'):
-            # ==================== BULK UPLOAD ====================
-            file = request.FILES.get('file')
-            if not file or not file.name.endswith('.csv'):
-                messages.error(request, "Please upload a valid CSV file.")
-                return redirect('book_add')
-
-            try:
-                reader = csv.DictReader(TextIOWrapper(file.file, encoding='utf-8'))
-                required_fields = ['title', 'author']
-                if not all(field in reader.fieldnames for field in required_fields):
-                    messages.error(request, f"CSV must contain at least: {', '.join(required_fields)}")
+                # === School ===
+                school_id = request.POST.get('school')
+                if not school_id:
+                    messages.error(request, "School is required.")
                     return redirect('book_add')
+                school = get_object_or_404(School, id=school_id, centre=centre)
 
-                for row in reader:
+                # === Category ===
+                category_id = request.POST.get('category')
+                if not category_id:
+                    messages.error(request, "Category is required.")
+                    return redirect('book_add')
+                category = get_object_or_404(Category, id=category_id)
+
+                # === Subject (only for Textbook) ===
+                subject = None
+                if category.name.lower() == 'textbook':
+                    grade_id = request.POST.get('grade')
+                    subject_id = request.POST.get('subject')
+                    if not grade_id or not subject_id:
+                        messages.error(request, "Textbook requires Grade and Subject.")
+                        return redirect('book_add')
+                    subject = get_object_or_404(Subject, id=subject_id, grade_id=grade_id, category=category)
+
+                added_books = []  # To store successfully created Book instances
+                errors = []
+
+                # ==================== BULK UPLOAD ====================
+                if 'bulk_upload' in request.POST:
+                    csv_file = request.FILES.get('file')
+                    if not csv_file:
+                        messages.error(request, "Please upload a CSV file.")
+                        return redirect('book_add')
+                    if not csv_file.name.lower().endswith('.csv'):
+                        messages.error(request, "File must be a .csv")
+                        return redirect('book_add')
+
+                    try:
+                        reader = csv.DictReader(TextIOWrapper(csv_file.file, encoding='utf-8-sig'))
+                        expected_headers = {'title', 'author', 'isbn', 'publisher', 'year_of_publication'}
+                        if not expected_headers.issubset(set(reader.fieldnames or [])):
+                            messages.error(request, "CSV missing required columns: title, author")
+                            return redirect('book_add')
+
+                        for row_num, row in enumerate(reader, start=2):
+                            title = row.get('title', '').strip()
+                            author = row.get('author', '').strip()
+                            if not title or not author:
+                                errors.append(f"Row {row_num}: Missing title or author")
+                                continue
+
+                            try:
+                                book = Book(
+                                    title=title,
+                                    author=author,
+                                    isbn=row.get('isbn', '').strip(),
+                                    publisher=row.get('publisher', '').strip() or "Unknown",
+                                    year_of_publication=int(row.get('year_of_publication', 2025) or 2025),
+                                    school=school,
+                                    centre=centre,
+                                    subject=subject,
+                                    added_by=request.user,
+                                )
+                                book.full_clean()
+                                book.save()
+                                added_books.append(book)
+                            except Exception as e:
+                                errors.append(f"Row {row_num} ('{title}'): {str(e)}")
+                    except Exception as e:
+                        messages.error(request, f"CSV processing error: {str(e)}")
+                        return redirect('book_add')
+
+                # ==================== SINGLE BOOK ====================
+                else:
+                    title = request.POST.get('title', '').strip()
+                    author = request.POST.get('author', '').strip()
+                    if not title or not author:
+                        messages.error(request, "Title and Author are required.")
+                        return redirect('book_add')
+
                     book = Book(
-                        title=row['title'].strip(),
-                        author=row['author'].strip(),
-                        isbn=row.get('isbn', '').strip(),
-                        publisher=row.get('publisher', '').strip(),
-                        year_of_publication=int(row.get('year_of_publication', 2025) or 2025),
+                        title=title,
+                        author=author,
+                        isbn=request.POST.get('isbn', '').strip(),
+                        publisher=request.POST.get('publisher', '').strip() or "Unknown",
+                        year_of_publication=int(request.POST.get('year_of_publication', 2025)),
                         school=school,
+                        centre=centre,
                         subject=subject,
                         added_by=request.user,
                     )
-                    try:
-                        book.full_clean()
-                        book.save()  # Auto-generates book_id via save()
-                        books_added.append(book.pk)
-                    except Exception as e:
-                        messages.error(request, f"Failed: '{row['title']}' → {str(e)}")
-                        continue
+                    book.full_clean()
+                    book.save()
+                    added_books.append(book)
 
-            except Exception as e:
-                messages.error(request, f"Error reading CSV: {str(e)}")
-                return redirect('book_add')
+                # === SUCCESS: Store in session + redirect ===
+                if added_books:
+                    # Store only the IDs of books added in this request
+                    request.session['just_added_book_ids'] = [b.id for b in added_books]
+                    request.session['just_added_count'] = len(added_books)
 
-        else:
-            # ==================== SINGLE BOOK ====================
-            book = Book(
-                title=request.POST['title'].strip(),
-                author=request.POST['author'].strip(),
-                isbn=request.POST.get('isbn', '').strip(),
-                publisher=request.POST.get('publisher', '').strip(),
-                year_of_publication=int(request.POST.get('year_of_publication', 2025)),
-                school=school,
-                subject=subject,
-                added_by=request.user,
-            )
-            try:
-                book.full_clean()
-                book.save()
-                books_added = [book.pk]
-            except Exception as e:
-                messages.error(request, f"Failed to add book: {str(e)}")
-                return redirect('book_add')
+                    msg = f"Successfully added {len(added_books)} book{'s' if len(added_books) > 1 else ''}!"
+                    if errors:
+                        msg += f" {len(errors)} row(s) had errors."
+                        for err in errors[:5]:
+                            messages.warning(request, err)
+                        if len(errors) > 5:
+                            messages.warning(request, f"...and {len(errors)-5} more.")
+                    messages.success(request, msg)
+                    return redirect('book_add_confirmation')
 
-        # =============== SAVE TO SESSION & REDIRECT ===============
-        if books_added:
-            # Update session with recently added book IDs (keep last 100)
-            recent = request.session.get('recently_added_books', [])
-            recent = list(set(recent + books_added))[-100:]
-            request.session['recently_added_books'] = recent
+                else:
+                    for err in errors:
+                        messages.error(request, err)
+                    messages.error(request, "No books were added due to errors.")
 
-            count = len(books_added)
-            messages.success(
-                request,
-                f"Successfully added {count} book{'s' if count != 1 else ''}! "
-                f"Confirmation below."
-            )
-            return redirect('book_add_confirmation')
-
-    # ==================== GET REQUEST — SHOW FORM ====================
-    centres = Centre.objects.all() if request.user.is_superuser else [request.user.centre]
-    grades = Grade.objects.all().order_by('order', 'name')
-    categories = Category.objects.all().order_by('name')
+        except Exception as e:
+            messages.error(request, f"Unexpected error: {str(e)}")
+            return redirect('book_add')
 
     context = {
         'centres': centres,
-        'grades': grades,
         'categories': categories,
+        'grades': grades,
     }
-
     return render(request, 'books/book_add.html', context)
 
 
 @login_required
 def book_add_confirmation(request):
-    """
-    Shows only the books that were just added in this session.
-    Uses session to store book IDs temporarily.
-    """
-    book_ids = request.session.get('recently_added_books', [])
+    book_ids = request.session.get('just_added_book_ids', [])
+    count = request.session.get('just_added_count', 0)
+
     if not book_ids:
-        messages.info(request, "No recently added books found.")
+        messages.info(request, "No books were added in this session.")
         return redirect('book_list')
 
     books = Book.objects.filter(id__in=book_ids).select_related(
-        'school__centre', 'subject__category', 'subject__grade'
+        'school__centre', 'subject__grade', 'subject__category'
     ).order_by('-id')
 
-    # Build beautiful breadcrumb title
+    # Clear session after displaying
+    del request.session['just_added_book_ids']
+    del request.session['just_added_count']
+
+    # Smart page title
     if books.exists():
-        first_book = books.first()
-        centre = first_book.school.centre.name if first_book.school.centre else "Unknown Centre"
-        school = first_book.school.name
-        category = first_book.subject.category.name if first_book.subject else "General"
-        grade = first_book.subject.grade.name if first_book.subject and first_book.subject.grade else "All Grades"
-        subject = first_book.subject.name if first_book.subject else "Various Subjects"
-
-        page_title = f"{centre} → {school} → {grade} → {category} → {subject}"
+        first = books.first()
+        centre_name = first.centre.name if first.centre else "Unknown"
+        school_name = first.school.name
+        cat_name = first.subject.category.name if first.subject else "General"
+        grade_name = first.subject.grade.name if first.subject and first.subject.grade else "All Grades"
+        page_title = f"{centre_name} → {school_name} → {grade_name} → {cat_name}"
     else:
-        page_title = "Recently Added Books"
-
-    # Clear session after showing (optional — you can keep it)
-    # del request.session['recently_added_books']
+        page_title = "Books Added"
 
     context = {
         'books': books,
+        'total_added': count,
         'page_title': page_title,
-        'total_added': len(books),
     }
     return render(request, 'books/book_add_confirmation.html', context)
-
-# Sample CSV Download
+# =============================================================================
+# SAMPLE CSV DOWNLOAD
+# =============================================================================
+@login_required
 def sample_csv_download(request):
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="sample_book_upload.csv"'
+    response['Content-Disposition'] = 'attachment; filename="sample_books_upload.csv"'
     writer = csv.writer(response)
     writer.writerow(['title', 'author', 'isbn', 'publisher', 'year_of_publication'])
-    writer.writerow(['Sample Book', 'John Doe', 'isbn-890123', 'Sample Publisher', 2023])
+    writer.writerow(['The Great Gatsby', 'F. Scott Fitzgerald', '978-0-7432-7356-5', 'Scribner', '1925'])
+    writer.writerow(['Mathematics Grade 10', 'John Doe', '978-1-234567-89-0', 'National Press', '2023'])
     return response
-
 
 # =============================================================================
 # 6. BOOK UPDATE
 # =============================================================================
+
 @login_required
 def book_update(request, pk):
     if not is_staff_user(request.user):
+        messages.error(request, "Access denied.")
         return redirect('book_list')
 
     book = get_object_or_404(Book, pk=pk)
-    if request.user.is_librarian and book.centre != request.user.centre:
-        return redirect('book_list')
 
-    centres = Centre.objects.all() if request.user.is_superuser else [book.centre]
-    schools = School.objects.filter(centre=book.centre)
+    # Restrict librarian to their own centre
+    if request.user.is_librarian and book.centre != request.user.centre:
+        messages.error(request, "You can only edit books from your centre.")
+        return redirect('book_list')
 
     if request.method == 'POST':
         try:
             with transaction.atomic():
-                centre = book.centre
+                # 1. Centre (superuser only)
                 if request.user.is_superuser:
-                    centre = get_object_or_404(Centre, id=request.POST['centre'])
+                    centre_id = request.POST.get('centre')
+                    if not centre_id:
+                        raise ValidationError("Centre is required.")
+                    centre = get_object_or_404(Centre, id=centre_id)
+                else:
+                    centre = book.centre
 
+                # 2. Update basic fields
                 book.title = request.POST['title'].strip()
                 book.author = request.POST['author'].strip()
-                book.isbn = request.POST['isbn'].strip()
-                book.book_code = request.POST.get('book_code', '').strip() or None
-                book.publisher = request.POST['publisher'].strip()
+                book.isbn = request.POST.get('isbn', '').strip()
+                book.publisher = request.POST.get('publisher', '').strip()
                 book.year_of_publication = int(request.POST['year_of_publication'])
-                book.subject = get_object_or_404(Subject, id=request.POST['subject'])
-                book.school = get_object_or_404(School, id=request.POST['school'], centre=centre)
+                book.book_code = request.POST.get('book_code', '').strip() or None
+
+                # 3. SCHOOL — MUST BE SET BEFORE SUBJECT (critical for validation!)
+                school_id = request.POST.get('school')
+                if not school_id:
+                    raise ValidationError("Please select a school.")
+                book.school = get_object_or_404(School, id=school_id, centre=centre)
+
+                # 4. CATEGORY
+                category_id = request.POST.get('category')
+                if not category_id:
+                    raise ValidationError("Please select a category.")
+                category = get_object_or_404(Category, id=category_id)
+
+                # 5. SUBJECT — ONLY FOR TEXTBOOK
+                if category.name.lower() == 'textbook':
+                    grade_id = request.POST.get('grade')
+                    subject_id = request.POST.get('subject')
+
+                    if not grade_id or not subject_id:
+                        raise ValidationError("Grade and Subject are required for Textbook category.")
+
+                    # Validate subject belongs to the selected grade
+                    book.subject = get_object_or_404(
+                        Subject,
+                        id=subject_id,
+                        grade_id=grade_id
+                    )
+                else:
+                    book.subject = None  # Non-textbook
+
+                # 6. Final assignments
                 book.centre = centre
-                book.full_clean()
+
+                # 7. Validate (now school + subject are in correct order)
+                book.full_clean()  # This runs your clean() method safely
                 book.save()
-                messages.success(request, "Book updated.")
-                return redirect('book_list')
+
+                messages.success(request, f"Book '{book.title}' updated successfully!")
+                return redirect('book_detail', pk=book.pk)
+
+        except ValidationError as e:
+            # Catch Django ValidationError (from clean()) and non-field errors
+            messages.error(request, f"Update failed: {' '.join(e.messages)}")
         except Exception as e:
-            messages.error(request, f"Error: {e}")
+            messages.error(request, f"Update failed: {str(e)}")
+
+    # ——— GET REQUEST ———
+    centres = Centre.objects.all() if request.user.is_superuser else [book.centre]
+    schools = book.centre.schools.all()
 
     context = {
         'book': book,
         'centres': centres,
         'schools': schools,
-        'subjects': Subject.objects.all(),
+        'categories': Category.objects.all(),
+        'grades': Grade.objects.all(),
+        'current_category': book.subject.category if book.subject else None,
+        'current_grade': book.subject.grade if book.subject else None,
+        'current_subject': book.subject,
     }
+
     return render(request, 'books/book_update.html', context)
-
-
 # =============================================================================
 # 7. BOOK DELETE
 # =============================================================================

@@ -6,6 +6,27 @@
 {% block content %}
 <div class="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-12 px-4">
     <div class="max-w-5xl mx-auto">
+
+        <!-- Beautiful Messages -->
+        {% if messages %}
+            <div class="mb-10 space-y-4">
+                {% for message in messages %}
+                    <div class="p-6 rounded-2xl border-l-8 font-bold text-lg shadow-xl flex items-center gap-4
+                        {% if message.tags == 'error' %}bg-red-50 border-red-600 text-red-800
+                        {% elif message.tags == 'success' %}bg-green-50 border-green-600 text-green-800
+                        {% elif message.tags == 'warning' %}bg-amber-50 border-amber-600 text-amber-800
+                        {% else %}bg-blue-50 border-blue-600 text-blue-800{% endif %}">
+                        {% if message.tags == 'success' %}
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        {% elif message.tags == 'error' %}
+                            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <div class="text-center mb-10">
             <h1 class="text-4xl font-extrabold text-gray-800 mb-4">Add New Books</h1>
             <p class="text-lg text-gray-600">Single book or bulk upload — fast, smart, and beautiful</p>
@@ -24,7 +45,7 @@
             <form method="post" class="bg-white rounded-3xl shadow-2xl p-10 space-y-8">
                 {% csrf_token %}
 
-                <!-- Centre (Superuser only) -->
+                <!-- Superuser: Centre + School -->
                 {% if user.is_superuser %}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -44,6 +65,7 @@
                     </div>
                 </div>
                 {% else %}
+                <!-- Librarian View -->
                 <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg">
                     <p class="text-lg font-bold">Centre: {{ user.centre.name }}</p>
                     <p class="text-sm opacity-90">School: <span id="librarian-school-name">Select below</span></p>
@@ -60,7 +82,7 @@
                 </div>
                 {% endif %}
 
-                <!-- Category → Grade → Subject (Smart Chained) -->
+                <!-- Category → Grade → Subject -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
@@ -90,37 +112,17 @@
 
                 <!-- Book Details -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Title <span class="text-red-500">*</span></label>
-                        <input type="text" name="title" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Author <span class="text-red-500">*</span></label>
-                        <input type="text" name="author" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">ISBN</label>
-                        <input type="text" name="isbn" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Publisher</label>
-                        <input type="text" name="publisher" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Year</label>
-                        <input type="number" name="year_of_publication" min="1900" max="2030" value="2025" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Book ID (Auto)</label>
-                        <input type="text" id="auto-code" disabled class="w-full px-5 py-4 bg-gray-100 border-2 border-gray-300 rounded-xl" value="Generated on save...">
-                    </div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">Title <span class="text-red-500">*</span></label><input type="text" name="title" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">Author <span class="text-red-500">*</span></label><input type="text" name="author" required class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">ISBN</label><input type="text" name="isbn" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">Publisher</label><input type="text" name="publisher" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">Year</label><input type="number" name="year_of_publication" value="2025" min="1900" max="2030" class="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition"></div>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-2">Book ID (Auto)</label><input type="text" disabled value="Generated on save..." class="w-full px-5 py-4 bg-gray-100 border-2 border-gray-300 rounded-xl"></div>
                 </div>
 
                 <div class="flex justify-end gap-4 pt-8">
                     <a href="{% url 'book_list' %}" class="px-8 py-4 bg-gray-500 text-white rounded-xl hover:bg-gray-600 font-bold transition">Cancel</a>
-                    <button type="submit" class="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl hover:from-green-700 hover:to-emerald-800 font-bold shadow-lg transform hover:scale-105 transition">
-                        Add Book Now
-                    </button>
+                    <button type="submit" class="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl hover:from-green-700 hover:to-emerald-800 font-bold shadow-lg transform hover:scale-105 transition">Add Book Now</button>
                 </div>
             </form>
         </div>
@@ -141,7 +143,7 @@
                     </ul>
                 </div>
 
-                <!-- Centre (Superuser only) -->
+                <!-- Superuser: Centre + School (Bulk) -->
                 {% if user.is_superuser %}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -177,7 +179,7 @@
                 </div>
                 {% endif %}
 
-                <!-- Category → Grade → Subject -->
+                <!-- Bulk: Category → Grade → Subject -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
@@ -214,9 +216,7 @@
 
                 <div class="flex justify-end gap-4 pt-8">
                     <a href="{% url 'book_list' %}" class="px-8 py-4 bg-gray-500 text-white rounded-xl hover:bg-gray-600 font-bold transition">Cancel</a>
-                    <button type="submit" class="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl hover:from-green-700 hover:to-emerald-800 font-bold shadow-lg transform hover:scale-105 transition">
-                        Upload & Import
-                    </button>
+                    <button type="submit" class="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-xl hover:from-green-700 hover:to-emerald-800 font-bold shadow-lg transform hover:scale-105 transition">Upload & Import</button>
                 </div>
             </form>
         </div>
@@ -233,51 +233,53 @@ function switchTab(tab) {
 
 function loadSchools() {
     const centreId = document.getElementById('id_centre')?.value;
-    if (!centreId) return;
+    if (!centreId) {
+        document.getElementById('id_school').innerHTML = '<option value="">-- Select School --</option>';
+        return;
+    }
     fetch(`/books/ajax/load-schools/?centre_id=${centreId}`)
         .then(r => r.json())
         .then(data => {
-            const schoolSelect = document.getElementById('id_school');
-            schoolSelect.innerHTML = '<option value="">-- Select School --</option>';
+            const select = document.getElementById('id_school');
+            select.innerHTML = '<option value="">-- Select School --</option>';
             data.schools.forEach(s => {
-                schoolSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
             });
         });
 }
 
 function loadBulkSchools() {
     const centreId = document.getElementById('id_bulk_centre')?.value;
-    if (!centreId) return;
+    if (!centreId) {
+        document.getElementById('id_bulk_school').innerHTML = '<option value="">-- Select School --</option>';
+        return;
+    }
     fetch(`/books/ajax/load-schools/?centre_id=${centreId}`)
         .then(r => r.json())
         .then(data => {
-            const schoolSelect = document.getElementById('id_bulk_school');
-            schoolSelect.innerHTML = '<option value="">-- Select School --</option>';
+            const select = document.getElementById('id_bulk_school');
+            select.innerHTML = '<option value="">-- Select School --</option>';
             data.schools.forEach(s => {
-                schoolSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                select.innerHTML += `<option value="${s.id}">${s.name}</option>`;
             });
         });
 }
 
 function toggleGradeSubject() {
-    const categorySelect = document.getElementById('id_category');
-    const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text || '';
-    const isTextbook = selectedText.toLowerCase() === 'textbook';
+    const catSelect = document.getElementById('id_category');
+    const isTextbook = catSelect.options[catSelect.selectedIndex]?.text.toLowerCase() === 'textbook';
 
-    const gradeRow = document.getElementById('grade-row');
-    const subjectRow = document.getElementById('subject-row');
+    document.getElementById('grade-row').classList.toggle('hidden', !isTextbook);
+    document.getElementById('subject-row').classList.toggle('hidden', !isTextbook);
+
     const gradeSelect = document.getElementById('id_grade');
     const subjectSelect = document.getElementById('id_subject');
 
     if (isTextbook) {
-        gradeRow.classList.remove('hidden');
-        subjectRow.classList.remove('hidden');
         gradeSelect.required = true;
         subjectSelect.required = true;
         loadSubjects();
     } else {
-        gradeRow.classList.add('hidden');
-        subjectRow.classList.add('hidden');
         gradeSelect.required = false;
         subjectSelect.required = false;
         subjectSelect.innerHTML = '<option value="">-- Not needed --</option>';
@@ -285,24 +287,20 @@ function toggleGradeSubject() {
 }
 
 function toggleBulkGradeSubject() {
-    const categorySelect = document.getElementById('id_bulk_category');
-    const selectedText = categorySelect.options[categorySelect.selectedIndex]?.text || '';
-    const isTextbook = selectedText.toLowerCase() === 'textbook';
+    const catSelect = document.getElementById('id_bulk_category');
+    const isTextbook = catSelect.options[catSelect.selectedIndex]?.text.toLowerCase() === 'textbook';
 
-    const gradeRow = document.getElementById('bulk-grade-row');
-    const subjectRow = document.getElementById('bulk-subject-row');
+    document.getElementById('bulk-grade-row').classList.toggle('hidden', !isTextbook);
+    document.getElementById('bulk-subject-row').classList.toggle('hidden', !isTextbook);
+
     const gradeSelect = document.getElementById('id_bulk_grade');
     const subjectSelect = document.getElementById('id_bulk_subject');
 
     if (isTextbook) {
-        gradeRow.classList.remove('hidden');
-        subjectRow.classList.remove('hidden');
         gradeSelect.required = true;
         subjectSelect.required = true;
         loadBulkSubjects();
     } else {
-        gradeRow.classList.add('hidden');
-        subjectRow.classList.add('hidden');
         gradeSelect.required = false;
         subjectSelect.required = false;
         subjectSelect.innerHTML = '<option value="">-- Not needed --</option>';
@@ -315,7 +313,7 @@ function loadSubjects() {
     const subjectSelect = document.getElementById('id_subject');
 
     if (!categoryId || !gradeId) {
-        subjectSelect.innerHTML = '<option value="">-- Select Category & Grade --</option>';
+        subjectSelect.innerHTML = '<option value="">-- Select Grade first --</option>';
         return;
     }
 
@@ -335,7 +333,7 @@ function loadBulkSubjects() {
     const subjectSelect = document.getElementById('id_bulk_subject');
 
     if (!categoryId || !gradeId) {
-        subjectSelect.innerHTML = '<option value="">-- Select Category & Grade --</option>';
+        subjectSelect.innerHTML = '<option value="">-- Select Grade first --</option>';
         return;
     }
 
@@ -349,16 +347,10 @@ function loadBulkSubjects() {
         });
 }
 
-// Initialize on page load
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    const categorySelect = document.getElementById('id_category');
-    const bulkCategorySelect = document.getElementById('id_bulk_category');
-    if (categorySelect) categorySelect.addEventListener('change', toggleGradeSubject);
-    if (bulkCategorySelect) bulkCategorySelect.addEventListener('change', toggleBulkGradeSubject);
     toggleGradeSubject();
     toggleBulkGradeSubject();
-    loadSchools();
-    loadBulkSchools();
 });
 </script>
 

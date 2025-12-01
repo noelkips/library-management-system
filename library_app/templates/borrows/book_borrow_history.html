@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Borrow History - {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto p-6">
+    <a href="{% url 'book_detail' book.pk %}" class="text-blue-600 hover:underline mb-6 inline-block">← Back to Book Details</a>
+
+    <div class="bg-white shadow-lg rounded-lg p-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Borrow History for "{{ book.title }}"</h1>
+        <p class="text-gray-600 mb-8">Showing all borrows and returns for this book.</p>
+
+        {% if page_obj %}
+            <table class="w-full table-auto border-collapse">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="px-4 py-3 text-left font-semibold">User</th>
+                        <th class="px-4 py-3 text-left font-semibold">Status</th>
+                        <th class="px-4 py-3 text-left font-semibold">Request Date</th>
+                        <th class="px-4 py-3 text-left font-semibold">Issue Date</th>
+                        <th class="px-4 py-3 text-left font-semibold">Due Date</th>
+                        <th class="px-4 py-3 text-left font-semibold">Return Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for borrow in page_obj %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="px-4 py-3">{{ borrow.user.get_full_name|default:borrow.user.email }}</td>
+                        <td class="px-4 py-3">
+                            <span class="{% if borrow.status == 'returned' %}text-green-600{% elif borrow.status == 'issued' %}text-blue-600{% else %}text-amber-600{% endif %} font-medium">
+                                {{ borrow.status|capfirst }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">{{ borrow.request_date|date:"d M Y" }}</td>
+                        <td class="px-4 py-3">{{ borrow.issue_date|date:"d M Y"|default:"—" }}</td>
+                        <td class="px-4 py-3">{{ borrow.due_date|date:"d M Y"|default:"—" }}</td>
+                        <td class="px-4 py-3">{{ borrow.return_date|date:"d M Y"|default:"—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="mt-8 flex justify-center">
+                <div class="flex space-x-2">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Previous</a>
+                    {% endif %}
+                    <span class="px-4 py-2 bg-gray-100 rounded">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Next</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <p class="text-center text-gray-500 text-xl">No borrow history for this book yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,24 +1,64 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Delete Book{% endblock %}
+{% block title %}Delete Book - {{ book.title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto p-6 text-center">
-    <div class="bg-white shadow-lg rounded-lg p-10">
-        <h1 class="text-3xl font-bold text-red-600 mb-6">Delete Book?</h1>
-        <p class="text-xl text-gray-700 mb-8">
-            Are you sure you want to permanently delete:<br>
-            <strong class="text-2xl">{{ book.title }}</strong> by {{ book.author }}?
-        </p>
-        <form method="post" class="inline">
-            {% csrf_token %}
-            <button type="submit" class="bg-red-600 text-white px-8 py-3 rounded hover:bg-red-700 font-semibold">
-                Yes, Delete Forever
-            </button>
-            <a href="{% url 'final_book_list' book.category.id %}" class="ml-4 bg-gray-500 text-white px-8 py-3 rounded hover:bg-gray-600 font-semibold">
-                Cancel
-            </a>
-        </form>
+<div class="min-h-screen bg-gradient-to-br from-red-50 to-pink-50 py-12 px-4">
+    <div class="max-w-2xl mx-auto">
+
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+                <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01v.01M12 17h.01M19 12a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-extrabold text-gray-800 mb-3">Delete Book</h1>
+            <p class="text-lg text-gray-600">This action cannot be undone</p>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-2xl p-10">
+            <div class="text-center space-y-6">
+                <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">
+                        "{{ book.title }}"
+                    </h2>
+                    <p class="text-lg text-gray-700">
+                        by <span class="font-semibold">{{ book.author }}</span>
+                    </p>
+                    <div class="mt-6 space-y-2 text-gray-600">
+                        <p><strong>School:</strong> {{ book.school.name }}</p>
+                        <p><strong>Category:</strong> {{ book.category_name|default:"General" }}</p>
+                        {% if book.subject %}
+                        <p><strong>Grade:</strong> {{ book.grade_name }}</p>
+                        <p><strong>Subject:</strong> {{ book.subject.name }}</p>
+                        {% endif %}
+                        <p><strong>Book ID:</strong> {{ book.book_id|default:"Not assigned" }}</p>
+                    </div>
+                </div>
+
+                <div class="text-red-600 font-bold text-xl">
+                    Are you absolutely sure you want to delete this book?
+                </div>
+
+                <form method="post" class="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8">
+                    {% csrf_token %}
+                    <a href="{% url 'book_detail' book.pk %}"
+                       class="px-10 py-4 bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-xl transition transform hover:scale-105">
+                        No, Cancel
+                    </a>
+                    <button type="submit"
+                            class="px-10 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl shadow-lg transition transform hover:scale-105">
+                        Yes, Delete Forever
+                    </button>
+                </form>
+
+                <div class="mt-8 text-sm text-gray-500">
+                    This book will be permanently removed from the system.
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

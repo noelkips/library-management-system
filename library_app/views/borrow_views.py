@@ -20,6 +20,21 @@ from ..models import (
 
 # ==================== USER BORROW REQUEST VIEWS ====================
 
+
+def is_staff_user(user):
+    """
+    Returns True if user is a librarian, site admin, or superuser.
+    This replaces Django's default user.is_staff
+    """
+    return bool(
+        user.is_authenticated and (
+            user.is_librarian or
+            user.is_site_admin or
+            user.is_superuser
+        )
+    )
+
+
 @login_required
 def borrow_request(request, book_id):
     if request.method != "POST":
@@ -1605,3 +1620,36 @@ def librarian_issue_book(request):
         "books": books,
     }
     return render(request, "borrows/librarian_issue_book.html", context)
+
+
+
+@login_required
+def book_borrow_history(request, book_id):
+    if not is_staff_user(request.user):
+        messages.error(request, "Access denied - staff only.")
+        print(f"Unauthorized access to book_borrow_history by {request.user.email} for book {book_id}")
+        return redirect('book_detail', pk=book_id)
+
+    book = get_object_or_404(Book, pk=book_id)
+
+    # Permission check for librarian
+    if request.user.is_librarian and book.centre != request.user.centre:
+        messages.error(request, "Access denied to this book.")
+        print(f"Unauthorized centre access by {request.user.email} for book {book_id}")
+        return redirect('book_detail', pk=book_id)
+
+    # Get all borrows for this book
+    borrows = Borrow.objects.filter(book=book).select_related(
+        'user', 'issued_by', 'returned_to'
+    ).order_by('-request_date')
+
+    # Paginate
+    paginator = Paginator(borrows, 20)  # 20 per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'book': book,
+        'page_obj': page_obj,
+    }
+    return render(request, 'borrows/book_borrow_history.html', context)

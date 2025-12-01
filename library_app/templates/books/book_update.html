@@ -1,121 +1,192 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Update Book{% endblock %}
+{% block title %}Update Book - {{ book.title }}{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto p-6">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">Update Book</h1>
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+    <div class="max-w-4xl mx-auto">
 
-    <div class="bg-white shadow-lg rounded-lg p-8">
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
+        <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-8">Update Book</h1>
 
-            <!-- Centre (Superuser only, otherwise hidden) -->
-            {% if user.is_superuser %}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Centre <span class="text-red-500">*</span></label>
-                <select name="centre" id="id_centre" class="form-select w-full border-gray-300 rounded-md" required>
-                    {% for centre in centres %}
-                    <option value="{{ centre.id }}" {% if centre.id == book.centre.id %}selected{% endif %}>
-                        {{ centre.name }}
-                    </option>
-                    {% endfor %}
-                </select>
+        {% if messages %}
+        <div class="mb-6 space-y-3">
+            {% for message in messages %}
+            <div class="p-4 rounded-lg text-white font-bold text-center shadow-md
+                {% if message.tags == 'error' %}bg-red-600{% elif message.tags == 'success' %}bg-green-600{% else %}bg-blue-600{% endif %}">
+                {{ message }}
             </div>
-            {% else %}
-            <p class="text-sm text-gray-600 mb-4">Centre: <strong>{{ book.centre.name }}</strong></p>
-            <input type="hidden" name="centre" value="{{ book.centre.id }}">
-            {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">School</label>
-                    <select name="school" id="id_school" class="form-select w-full border-gray-300 rounded-md">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 md:p-10">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Centre -->
+                {% if user.is_superuser %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-2">Centre <span class="text-red-500">*</span></label>
+                        <select name="centre" id="id_centre" onchange="loadSchools()" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                            {% for c in centres %}
+                            <option value="{{ c.id }}" {% if c.id == book.centre.id %}selected{% endif %}>{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-2">School <span class="text-red-500">*</span></label>
+                        <select name="school" id="id_school" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                            <option value="">-- Select School --</option>
+                            {% for s in schools %}
+                            <option value="{{ s.id }}" {% if book.school.id == s.id %}selected{% endif %}>{{ s.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% else %}
+                <input type="hidden" name="centre" value="{{ book.centre.id }}">
+                <div class="bg-indigo-600 text-white p-5 rounded-xl text-center font-bold mb-6">
+                    Centre: {{ book.centre.name }}
+                </div>
+                <div class="mb-6">
+                    <label class="block font-bold text-gray-700 mb-2">School <span class="text-red-500">*</span></label>
+                    <select name="school" id="id_school" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
                         <option value="">-- Select School --</option>
-                        {% for school in schools %}
-                        <option value="{{ school.id }}" {% if book.school and school.id == book.school.id %}selected{% endif %}>
-                            {{ school.name }}
-                        </option>
+                        {% for s in book.centre.schools.all %}
+                        <option value="{{ s.id }}" {% if book.school.id == s.id %}selected{% endif %}>{{ s.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
+                {% endif %}
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
-                    <select name="category" id="id_category" class="form-select w-full border-gray-300 rounded-md" required>
-                        <option value="">-- Select Category --</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat.id }}" {% if book.category and cat.id == book.category.id %}selected{% endif %}>
-                            {{ cat.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                <!-- Category → Grade → Subject -->
+                <div class="space-y-6 mb-8">
+                    <div>
+                        <label class="block font-bold text-gray-700 mb-2">Category <span class="text-red-500">*</span></label>
+                        <select name="category" id="id_category" onchange="toggleGradeSubject()" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                            <option value="">-- Select Category --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}"
+                                {% if current_category and current_category.id == cat.id %}selected{% endif %}
+                                data-is-textbook="{% if cat.name|lower == 'textbook' %}true{% else %}false{% endif %}">
+                                {{ cat.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="grade-row" class="{% if current_category and current_category.name|lower == 'textbook' %}block{% else %}hidden{% endif %}">
+                        <label class="block font-bold text-gray-700 mb-2">Grade <span class="text-red-500">*</span></label>
+                        <select name="grade" id="id_grade" onchange="loadSubjects()" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                            <option value="">-- Select Grade --</option>
+                            {% for g in grades %}
+                            <option value="{{ g.id }}" {% if current_grade and current_grade.id == g.id %}selected{% endif %}>{{ g.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div id="subject-row" class="{% if current_category and current_category.name|lower == 'textbook' %}block{% else %}hidden{% endif %}">
+                        <label class="block font-bold text-gray-700 mb-2">Subject <span class="text-red-500">*</span></label>
+                        <select name="subject" id="id_subject" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                            <option value="">-- Select Subject --</option>
+                            {% if current_subject %}
+                            <option value="{{ current_subject.id }}" selected>{{ current_subject.name }}</option>
+                            {% endif %}
+                        </select>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Grade <span id="grade-required" class="text-red-500 hidden">* Required</span></label>
-                    <select name="grade" id="id_grade" class="form-select w-full border-gray-300 rounded-md">
-                        <option value="">-- Select Grade --</option>
-                        {% for grade in grades %}
-                        <option value="{{ grade.id }}" {% if book.grade and grade.id == book.grade.id %}selected{% endif %}>
-                            {{ grade.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                <!-- Book Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div><label class="block font-bold text-gray-700 mb-2">Title <span class="text-red-500">*</span></label>
+                        <input type="text" name="title" value="{{ book.title }}" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                    </div>
+                    <div><label class="block font-bold text-gray-700 mb-2">Author <span class="text-red-500">*</span></label>
+                        <input type="text" name="author" value="{{ book.author }}" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                    </div>
+                    <div><label class="block font-bold text-gray-700 mb-2">ISBN</label>
+                        <input type="text" name="isbn" value="{{ book.isbn|default:'' }}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                    </div>
+                    <div><label class="block font-bold text-gray-700 mb-2">Publisher</label>
+                        <input type="text" name="publisher" value="{{ book.publisher|default:'' }}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                    </div>
+                    <div><label class="block font-bold text-gray-700 mb-2">Year <span class="text-red-500">*</span></label>
+                        <input type="number" name="year_of_publication" value="{{ book.year_of_publication }}" min="1900" max="2030" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                    </div>
+                    <div><label class="block font-bold text-gray-700 mb-2">Book Code</label>
+                        <input type="text" name="book_code" value="{{ book.book_code|default:'' }}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject <span id="subject-required" class="text-red-500 hidden">* Required</span></label>
-                    <select name="subject" id="id_subject" class="form-select w-full border-gray-300 rounded-md">
-                        <option value="">-- Select Subject --</option>
-                        {% for subject in subjects %}
-                        <option value="{{ subject.id }}" {% if book.subject and subject.id == book.subject.id %}selected{% endif %}>
-                            {{ subject.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                <div class="flex flex-col sm:flex-row gap-4 justify-end">
+                    <a href="{% url 'book_detail' book.pk %}" class="px-8 py-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-bold text-center">Cancel</a>
+                    <button type="submit" class="px-10 py-4 bg-gradient-to-r from-green-600 to-emerald-700 text-white rounded-lg hover:from-green-700 hover:to-emerald-800 font-bold shadow-lg">Update Book</button>
                 </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Title <span class="text-red-500">*</span></label>
-                    <input type="text" name="title" value="{{ book.title }}" class="form-input w-full border-gray-300 rounded-md" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Author <span class="text-red-500">*</span></label>
-                    <input type="text" name="author" value="{{ book.author }}" class="form-input w-full border-gray-300 rounded-md" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">ISBN <span class="text-red-500">*</span></label>
-                    <input type="text" name="isbn" value="{{ book.isbn }}" class="form-input w-full border-gray-300 rounded-md" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Publisher <span class="text-red-500">*</span></label>
-                    <input type="text" name="publisher" value="{{ book.publisher }}" class="form-input w-full border-gray-300 rounded-md" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Publication Year <span class="text-red-500">*</span></label>
-                    <input type="number" name="year_of_publication" value="{{ book.year_of_publication }}" min="1500" max="2030" class="form-input w-full border-gray-300 rounded-md" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Book Code</label>
-                    <input type="text" name="book_code" value="{{ book.book_code|default:'' }}" class="form-input w-full border-gray-300 rounded-md">
-                </div>
-            </div>
-
-            <div class="flex justify-end space-x-4 pt-6">
-                <a href="{% url 'final_book_list' book.category.id %}" class="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Cancel</a>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Update Book</button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
-{% include 'books/partials/book_form_scripts.html' %}
+<script>
+function loadSchools() {
+    const centreId = document.getElementById('id_centre')?.value;
+    const schoolSelect = document.getElementById('id_school');
+    if (!centreId) return;
+    fetch(`/books/ajax/load-schools/?centre_id=${centreId}`)
+        .then(r => r.json())
+        .then(data => {
+            schoolSelect.innerHTML = '<option value="">-- Select School --</option>';
+            data.schools.forEach(s => {
+                schoolSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+            });
+        });
+}
 
+function toggleGradeSubject() {
+    const catSelect = document.getElementById('id_category');
+    const selectedOption = catSelect.options[catSelect.selectedIndex];
+    const isTextbook = selectedOption && selectedOption.getAttribute('data-is-textbook') === 'true';
 
+    const gradeRow = document.getElementById('grade-row');
+    const subjectRow = document.getElementById('subject-row');
 
+    if (isTextbook) {
+        gradeRow.classList.remove('hidden');
+        subjectRow.classList.remove('hidden');
+        document.getElementById('id_grade').required = true;
+        document.getElementById('id_subject').required = true;
+        if (document.getElementById('id_grade').value) loadSubjects();
+    } else {
+        gradeRow.classList.add('hidden');
+        subjectRow.classList.add('hidden');
+        document.getElementById('id_grade').required = false;
+        document.getElementById('id_subject').required = false;
+        document.getElementById('id_grade').value = '';
+        document.getElementById('id_subject').innerHTML = '<option value="">-- Not needed --</option>';
+    }
+}
 
+function loadSubjects() {
+    const gradeId = document.getElementById('id_grade').value;
+    const subjectSelect = document.getElementById('id_subject');
+    if (!gradeId) return;
+
+    fetch(`/books/ajax/load-subjects/?grade_id=${gradeId}`)
+        .then(r => r.json())
+        .then(data => {
+            subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+            data.subjects.forEach(s => {
+                const selected = {{ current_subject.id|default:0 }} == s.id ? 'selected' : '';
+                subjectSelect.innerHTML += `<option value="${s.id}" ${selected}>${s.name}</option>`;
+            });
+        });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    toggleGradeSubject();
+    {% if user.is_superuser %}loadSchools();{% endif %}
+});
+</script>
 {% endblock %}
