@@ -1,0 +1,68 @@
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+    <!-- Subjects Sidebar -->
+    <aside class="lg:col-span-1">
+        <div class="sticky top-8 bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h3 class="font-bold text-lg text-gray-900 mb-4">Subjects</h3>
+            <div class="space-y-2">
+                <a href="{% url 'school_catalog' school.id %}?tab=textbooks"
+                   class="block px-4 py-3 rounded-lg transition {% if not selected_subject %}bg-blue-50 text-blue-700 font-semibold border border-blue-200{% else %}hover:bg-gray-50{% endif %}">
+                    <div class="flex justify-between">
+                        <span>All Subjects</span>
+                        <span class="text-sm font-medium text-gray-500">{{ total_textbooks }}</span>
+                    </div>
+                </a>
+                {% for subject in textbook_subjects %}
+                <a href="{% url 'school_catalog' school.id %}?tab=textbooks&subject={{ subject.id }}"
+                   class="block px-4 py-3 rounded-lg transition {% if selected_subject and selected_subject.id == subject.id %}bg-blue-50 text-blue-700 font-semibold border border-blue-200{% else %}hover:bg-gray-50{% endif %}">
+                    <div class="flex justify-between">
+                        <span>{{ subject.name }}</span>
+                        <span class="text-sm font-medium text-gray-500">{{ subject.book_count }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+
+    <!-- Grades Grid -->
+    <div class="lg:col-span-3">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">
+            Grades
+            {% if selected_subject %}
+                • {{ selected_subject.name }}
+            {% endif %}
+        </h2>
+
+        {% if filtered_grades %}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for grade in filtered_grades %}
+            <a href="{% url 'grade_book_list' school.id grade.id %}{% if selected_subject %}?subject={{ selected_subject.id }}{% endif %}"
+               class="group block bg-white rounded-2xl border border-gray-200 p-6 text-center transition-all hover:shadow-2xl hover:-translate-y-3">
+                <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-amber-400 to-red-500 shadow-xl flex items-center justify-center">
+                    <span class="text-2xl font-extrabold text-white">
+                        {% if grade.name|lower|slice:":5" == "grade" %}{{ grade.name|slice:"6:" }}{% else %}{{ grade.name }}{% endif %}
+                    </span>
+                </div>
+                <h3 class="font-bold text-gray-800 group-hover:text-blue-700">{{ grade.name }}</h3>
+                <p class="text-sm text-gray-600 mt-2">
+                    <span class="font-semibold text-blue-600">
+                        {% if selected_subject %}{{ grade.filtered_books }}{% else %}{{ grade.total_books }}{% endif %}
+                    </span> book{{ grade.total_books|pluralize }}
+                </p>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16 bg-white rounded-2xl border border-gray-200">
+            <p class="text-gray-500 text-lg">
+                {% if selected_subject %}
+                    No books found for <strong>{{ selected_subject.name }}</strong>.
+                {% else %}
+                    No textbooks found.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>

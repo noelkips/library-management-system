@@ -114,63 +114,135 @@ def ajax_load_schools_modal(request):
 # =============================================================================
 
 
-
 @login_required
 def school_catalog(request, school_id):
     school = get_object_or_404(School, id=school_id)
 
-    # Permission check
+    # ==================================================================
+    # Permission Check for Librarians (non-superusers)
+    # ==================================================================
     if request.user.is_librarian and not request.user.is_superuser:
         if school.centre != request.user.centre:
-            messages.error(request, "Access denied.")
+            messages.error(request, "You do not have permission to access this school.")
             return redirect('book_list')
 
-    selected_category_id = request.GET.get('category')
-    selected_category = None
-    if selected_category_id:
-        selected_category = get_object_or_404(Category, id=selected_category_id)
+    # ==================================================================
+    # Get active tab: textbooks (default) or other
+    # ==================================================================
+    active_tab = request.GET.get('tab', 'textbooks')  # 'textbooks' or 'other'
 
-    # =====================================================================
-    # 1. CATEGORIES – Show ALL categories that have at least 1 book in this school
-    # =====================================================================
-    categories = Category.objects.annotate(
-        book_count=Count(
-            'subjects__books',
-            filter=Q(subjects__books__school=school),
-            distinct=True
-        )
-    ).order_by('name')  # No .filter(book_count__gt=0) → shows even 0 if you want
-    # Remove the line above if you want to show categories with 0 books too
+    # ==================================================================
+    # TEXTBOOKS TAB — Grade + Subject Based
+    # ==================================================================
+    if active_tab != 'other':
+        selected_subject_id = request.GET.get('subject')
 
-    # =====================================================================
-    # 2. GRADES – Show ALL grades (even with 0 books) + correct counts
-    # =====================================================================
-    grades = Grade.objects.all().annotate(
-        total_books=Count(
-            'subjects__books',
-            filter=Q(subjects__books__school=school),
-            distinct=True
-        ),
-        filtered_books=Count(
-            'subjects__books',
-            filter=Q(
-                subjects__books__school=school,
-                subjects__books__subject__category=selected_category
-            ) if selected_category else Q(),
-            distinct=True
-        )
-    ).order_by('order', 'name')
+        # All subjects that have textbooks in this school
+        textbook_subjects = Subject.objects.filter(
+            grade__isnull=False,
+            books__school=school
+        ).annotate(book_count=Count('books')).distinct().order_by('name')
 
-    context = {
-        'school': school,
-        'categories': categories,
-        'grades': grades,
-        'selected_category': selected_category,
-        'is_staff': is_staff_user(request.user),
-    }
+        selected_subject = None
+        if selected_subject_id:
+            selected_subject = get_object_or_404(Subject, id=selected_subject_id, grade__isnull=False)
 
-    return render(request, 'books/school_catalog.html', context)
+        # Grades with book counts
+        grades = Grade.objects.annotate(
+            total_books=Count(
+                'subjects__books',
+                filter=Q(subjects__books__school=school),
+                distinct=True
+            ),
+            filtered_books=Count(
+                'subjects__books',
+                filter=Q(subjects__books__school=school) &
+                       (Q(subjects=selected_subject) if selected_subject else Q()),
+                distinct=True
+            )
+        ).order_by('order', 'name')
 
+        # Only show grades that have books in the selected subject (or all if no subject selected)
+        filtered_grades = [
+            g for g in grades
+            if (selected_subject and g.filtered_books > 0) or (not selected_subject and g.total_books > 0)
+        ]
+
+        total_textbooks = sum(g.total_books for g in grades)
+
+        context = {
+            'school': school,
+            'grades': grades,
+            'filtered_grades': filtered_grades,
+            'textbook_subjects': textbook_subjects,
+            'selected_subject': selected_subject,
+            'total_textbooks': total_textbooks,
+            'active_tab': 'textbooks',
+            'is_staff': is_staff_user(request.user),
+        }
+
+        return render(request, 'books/school_catalog.html', context)
+
+    # ==================================================================
+    # OTHER BOOKS TAB — Category Based Table List
+    # ==================================================================
+    else:
+        selected_category_id = request.GET.get('category')
+        query = request.GET.get('q', '').strip()
+        available_only = request.GET.get('available') == 'on'
+
+        # Base queryset: only non-textbook books
+        books = Book.objects.filter(
+            school=school,
+            subject__grade__isnull=True  # This excludes textbooks
+        ).select_related('subject', 'subject__category').order_by('book_id')
+
+        # Filter by category
+        if selected_category_id:
+            books = books.filter(subject__category_id=selected_category_id)
+
+        # Search
+        if query:
+            books = books.filter(
+                Q(title__icontains=query) |
+                Q(author__icontains=query) |
+                Q(isbn__icontains=query) |
+                Q(book_id__icontains=query)
+            )
+
+        # Availability
+        if available_only:
+            books = books.filter(available_copies__gt=0)
+
+        # Categories with book counts
+        categories = Category.objects.annotate(
+            book_count=Count(
+                'subjects__books',
+                filter=Q(subjects__books__school=school, subjects__grade__isnull=True),
+                distinct=True
+            )
+        ).exclude(book_count=0).order_by('name')
+
+        selected_category = None
+        if selected_category_id:
+            selected_category = get_object_or_404(Category, id=selected_category_id)
+
+        # Pagination
+        paginator = Paginator(books, 25)
+        page_obj = paginator.get_page(request.GET.get('page'))
+
+        context = {
+            'school': school,
+            'page_obj': page_obj,
+            'categories': categories,
+            'selected_category': selected_category,
+            'query': query,
+            'available_only': available_only,
+            'active_tab': 'other',
+            'is_staff': is_staff_user(request.user),
+        }
+
+        return render(request, 'books/other_books_list.html', context)
 
 # =============================================================================
 # 4. FINAL BOOK LIST: Grade + Category + Subject Filter (FIXED & IMPROVED)
