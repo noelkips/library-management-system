@@ -28,7 +28,6 @@ from ..models import (
 # Permission helper
 def is_staff_user(user):
     return user.is_superuser or user.is_librarian or user.is_site_admin
-
 # =============================================================================
 # 1. MAIN ENTRY: book_list — Your Exact Flow Starts Here
 # =============================================================================
@@ -36,44 +35,58 @@ def is_staff_user(user):
 def book_list(request):
     user = request.user
 
-    # Superuser / Site Admin → All Centres
+    # ==================================================================
+    # 1. Superuser / Site Admin → Full Centre List
+    # ==================================================================
     if user.is_superuser or user.is_site_admin:
         centres = Centre.objects.annotate(
-            school_count=Count('schools'),
-            book_count=Count('schools__books', distinct=True)
-        ).order_by('-book_count', 'name')  # Most popular first!
+            school_count=Count('schools', distinct=True),
+            book_count=Count('books')
+        ).order_by('-book_count', 'name')
 
-        # Calculate totals for the beautiful stats cards
         total_schools = sum(c.school_count for c in centres)
-        total_books = sum(c.book_count for c in centres)
+        total_books   = sum(c.book_count   for c in centres)
 
         return render(request, 'books/centre_list.html', {
             'centres': centres,
-            'title': 'Select Library Centre',
+            'title': 'Library Centres',
             'total_schools': total_schools,
             'total_books': total_books,
         })
 
-    # Librarian → Their Centre
-    if user.is_librarian and user.centre:
-        schools = user.centre.schools.all()
+    # ==================================================================
+    # 2. ALL STAFF: Librarian, Teacher, Regular Staff → School List from their centre
+    # ==================================================================
+    if user.centre and (user.is_librarian or user.is_teacher or getattr(user, 'is_other', False)):
+        schools = user.centre.schools.all().annotate(book_count=Count('books'))
+        
+        total_books = sum(s.book_count for s in schools)
+        active_borrows = Borrow.objects.filter(centre=user.centre, status='issued').count()
+        available_books = Book.objects.filter(school__centre=user.centre, available_copies__gt=0).count()
+
+        # If only one school → go directly to catalog
         if schools.count() == 1:
             return redirect('school_catalog', school_id=schools.first().id)
-        return render(request, 'books/centre_detail.html', {
+
+        return render(request, 'books/school_list.html', {
             'centre': user.centre,
-            'schools': schools.annotate(book_count=Count('books')),
-            'title': user.centre.name
+            'schools': schools,
+            'total_books': total_books,
+            'active_borrows': active_borrows,
+            'available_books': available_books,
         })
 
-    # Student / Teacher → Direct to their school
-    if hasattr(user, 'student_profile') and user.student_profile.school:
+    # ==================================================================
+    # 3. Student → Direct to their school
+    # ==================================================================
+    if user.is_student and hasattr(user, 'student_profile') and user.student_profile.school:
         return redirect('school_catalog', school_id=user.student_profile.school.id)
 
-    if user.is_teacher and hasattr(user, 'school') and user.school:
-        return redirect('school_catalog', school_id=user.school.id)
-
-    messages.error(request, "You are not assigned to a school or centre.")
-    return redirect('home')
+    # ==================================================================
+    # 4. Fallback
+    # ==================================================================
+    messages.error(request, "You do not have access to any library.")
+    return redirect('dashboard')
 
 
 # =============================================================================
@@ -157,8 +170,10 @@ def school_catalog(request, school_id):
     }
 
     return render(request, 'books/school_catalog.html', context)
+
+
 # =============================================================================
-# 4. FINAL BOOK LIST: Grade + Category + Subject Filter
+# 4. FINAL BOOK LIST: Grade + Category + Subject Filter (FIXED & IMPROVED)
 # =============================================================================
 @login_required
 def grade_book_list(request, school_id, grade_id):
@@ -174,10 +189,10 @@ def grade_book_list(request, school_id, grade_id):
         subject__grade=grade
     ).select_related('subject', 'subject__category', 'added_by', 'centre')
 
-    category_id = request.GET.get('category')
-    subject_id = request.GET.get('subject')
+    category_id = request.GET.get('category', '').strip()
+    subject_id = request.GET.get('subject', '').strip()
     q = request.GET.get('q', '').strip()
-    available = request.GET.get('available') == '1'
+    available = request.GET.get('available') == 'on'  # Changed to 'on' for checkbox
 
     if category_id and category_id != 'all':
         books = books.filter(subject__category_id=category_id)
@@ -192,6 +207,30 @@ def grade_book_list(request, school_id, grade_id):
         books = books.filter(available_copies=True)
 
     books = books.order_by('title')
+
+    # Export Logic
+    if 'export' in request.GET:
+        export_type = request.GET['export']
+        if export_type == 'page':
+            books_to_export = Paginator(books, 20).get_page(request.GET.get('page')).object_list
+        elif export_type == 'all':
+            books_to_export = books
+        else:
+            books_to_export = []
+
+        if books_to_export.exists():
+            response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{grade.name}_books.xlsx"'
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            ws.append(['Title', 'Author', 'ISBN', 'Status'])
+            for book in books_to_export:
+                status = 'Available' if book.available_copies else 'Borrowed'
+                ws.append([book.title, book.author, book.isbn or '', status])
+            wb.save(response)
+            return response
+
+    # Pagination (after filters, before export)
     paginator = Paginator(books, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
 
@@ -200,8 +239,8 @@ def grade_book_list(request, school_id, grade_id):
         subjects__books__subject__grade=grade
     ).distinct()
 
-    subjects = Subject.objects.filter(grade=grade, books__school=school)
-    if category_id:
+    subjects = Subject.objects.filter(grade=grade, books__school=school).distinct()
+    if category_id and category_id != 'all':
         subjects = subjects.filter(category_id=category_id)
 
     context = {
@@ -210,14 +249,13 @@ def grade_book_list(request, school_id, grade_id):
         'page_obj': page_obj,
         'categories': categories,
         'subjects': subjects,
-        'selected_category': category_id,
-        'selected_subject': subject_id,
+        'selected_category': category_id if category_id != 'all' else None,
+        'selected_subject': subject_id if subject_id != 'all' else None,
         'query': q,
         'available_only': available,
         'is_staff': is_staff_user(request.user),
     }
     return render(request, 'books/grade_book_list.html', context)
-
 
 # =============================================================================
 # 5. BOOK ADD (Single + Bulk) — Full Chain: Centre → School → Subject

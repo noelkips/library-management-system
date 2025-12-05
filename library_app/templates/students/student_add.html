@@ -18,41 +18,47 @@
     <form method="post" style="background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
         {% csrf_token %}
       
-        <p style="color: #666; margin-bottom: 20px;">Only Child ID is required. Other fields are optional.</p>
+        <p style="color: #28a745; font-weight: bold; margin-bottom: 20px;">
+            Students login using their <strong>Child ID</strong> only.<br>
+            Password = Child ID (they will change it on first login)
+        </p>
 
         <div class="form-group" style="margin-bottom: 15px;">
-            <label for="name" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">Name</label>
-            <input type="text" id="name" name="name" class="form-control" value="{{ request.POST.name|default:'' }}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <label for="name" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">Full Name</label>
+            <input type="text" id="name" name="name" class="form-control" value="{{ request.POST.name|default:'' }}" placeholder="e.g. John Doe" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
         </div>
 
         <div class="form-group" style="margin-bottom: 15px;">
-            <label for="child_ID" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">Child ID</label>
-            <input type="number" id="child_ID" name="child_ID" class="form-control" value="{{ request.POST.child_ID|default:'' }}" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;" required>
+            <label for="child_ID" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">
+                Child ID <span style="color: red;">*</span> (This is their Login ID)
+            </label>
+            <input type="text" id="child_ID" name="child_ID" class="form-control" value="{{ request.POST.child_ID|default:'' }}" placeholder="e.g. 12345 or A001" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
+            <small style="color: #666;">Can be numbers or letters (e.g. 1001, S123, A001)</small>
         </div>
 
         <div class="form-group" style="margin-bottom: 15px;">
             <label for="centre" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">Centre</label>
-            <select id="centre" name="centre" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
-                <option value="">None</option>
+            <select id="centre" name="centre" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" {% if not request.user.is_superuser %}disabled{% endif %}>
+                <option value="">Select Centre</option>
                 {% for centre in centres %}
-                    <option value="{{ centre.id }}" {% if centre.id|stringformat:"s" == request.POST.centre %}selected{% endif %}>{{ centre.name }}</option>
+                    <option value="{{ centre.id }}" {% if centre.id|stringformat:"s" == request.POST.centre or centre == request.user.centre %}selected{% endif %}>{{ centre.name }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="form-group" style="margin-bottom: 20px;">
             <label for="school" style="display: block; font-weight: bold; margin-bottom: 5px; color: #333;">School</label>
-            <select id="school" name="school" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
+            <select id="school" name="school" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" required>
                 <option value="">Select a school</option>
                 {% for school in schools %}
-                    <option value="{{ school.name }}" {% if school.name == request.POST.school %}selected{% endif %}>{{ school.name }}</option>
+                    <option value="{{ school.id }}" {% if school.id|stringformat:"s" == request.POST.school %}selected{% endif %}>{{ school.name }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="form-group">
-            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 10px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s;">
-                Add Single Student
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                Add Student
             </button>
         </div>
     </form>
@@ -62,29 +68,27 @@
         $(document).ready(function() {
             $('#centre').change(function() {
                 var centreId = $(this).val();
+                if (!centreId) {
+                    $('#school').html('<option value="">Select a school</option>');
+                    return;
+                }
                 $.ajax({
                     url: "{% url 'get_schools_by_centre' %}",
                     data: { centre_id: centreId },
-                    dataType: 'json',
                     success: function(data) {
-                        console.log(data);
                         var $schoolSelect = $('#school');
-                        $schoolSelect.empty();
-                        $schoolSelect.append('<option value="">Select a school</option>');
-                        if (data.schools && data.schools.length > 0) {
-                            $.each(data.schools, function(index, school) {
-                                $schoolSelect.append(
-                                    $('<option>').val(school.name).text(school.name)
-                                );
-                            });
-                        }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error fetching schools:', error);
-                        $('#school').empty().append('<option value="">Select a school</option>');
+                        $schoolSelect.html('<option value="">Select a school</option>');
+                        data.schools.forEach(function(school) {
+                            $schoolSelect.append(`<option value="${school.id}">${school.name}</option>`);
+                        });
                     }
                 });
             });
+
+            // Auto-load schools if centre is pre-selected
+            if ($('#centre').val()) {
+                $('#centre').trigger('change');
+            }
         });
     </script>
 {% endblock %}

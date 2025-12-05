@@ -15,6 +15,10 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.template.loader import render_to_string
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+from ..utils import send_custom_email
+
 
 from io import TextIOWrapper
 from datetime import timedelta
@@ -38,8 +42,6 @@ from ..models import (
     Grade,
     Subject
 )
-
-from ..utils import send_custom_email  
 
 
 def is_site_admin(user):
@@ -112,6 +114,7 @@ def dashboard(request):
         'is_librarian': user.is_librarian,
         'is_student': user.is_student,
         'is_teacher': user.is_teacher,
+        'is_other': user.is_other,
     }
 
     # ------------------------------------------------------------------
@@ -277,6 +280,30 @@ def dashboard(request):
 
             'borrow_history': student_borrows.filter(status='returned')
                              .select_related('book').order_by('-return_date')[:5],
+
+            'unread_notifications': Notification.objects.filter(user=user, is_read=False).count(),
+            'active_reservations': Reservation.objects.filter(
+                user=user, status='pending'
+            ).select_related('book'),
+        })
+    # ------------------------------------------------------------------
+    # 5. Other user types (e.g., staff) – basic info
+    # ------------------------------------------------------------------
+    elif user.is_other:
+        other_borrows = Borrow.objects.filter(user=user)
+
+        context.update({
+            'borrowed_books': other_borrows.filter(status='issued')
+                            .select_related('book', 'centre').order_by('-issue_date'),
+
+            'total_borrowed': other_borrows.filter(status='issued').count(),
+            'can_borrow_more': can_user_borrow(user),
+            'overdue_borrows': other_borrows.filter(
+                status='issued', due_date__lt=timezone.now()
+            ).count(),
+
+            'borrow_history': other_borrows.filter(status='returned')
+                            .select_related('book').order_by('-return_date')[:5],
 
             'unread_notifications': Notification.objects.filter(user=user, is_read=False).count(),
             'active_reservations': Reservation.objects.filter(
@@ -466,300 +493,236 @@ def user_delete(request, pk):
             messages.success(request, "User deleted successfully.")
         return redirect('manage_users')
     return redirect('manage_users')
-
-
+# views/auth_views.py
 
 @login_required
 @user_passes_test(is_authorized_for_manage_users)
 def manage_users(request):
-    query = request.GET.get('q', '')
-    centre_filter = request.GET.get('centre', '')
-    role_filter = request.GET.get('role', '')
-    
-    if is_site_admin(request.user):
-        # Site admin can see all users
-        users = CustomUser.objects.all()
-        
-        # Apply search filter
-        if query:
-            users = users.filter(
-                Q(email__icontains=query) | 
-                Q(student_profile__child_ID__icontains=query) |
-                Q(first_name__icontains=query) |
-                Q(last_name__icontains=query)
-            )
-        
-        # Apply centre filter
-        if centre_filter:
-            users = users.filter(centre_id=centre_filter)
-        
-        # Apply role filter
-        if role_filter:
-            if role_filter == 'student':
-                users = users.filter(is_student=True)
-            elif role_filter == 'librarian':
-                users = users.filter(is_librarian=True)
-            elif role_filter == 'teacher':
-                users = users.filter(is_teacher=True)
-            elif role_filter == 'site_admin':
-                users = users.filter(is_site_admin=True)
-            elif role_filter == 'other':
-                users = users.filter(is_other=True)
-        
-        centres = Centre.objects.all()
-        schools = []  # Schools will be loaded dynamically via AJAX
-        
-    else:
-        # Librarian - only show students in their centre
-        users = CustomUser.objects.filter(centre=request.user.centre, is_student=True)
-        
-        # Apply search filter
-        if query:
-            users = users.filter(
-                Q(email__icontains=query) | 
-                Q(student_profile__child_ID__icontains=query) |
-                Q(first_name__icontains=query) |
-                Q(last_name__icontains=query)
-            )
-        
-        centres = [request.user.centre] if request.user.centre else []
-        # Get schools for the librarian's centre
-        schools = request.user.centre.school_set.all() if request.user.centre else []
-    
-    # Order users by email for consistent display
-    users = users.order_by('email')
-    
-    return render(request, 'auth/manage_users.html', {
-        'users': users,
-        'centres': centres,
-        'schools': schools,
-        'is_full_admin': is_site_admin(request.user),
-        'query': query,
-    })
+    users = CustomUser.objects.filter(is_student=False).select_related('centre').order_by('first_name')
 
+    query = request.GET.get('q', '').strip()
+    if query:
+        users = users.filter(
+            Q(login_id__icontains=query) |
+            Q(email__icontains=query) |
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query)
+        )
+
+    if not request.user.is_superuser:
+        users = users.filter(centre=request.user.centre)
+
+    centre_id = request.GET.get('centre')
+    if centre_id:
+        users = users.filter(centre_id=centre_id)
+
+    role = request.GET.get('role')
+    if role == 'librarian':
+        users = users.filter(is_librarian=True)
+    elif role == 'teacher':
+        users = users.filter(is_teacher=True)
+    elif role == 'site_admin':
+        users = users.filter(is_site_admin=True)
+    elif role == 'staff':
+        users = users.filter(is_librarian=False, is_teacher=False, is_site_admin=False)
+
+    paginator = Paginator(users, 25)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'users': page_obj,
+        'page_obj': page_obj,
+        'query': query,
+        'centres': Centre.objects.all() if request.user.is_superuser else [request.user.centre],
+        'is_full_admin': request.user.is_superuser or request.user.is_site_admin,
+    }
+    return render(request, 'auth/manage_users.html', context)
 
 @login_required
 @user_passes_test(is_authorized_for_manage_users)
 def user_add(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
-        first_name = request.POST.get('first_name', '')
-        last_name = request.POST.get('last_name', '')
+        email = request.POST.get('email', '').strip().lower()
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
         centre_id = request.POST.get('centre')
-        is_librarian_flag = request.POST.get('is_librarian') == 'on'
-        is_student = request.POST.get('is_student') == 'on'
-        is_teacher = request.POST.get('is_teacher') == 'on'
-        is_site_admin_flag = request.POST.get('is_site_admin') == 'on'
-        is_other = request.POST.get('is_other') == 'on'
-        errors = []
+        role = request.POST.get('role', 'staff')
 
-        # ✅ Only validate email if NOT student
-        if not is_student:
-            if not email:
-                errors.append("Email is required.")
-            elif CustomUser.objects.filter(email=email).exists():
-                errors.append("Email is already in use.")
+        if not email or not centre_id:
+            messages.error(request, "Email and Centre are required.")
+            return redirect('manage_users')
 
-        if centre_id and centre_id != '' and not Centre.objects.filter(id=centre_id).exists():
-            errors.append("Invalid centre selected.")
+        if CustomUser.objects.filter(login_id=email).exists():
+            messages.error(request, "This login ID is already taken.")
+            return redirect('manage_users')
 
-        # Role restrictions for librarians
-        if is_librarian(request.user) and not is_site_admin(request.user):
-            if not is_student or any([is_librarian_flag, is_teacher, is_site_admin_flag, is_other]):
-                errors.append("Librarians can only add students.")
-            if centre_id != str(request.user.centre.id):
-                errors.append("Librarians can only add users to their own centre.")
-
-        # Handle student specific fields
-        child_ID = None
-        school_id = request.POST.get('school', None)
-        if is_student:
-            child_ID = request.POST.get('child_ID')
-            if not child_ID:
-                errors.append("child_ID is required for students.")
-            else:
-                try:
-                    child_ID = int(child_ID)
-                    if Student.objects.filter(child_ID=child_ID).exists():
-                        errors.append("child_ID is already in use.")
-                except ValueError:
-                    errors.append("Invalid child_ID.")
-
-        if errors:
-            for error in errors:
-                messages.error(request, error)
-        else:
+        try:
+            centre = Centre.objects.get(id=centre_id)
             with transaction.atomic():
-                centre = Centre.objects.get(id=centre_id) if centre_id and centre_id != '' else None
+                user = CustomUser.objects.create_user(
+                    login_id=email,
+                    email=email,
+                    password=None,
+                    first_name=first_name,
+                    last_name=last_name,
+                    centre=centre,
+                    is_librarian=(role == 'librarian'),
+                    is_teacher=(role == 'teacher'),
+                    is_site_admin=(role == 'site_admin'),
+                    is_student=False,
+                    force_password_change=True,
+                )
+                user.set_unusable_password()
+                user.save()
 
-                if is_student:
-                    school = School.objects.get(id=school_id) if school_id else None
-                    school = school.name if school else "Mohi"
-                    auto_email = f"{school}@{child_ID}.mohiafrica.org"
-                    user = CustomUser(
-                        email=auto_email,
-                        first_name=first_name,
-                        last_name=last_name,
-                        centre=centre,
-                        is_student=True,
-                    )
-                    child_ID_str = str(child_ID)
-                    user.set_password(child_ID_str)  # initial password = child_ID
-                    user.force_password_change = False
-                    user._child_ID = child_ID  # temporary attributes for signal
-                    user._school_id = school_id
-                    user.save()
+                # Generate login URL
+                current_site = get_current_site(request)
+                login_url = f"http://{current_site.domain}{reverse('login_view')}"
 
-                    messages.success(
-                        request,
-                        mark_safe(
-                            f"Student added successfully. "
-                            f"Initial password is their child_ID: <span class=\"font-bold text-danger\">{child_ID_str}</span>. "
-                            f"They will be forced to change it on first login."
-                        )
-                    )
+                # Role name for email
+                role_name = {
+                    'librarian': 'Librarian',
+                    'teacher': 'Teacher',
+                    'site_admin': 'Site Admin',
+                    'staff': 'Staff Member'
+                }.get(role, 'Staff Member')
 
-                else:
-                    # ✅ For non-students (staff, librarians, etc.)
-                    random_digits = ''.join(random.choices('0123456789', k=5))
-                    password = f"Lib{random_digits}"
+                # Send Welcome Email
+                subject = "Welcome to LibraryHub - Your Account is Ready!"
+                message = f"""
+                Hello {first_name or 'User'},
 
-                    user = CustomUser.objects.create_user(
-                        email=email,
-                        password=password,
-                        first_name=first_name,
-                        last_name=last_name,
-                        centre=centre,
-                        is_librarian=is_librarian_flag,
-                        is_teacher=is_teacher,
-                        is_site_admin=is_site_admin_flag,
-                        is_other=is_other,
-                    )
-                    user.force_password_change = False
-                    user.save()
+                Your LibraryHub account has been created!
 
-                    messages.success(
-                        request,
-                        mark_safe(
-                            f"User added successfully. "
-                            f"Initial password: <span class=\"font-bold text-danger\">{password}</span>. "
-                            f"They will be forced to change it on first login."
-                        )
-                    )
+                Role: {role_name}
+                Centre: {centre.name}
 
-                return redirect('manage_users')
+                Login Details:
+                • Login ID / Email: {email}
+                • You will be asked to set a new password on first login
+
+                Click here to log in and set your password:
+                {login_url}
+
+                If you did not request this account, please contact your librarian.
+
+                Thank you!
+                LibraryHub Team
+                """
+
+                send_custom_email(subject, message, [email])
+
+                messages.success(request, f"User '{user.get_full_name() or email}' created and welcome email sent!")
+            return redirect('manage_users')
+
+        except Exception as e:
+            messages.error(request, f"Error creating user: {str(e)}")
+            return redirect('manage_users')
 
     return redirect('manage_users')
 
 @login_required
 @user_passes_test(is_authorized_for_manage_users)
 def user_update(request, pk):
-    target_user = get_object_or_404(CustomUser, pk=pk)
-    # Permission check for update
-    if is_librarian(request.user) and not is_site_admin(request.user):
-        if not target_user.is_student:
-            messages.error(request, "You do not have permission to update this user.")
-            return redirect('manage_users')
-        if target_user.centre != request.user.centre:
-            messages.error(request, "You can only update users in your own centre.")
-            return redirect('manage_users')
-
+    user = get_object_or_404(CustomUser, pk=pk, is_student=False)
+    
     if request.method == 'POST':
-        email = request.POST.get('email')
-        first_name = request.POST.get('first_name', '')
-        last_name = request.POST.get('last_name', '')
-        centre_id = request.POST.get('centre')
-        is_librarian_flag = request.POST.get('is_librarian') == 'on'
-        is_student = request.POST.get('is_student') == 'on'
-        is_teacher = request.POST.get('is_teacher') == 'on'
-        is_site_admin_flag = request.POST.get('is_site_admin') == 'on'
-        is_other = request.POST.get('is_other') == 'on'
-        errors = []
+        email = request.POST.get('email', '').strip().lower()
+        role = request.POST.get('role')  # 'librarian', 'teacher', 'site_admin', 'staff'
 
-        if not email:
-            errors.append("Email is required.")
-        if CustomUser.objects.filter(email=email).exclude(id=pk).exists():
-            errors.append("Email is already in use.")
-        if centre_id and centre_id != '' and not Centre.objects.filter(id=centre_id).exists():
-            errors.append("Invalid centre selected.")
-
-        # Role restrictions for librarians
-        if is_librarian(request.user) and not is_site_admin(request.user):
-            if not is_student or any([is_librarian_flag, is_teacher, is_site_admin_flag, is_other]):
-                errors.append("Librarians can only manage students.")
-            if centre_id != str(request.user.centre.id):
-                errors.append("Librarians can only assign to their own centre.")
-
-        if is_student:
-            child_ID = request.POST.get('child_ID')
-            if not child_ID:
-                errors.append("child_ID is required for students.")
-            else:
-                try:
-                    child_ID = int(child_ID)
-                    if Student.objects.filter(child_ID=child_ID).exclude(user=target_user).exists():
-                        errors.append("child_ID is already in use.")
-                except ValueError:
-                    errors.append("Invalid child_ID.")
-
-        if errors:
-            for error in errors:
-                messages.error(request, error)
-        else:
-            with transaction.atomic():
-                centre = Centre.objects.get(id=centre_id) if centre_id and centre_id != '' else None
-                target_user.email = email
-                target_user.first_name = first_name
-                target_user.last_name = last_name
-                target_user.centre = centre
-                target_user.is_librarian = is_librarian_flag
-                target_user.is_student = is_student
-                target_user.is_teacher = is_teacher
-                target_user.is_site_admin = is_site_admin_flag
-                target_user.is_other = is_other
-                target_user.save()
-
-                if is_student:
-                    student, created = Student.objects.get_or_create(user=target_user)
-                    student.child_ID = child_ID
-                    student.name = f"{first_name} {last_name}"
-                    student.centre = centre
-                    student.school = request.POST.get('school', '')
-                    student.save()
-
-                messages.success(request, "User updated successfully.")
+        if CustomUser.objects.filter(login_id=email).exclude(pk=user.pk).exists():
+            messages.error(request, "This login ID is already in use.")
             return redirect('manage_users')
+
+        try:
+            centre = Centre.objects.get(id=request.POST.get('centre'))
+
+            user.login_id = email
+            user.email = email
+            user.first_name = request.POST.get('first_name', '').strip()
+            user.last_name = request.POST.get('last_name', '').strip()
+            user.centre = centre
+
+            # Just set the selected role — model will auto-handle is_other
+            user.is_librarian = (role == 'librarian')
+            user.is_teacher = (role == 'teacher')
+            user.is_site_admin = (role == 'site_admin')
+            # is_other is handled automatically in save()
+
+            user.save()  # ← This triggers the magic
+
+            messages.success(request, "User updated successfully.")
+            return redirect('manage_users')
+
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+
     return redirect('manage_users')
+
 
 @login_required
 @user_passes_test(is_authorized_for_manage_users)
 def user_reset_password(request, pk):
     target_user = get_object_or_404(CustomUser, pk=pk)
-    if not can_reset_password(request.user, target_user):
-        messages.error(request, "You do not have permission to reset this user's password.")
-        return redirect('manage_users')
 
-    if is_librarian(request.user) and not is_site_admin(request.user):
-        if target_user.centre != request.user.centre:
-            messages.error(request, "You can only reset passwords for users in your own centre.")
-            return redirect('manage_users')
-
+    # Allow reset for both staff and students (different behavior)
     if request.method == 'POST':
-        if target_user.is_student:
-            try:
-                student = target_user.student_profile
-                new_password = str(student.child_ID)
-            except Student.DoesNotExist:
-                random_digits = ''.join(random.choices('0123456789', k=5))
-                new_password = f"Lib{random_digits}"
-        else:
-            random_digits = ''.join(random.choices('0123456789', k=5))
-            new_password = f"Lib{random_digits}"
-        target_user.set_password(new_password)
-        target_user.force_password_change = True
-        target_user.save()
-        messages.success(request, mark_safe(f"Password reset successfully. New password: <span class=\"font-bold text-danger\">{new_password}</span>. The user will be forced to change it on next login."))
+        try:
+            with transaction.atomic():
+                if target_user.is_student:
+                    # === STUDENT: Reset password to child_ID and SHOW it ===
+                    student = target_user.student_profile
+                    new_password = str(student.child_ID)
+                    target_user.set_password(new_password)
+                    target_user.force_password_change = True
+                    target_user.save()
+
+                    messages.success(
+                        request,
+                        mark_safe(
+                            f"Student password reset!<br>"
+                            f"<strong>Login ID:</strong> {student.child_ID}<br>"
+                            f"<strong>New Password:</strong> <code class='bg-gray-200 px-2 py-1 rounded'>{new_password}</code><br>"
+                            f"They will be asked to change it on first login."
+                        )
+                    )
+                else:
+                    # === STAFF: Send secure reset link via email ===
+                    token = default_token_generator.make_token(target_user)
+                    uid = urlsafe_base64_encode(force_bytes(target_user.pk))
+                    current_site = get_current_site(request)
+                    reset_url = f"http://{current_site.domain}{reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})}"
+
+                    subject = "LibraryHub - Password Reset Request"
+                    message = f"""
+                    Hello {target_user.get_full_name() or 'User'},
+
+                    A password reset was requested for your LibraryHub account.
+
+                    Click the link below to set a new password:
+                    {reset_url}
+
+                    This link expires in 24 hours.
+
+                    If you didn't request this, ignore this email.
+
+                    Thank you,
+                    LibraryHub Team
+                    """
+
+                    if send_custom_email(subject, message, [target_user.email]):
+                        messages.success(
+                            request,
+                            f"Password reset link sent to <strong>{target_user.email}</strong>"
+                        )
+                    else:
+                        messages.error(request, "Failed to send email. Check server settings.")
+
+        except Exception as e:
+            messages.error(request, f"Error: {str(e)}")
+
         return redirect('manage_users')
+
     return redirect('manage_users')
 
 

@@ -562,7 +562,158 @@
             {% endif %}
         </div>
     </div>
+    {% elif is_other %}
+    <!-- ============================================ -->
+    <!-- OTHER USER (Parent/Community) DASHBOARD -->
+    <!-- ============================================ -->
+    <div class="space-y-6">
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <a href="{% url 'book_list' %}" class="flex flex-col items-center justify-center p-4 bg-primary bg-opacity-10 rounded-lg hover:bg-primary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-primary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Browse Books</span>
+                </a>
+                <a href="{% url 'my_borrows' %}" class="flex flex-col items-center justify-center p-4 bg-accent bg-opacity-10 rounded-lg hover:bg-accent hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-accent group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">My Borrows</span>
+                </a>
+                <a href="{% url 'notification_center' %}" class="flex flex-col items-center justify-center p-4 bg-blue-100 rounded-lg hover:bg-blue-500 hover:text-white transition-all group relative">
+                    {% if unread_notifications > 0 %}
+                    <span class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{{ unread_notifications }}</span>
+                    {% endif %}
+                    <svg class="w-8 h-8 mb-2 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">Notifications</span>
+                </a>
+                <a href="{% url 'profile' %}" class="flex flex-col items-center justify-center p-4 bg-secondary bg-opacity-10 rounded-lg hover:bg-secondary hover:text-white transition-all group">
+                    <svg class="w-8 h-8 mb-2 text-secondary group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    <span class="text-sm font-semibold text-center">My Profile</span>
+                </a>
+            </div>
+        </div>
 
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-primary">
+                <p class="text-sm text-neutral mb-1">Currently Borrowed</p>
+                <p class="text-3xl font-bold text-primary">{{ total_borrowed }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 border-danger">
+                <p class="text-sm text-neutral mb-1">Overdue Books</p>
+                <p class="text-3xl font-bold text-danger">{{ overdue_borrows }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 border-l-4 {% if can_borrow_more %}border-green-500{% else %}border-red-500{% endif %}">
+                <p class="text-sm text-neutral mb-1">Borrow Status</p>
+                <p class="text-lg font-bold {% if can_borrow_more %}text-green-600{% else %}text-red-600{% endif %}">
+                    {% if can_borrow_more %}Can Borrow{% else %}Limit Reached{% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        {% if unread_notifications > 0 %}
+        <a href="{% url 'notifications' %}" class="block bg-blue-50 border-l-4 border-blue-500 rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-blue-700 mb-1">Unread Notifications</p>
+                    <p class="text-3xl font-bold text-blue-600">{{ unread_notifications }}</p>
+                </div>
+                <svg class="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+            </div>
+        </a>
+        {% endif %}
+
+        <!-- Currently Borrowed -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-primary">Currently Borrowed Books</h3>
+                <a href="{% url 'book_list' %}" class="text-accent hover:underline text-sm font-semibold">Browse Books</a>
+            </div>
+            {% if borrowed_books %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for borrow in borrowed_books %}
+                <div class="border rounded-lg p-4 hover:shadow-lg transition-shadow">
+                    <div class="flex items-start justify-between mb-2">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-primary">{{ borrow.book.title }}</h4>
+                            <p class="text-sm text-neutral">{{ borrow.book.author }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 space-y-1 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-neutral">Centre:</span>
+                            <span class="font-semibold">{{ borrow.centre.name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral">Issue Date:</span>
+                            <span>{{ borrow.issue_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-neutral">Due Date:</span>
+                            <span class="{% if borrow.due_date < today %}text-red-600 font-bold{% endif %}">
+                                {{ borrow.due_date|date:"M d, Y" }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="w-20 h-20 mx-auto text-neutral mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                </svg>
+                <p class="text-neutral text-lg mb-4">No books currently borrowed</p>
+                <a href="{% url 'book_list' %}" class="inline-block bg-primary text-white px-6 py-2 rounded-lg hover:bg-accent transition-colors">
+                    Browse Available Books
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Borrow History -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-primary mb-4">Recent Borrow History</h3>
+            {% if borrow_history %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Book</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Borrowed</th>
+                            <th class="px-4 py-3 text-left text-primary font-semibold">Returned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for borrow in borrow_history %}
+                        <tr class="border-b hover:bg-light transition-colors">
+                            <td class="px-4 py-3">
+                                <p class="font-semibold">{{ borrow.book.title }}</p>
+                                <p class="text-xs text-neutral">{{ borrow.book.author }}</p>
+                            </td>
+                            <td class="px-4 py-3">{{ borrow.issue_date|date:"M d, Y" }}</td>
+                            <td class="px-4 py-3">{{ borrow.return_date|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-center text-neutral py-8">No borrow history yet</p>
+            {% endif %}
+        </div>
+    </div>
     {% elif is_student %}
     <!-- ============================================ -->
     <!-- STUDENT DASHBOARD -->
@@ -715,6 +866,7 @@
             {% endif %}
         </div>
     </div>
+    
 
     {% else %}
     <!-- ============================================ -->

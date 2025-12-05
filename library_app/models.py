@@ -82,8 +82,14 @@ class Category(models.Model):
 class Subject(models.Model):
     name = models.CharField(max_length=200)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subjects')
-    grade = models.ForeignKey(Grade, on_delete=models.CASCADE, related_name='subjects')
-
+    grade = models.ForeignKey(
+    Grade,
+    on_delete=models.CASCADE,
+    related_name='subjects',
+    null=True,
+    blank=True,
+    help_text="Required only for Textbook subjects"
+)
     class Meta:
         unique_together = ('name', 'grade', 'category')
         ordering = ['name']
@@ -104,41 +110,90 @@ class BookIDSequence(models.Model):
     def __str__(self):
         return f"{self.centre} - {self.subject or 'General'} #{self.last_number}"
 
-
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Email is required')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+    def create_user(self, login_id, password=None, **extra_fields):
+        if not login_id:
+            raise ValueError("Login ID is required")
+
+        # Only normalize email for non-students
+        if not extra_fields.get('is_student', False):
+            login_id = self.normalize_email(login_id)
+
+        user = self.model(login_id=login_id, **extra_fields)
         user.set_password(password)
-        user.save()
+        user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, login_id, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, password, **extra_fields)
+        extra_fields.setdefault('is_site_admin', True)
 
+        if not login_id:
+            raise ValueError("Superuser must have a login ID")
+
+        return self.create_user(login_id, password, **extra_fields)
+
+
+# models.py
 
 class CustomUser(AbstractUser):
     username = None
-    email = models.EmailField(unique=True)
+
+    login_id = models.CharField(
+        max_length=254,
+        unique=True,
+        db_index=True,
+        help_text="Child ID for students, email for staff/librarians"
+    )
+    email = models.EmailField(blank=True, null=True, unique=False)
+
     is_librarian = models.BooleanField(default=False)
     is_student = models.BooleanField(default=False)
     is_teacher = models.BooleanField(default=False)
     is_site_admin = models.BooleanField(default=False)
+    is_other = models.BooleanField(default=True, help_text="Regular staff (accountant, guard, etc.)")  # ← NEW
+
     centre = models.ForeignKey(Centre, on_delete=models.SET_NULL, null=True, blank=True)
     force_password_change = models.BooleanField(default=False)
 
-    USERNAME_FIELD = 'email'
+    USERNAME_FIELD = 'login_id'
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
 
-    def __str__(self):
-        return self.email or "User"
+    def clean(self):
+        if not self.is_student and self.login_id and '@' not in self.login_id:
+            raise ValidationError("Staff must use a valid email as login ID")
 
+    def save(self, *args, **kwargs):
+        # Auto-sync email
+        if not self.is_student and self.login_id:
+            self.email = self.login_id
+
+        # === AUTOMATIC ROLE LOGIC ===
+        if self.is_student:
+            # Students have no staff roles
+            self.is_librarian = False
+            self.is_teacher = False
+            self.is_site_admin = False
+            self.is_other = False
+        else:
+            # Staff: if any special role → is_other = False
+            # if no special role → is_other = True
+            has_special_role = (
+                self.is_librarian or
+                self.is_teacher or
+                self.is_site_admin
+            )
+            self.is_other = not has_special_role
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.is_student and hasattr(self, 'student_profile'):
+            return f"Student {self.student_profile.child_ID} - {self.student_profile.name}"
+        return self.login_id
 
 # MAIN BOOK MODEL — FINAL WORKING VERSION
 class Book(models.Model):
@@ -199,16 +254,15 @@ class Book(models.Model):
             raise ValidationError("ISBN must be 4–20 characters")
 
     def save(self, *args, **kwargs):
-        self.full_clean()  # Ensures clean() runs
+        self.full_clean()
 
-        # Auto-set centre from school
         if self.school and not self.centre:
             self.centre = self.school.centre
 
-        # Auto-generate book_id only on first save
+        # ONLY generate book_id when creating a new book (not on update)
         if not self.pk and not self.book_id and self.centre:
             with transaction.atomic():
-                seq, _ = BookIDSequence.objects.get_or_create(
+                seq, _ = BookIDSequence.objects.select_for_update().get_or_create(
                     centre=self.centre,
                     subject=self.subject,
                     defaults={'last_number': 0}
@@ -218,7 +272,6 @@ class Book(models.Model):
 
                 c_prefix = re.sub(r'[^A-Z0-9]', '', self.centre.name.upper())[:4].ljust(4, 'X')
                 s_prefix = re.sub(r'[^A-Z0-9]', '', (self.subject.name if self.subject else "GEN").upper())[:4].ljust(4, 'X')
-
                 self.book_id = f"{c_prefix}/{s_prefix}/{seq.last_number:04d}/{timezone.now().year}"
 
         super().save(*args, **kwargs)
@@ -242,35 +295,45 @@ class Book(models.Model):
     def __str__(self):
         return f"{self.title} | {self.category_name} | {self.grade_name} | {self.school}"
 
-
 class Student(models.Model):
     GRADE_CHOICES = [
-        ('K', 'Kindergarten'),
-        ('1', 'Grade 1'),
-        ('2', 'Grade 2'),
-        ('3', 'Grade 3'),
-        ('4', 'Grade 4'),
-        ('5', 'Grade 5'),
-        ('6', 'Grade 6'),
-        ('7', 'Grade 7'),
-        ('8', 'Grade 8'),
-        ('9', 'Grade 9'),
-        ('10', 'Grade 10'),
-        ('11', 'Grade 11'),
-        ('12', 'Grade 12'),
+        ('K', 'Kindergarten'), ('1', 'Grade 1'), ('2', 'Grade 2'), ('3', 'Grade 3'),
+        ('4', 'Grade 4'), ('5', 'Grade 5'), ('6', 'Grade 6'), ('7', 'Grade 7'),
+        ('8', 'Grade 8'), ('9', 'Grade 9'), ('10', 'Grade 10'), ('11', 'Grade 11'), ('12', 'Grade 12'),
     ]
 
-    child_ID = models.IntegerField(unique=True, blank=True, null=True)
+    child_ID = models.CharField(          # ← Changed from IntegerField to CharField
+        max_length=50,
+        unique=True,
+        db_index=True,
+        help_text="This is the student's login ID"
+    )
     name = models.CharField(max_length=500)
-    centre = models.ForeignKey(
-        'Centre', on_delete=models.SET_NULL, null=True, blank=True)
-    school = models.ForeignKey(
-        'School', on_delete=models.SET_NULL, null=True, blank=True)
+    centre = models.ForeignKey('Centre', on_delete=models.SET_NULL, null=True, blank=True)
+    school = models.ForeignKey('School', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField('CustomUser', on_delete=models.CASCADE, null=True, blank=True, related_name='student_profile')
     grade = models.CharField(max_length=2, choices=GRADE_CHOICES, null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} (ID: {self.child_ID})"
+
+    # In your Student model (add this)
+    def save(self, *args, **kwargs):
+        old_child_id = None
+        if self.pk:
+            old_child_id = Student.objects.get(pk=self.pk).child_ID
+
+        super().save(*args, **kwargs)
+
+        # If child_ID changed and user exists → update login_id
+        if self.user and old_child_id and old_child_id != self.child_ID:
+            self.user.login_id = self.child_ID
+            self.user.save(update_fields=['login_id'])
+            
+            # Optional: reset password to new child_ID
+            self.user.set_password(self.child_ID)
+            self.user.force_password_change = True
+            self.user.save()
 
 
 def get_user_borrow_limit(user):
@@ -646,32 +709,21 @@ class Notification(models.Model):
         return colors.get(self.notification_type, 'gray')
 
 
-@receiver(post_save, sender=CustomUser)
-def create_student_profile(sender, instance, created, **kwargs):
-    if created and instance.is_student and not hasattr(instance, 'student_profile'):
-        school = None
-        if hasattr(instance, '_school_id') and instance._school_id:
-            try:
-                school = School.objects.get(id=instance._school_id)
-            except School.DoesNotExist:
-                school = None
-            del instance._school_id
-
-        child_ID = getattr(instance, '_child_ID', None)
-        if hasattr(instance, '_child_ID'):
-            del instance._child_ID
-
-        if not instance.email:
-            instance.email = f"student{child_ID}@libraryhub.com" if child_ID else f"student{instance.id}@libraryhub.com"
-            instance.save(update_fields=["email"])
-
-        Student.objects.create(
-            user=instance,
-            name=f"{instance.first_name} {instance.last_name}".strip(),
+@receiver(post_save, sender=Student)
+def create_student_user(sender, instance, created, **kwargs):
+    if not instance.user:
+        user = CustomUser.objects.create_user(
+            login_id=instance.child_ID,
+            password=None,
+            is_student=True,
+            first_name=instance.name.split(maxsplit=1)[0] if instance.name else '',
+            last_name=instance.name.split(maxsplit=1)[1] if ' ' in instance.name else '',
             centre=instance.centre,
-            child_ID=child_ID,
-            school=school,
         )
+        user.set_unusable_password()
+        instance.user = user
+        instance.save(update_fields=['user'])
+
 
 
 @receiver(post_save, sender=Borrow)

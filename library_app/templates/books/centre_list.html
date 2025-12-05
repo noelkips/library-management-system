@@ -101,30 +101,37 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const grid = document.getElementById('centresGrid');
+        const cards = grid.querySelectorAll('.centre-card');
+    
+        if (searchInput) {
+            console.log('Search input found');  // Debug: Check if this logs in console
+    
+            let debounceTimer;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    const query = this.value.toLowerCase().trim();
+                    console.log('Searching for:', query);  // Debug: Check query value
+    
+                    cards.forEach(card => {
+                        const name = card.getAttribute('data-name') || '';
+                        if (query === '' || name.includes(query)) {
+                            card.classList.remove('hidden');
+                        } else {
+                            card.classList.add('hidden');
+                        }
+                    });
+                }, 300);  // 300ms debounce
+            });
+        }
+    });
+    </script>
 
+    
 {% include 'books/partials/modal.html' %}
 {% endblock %}
 
-<script>
-// LIVE SEARCH — FIXED & WORKING
-document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('searchInput');
-    const grid = document.getElementById('centresGrid');
-    const cards = grid.querySelectorAll('.centre-card');
-
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            const query = this.value.toLowerCase().trim();
-
-            cards.forEach(card => {
-                const name = card.getAttribute('data-name') || '';
-                if (query === '' || name.includes(query)) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        });
-    }
-});
-</script>

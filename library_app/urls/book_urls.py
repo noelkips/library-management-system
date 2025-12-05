@@ -11,6 +11,7 @@ book_urlpatterns = [
     path('books/school/<int:school_id>/grade/<int:grade_id>/',  views.grade_book_list, name='grade_book_list'),
     path('books/add/',  views.book_add, name='book_add'),
     path('books/<int:pk>/update/',  views.book_update, name='book_edit'),
+    path('book/<int:pk>/update/', views.book_update, name='book_update'),
     path('books/<int:pk>/delete/',  views.book_delete, name='book_delete'),
     path('books/<int:pk>/',  views.book_detail, name='book_detail'),
     path('books/borrows/<int:pk>/approve/',  views.borrow_approve, name='borrow_approve'),

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Choose School - {{ centre.name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-3">
+                {{ centre.name }}
+            </h1>
+            <p class="text-lg text-gray-600">Choose a school to view its catalog</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center shadow-md">
+                <div class="text-3xl font-bold text-indigo-600">{{ schools|length }}</div>
+                <div class="text-sm text-gray-600">Schools</div>
+            </div>
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center shadow-md">
+                <div class="text-3xl font-bold text-purple-600">{{ total_books }}</div>
+                <div class="text-sm text-gray-600">Total Books</div>
+            </div>
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center shadow-md">
+                <div class="text-3xl font-bold text-pink-600">{{ active_borrows }}</div>
+                <div class="text-sm text-gray-600">Active Borrows</div>
+            </div>
+            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 text-center shadow-md">
+                <div class="text-3xl font-bold text-green-600">{{ available_books }}</div>
+                <div class="text-sm text-gray-600">Available</div>
+            </div>
+        </div>
+
+        <!-- School Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for school in schools %}
+            <a href="{% url 'school_catalog' school.id %}" 
+               class="group block transform transition-all duration-300 hover:scale-105">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl border border-gray-200">
+                    <div class="h-32 bg-gradient-to-br from-indigo-400 to-purple-500 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-black opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                        <div class="absolute bottom-4 left-4 text-white">
+                            <h3 class="text-2xl font-bold">{{ school.name }}</h3>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between text-sm text-gray-600 mb-3">
+                            <span>{{ school.book_count|default:0 }} books</span>
+                            <span class="text-indigo-600 font-semibold">View Catalog →</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-gray-500">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            {{ centre.name }}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
